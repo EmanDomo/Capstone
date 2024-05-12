@@ -4,7 +4,7 @@ import Form from 'react-bootstrap/Form';
 import axios from "axios"
 import {useNavigate} from "react-router-dom"
 
-const Register = () => {
+const AddItem = () => {
 
     const [fname,setFName] = useState("");
     const [file,setFile] = useState("");
@@ -32,10 +32,10 @@ const Register = () => {
             }
         }
 
-        const res = await axios.post("/register",formData,config);
+        const res = await axios.post("/additem",formData,config);
        
         if(res.data.status == 201){
-            history("/")
+            history("/admin")
         }else{
             console.log("error")
         }
@@ -65,4 +65,4 @@ const Register = () => {
     )
 }
 
-export default Register
+export default AddItem

@@ -6,7 +6,7 @@ import axios from 'axios';
 import moment from "moment"
 import Alert from 'react-bootstrap/Alert';
 
-const Home = () => {
+const Menu = () => {
 
     const [data, setData] = useState([]);
 
@@ -57,11 +57,11 @@ const Home = () => {
                 </Alert> : ""
             }
             <div className="container mt-2">
-                <h1 className='text-center mt-2'>Image Upload Projects With Mysql database</h1>
+                <h1 className='text-center mt-2'>ORDER NOW</h1>
 
-                <div className='text-end'>
-                    <Button variant="primary"><NavLink to="/register" className="text-decoration-none text-light"> Add User</NavLink></Button>
-                </div>
+                {/* <div className='text-end'>
+                    <Button variant="primary"><NavLink to="/additem" className="text-decoration-none text-light"> Add Item</NavLink></Button>
+                </div> */}
 
                 <div className='d-flex justify-content-between align-iteams-center mt-5'>
                     {
@@ -89,4 +89,4 @@ const Home = () => {
     )
 }
 
-export default Home
+export default Menu

@@ -2,7 +2,34 @@ const express = require("express");
 const router = new express.Router();
 const conn = require("../db/conn");
 const multer = require("multer");
-const moment = require("moment")
+const moment = require("moment");
+const cors = require('cors');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+app.post('/LoginForm', (req, res) => {
+    const { username, password } = req.body;
+  
+    // check if the username and password match a user in the database
+  
+    const query = `SELECT * FROM tbl_admins WHERE username = ? AND password = ?`;
+    conn.query(query, [username, password], (err, results) => {
+      if (err) {
+        console.error('Error executing query:', err.stack);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+  
+      if (results.length > 0) {
+        // Successful login
+        res.status(200).json({ message: 'Login successful' });
+      } else {
+        // Login error
+        res.status(401).json({ message: 'Invalid username or password' });
+      }
+    });
+  });
 
 
 // img storage confing
@@ -33,7 +60,7 @@ var upload = multer({
 
 
 // register userdata
-router.post("/register",upload.single("photo"),(req,res)=>{
+router.post("/additem",upload.single("photo"),(req,res)=>{
     const {fname} = req.body;
     const {filename} = req.file;
 
@@ -97,3 +124,9 @@ router.delete("/:id",(req,res)=>{
 
 
 module.exports = router;
+
+const PORT = process.env.PORT || 3000 ;
+
+app.listen(PORT, () => {
+  console.log(`The server has started on port ${PORT}`);
+});

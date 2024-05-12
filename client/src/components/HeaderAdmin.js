@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
-import "../styles/Header.css";
+import "../styles/AdminHeader.css";
 
-const Header = () => {
-const [openLinks, setOpenLinks] = useState(false);
+function AdminHeader() {
+  const [openLinks, setOpenLinks] = useState(false);
 
   const toggleNavbar = () => {
     setOpenLinks(!openLinks);
@@ -14,14 +14,16 @@ const [openLinks, setOpenLinks] = useState(false);
       <div className="leftSide" id={openLinks ? "open" : "close"}>
         <div className="hiddenLinks">
           <Link to="/"> Home </Link>
-          <Link to="/Menu"> Menu </Link>
-          <Link to="/Order"> Order </Link>
+          <Link to="/Admin"> POS </Link>
+          <Link to="#"> Order </Link>
+          <Link to="#"> Inventory </Link>
         </div>
       </div>
       <div className="rightSide">
           <Link to="/"> Home </Link>
-          <Link to="/Menu"> Menu </Link>
-          <Link to="/Order"> Order </Link>
+          <Link to="/Admin"> POS </Link>
+          <Link to="#"> Order </Link>
+          <Link to="#"> Inventory </Link>
         <button onClick={toggleNavbar}>
           <GiHamburgerMenu />
         </button>
@@ -30,4 +32,4 @@ const [openLinks, setOpenLinks] = useState(false);
   );
 }
 
-export default Header
+export default AdminHeader;
