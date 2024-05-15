@@ -12,7 +12,7 @@ import { Routes, Route } from "react-router-dom";
 function App() {
   return (
     <>
-      <Header />
+      {/* <Header /> */}
       <HeaderAdmin />
       <Routes>
         <Route path='/' element={<Homepage />} />

@@ -29,21 +29,21 @@ const Menu = () => {
     }
 
 
-    const dltUser = async (id) => {
-        console.log(id)
-        const res = await axios.delete(`/${id}`, {
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
+    // const dltUser = async (id) => {
+    //     console.log(id)
+    //     const res = await axios.delete(`/${id}`, {
+    //         headers: {
+    //             "Content-Type": "application/json"
+    //         }
+    //     });
 
-        if (res.data.status == 201) {
-            getUserData()
-            setShow(true)
-        } else {
-            console.log("error")
-        }
-    }
+    //     if (res.data.status == 201) {
+    //         getUserData()
+    //         setShow(true)
+    //     } else {
+    //         console.log("error")
+    //     }
+    // }
 
     useEffect(() => {
         getUserData()
@@ -51,19 +51,21 @@ const Menu = () => {
 
     return (
         <>
-            {
+           
+            <div className="container mt-2">
+                <h1 className='text-center mt-2'>ORDER NOW</h1>
+
+                {/* {
                 show ? <Alert variant="danger" onClose={() => setShow(false)} dismissible>
                     User Delete
                 </Alert> : ""
-            }
-            <div className="container mt-2">
-                <h1 className='text-center mt-2'>ORDER NOW</h1>
+            } */}
 
                 {/* <div className='text-end'>
                     <Button variant="primary"><NavLink to="/additem" className="text-decoration-none text-light"> Add Item</NavLink></Button>
                 </div> */}
 
-                <div className='d-flex justify-content-between align-iteams-center mt-5'>
+                <div className='card-container'>
                     {
                         data.length > 0 ? data.map((el, i) => {
                             return (
@@ -75,7 +77,7 @@ const Menu = () => {
                                             <Card.Text>
                                                 Date Added : {moment(el.date).format("DD-MM-YYYY")}
                                             </Card.Text>
-                                            <Button variant="danger" onClick={() => dltUser(el.id)} className='col-lg-6 text-center'>Delete</Button>
+                                            <Button variant="success" className='col-lg-6 text-center'>Add to Cart</Button>
                                         </Card.Body>
                                     </Card>
                                 </>

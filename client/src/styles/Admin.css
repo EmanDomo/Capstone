@@ -1,0 +1,104 @@
+.bg {
+    background-color: #f2f2f2;
+}
+.items {
+    height: 675px;
+    width: 1200px;
+    position: relative;
+    left: 318px;
+    bottom: -10px;
+    overflow: auto; 
+    overflow-y: hidden; 
+    overflow-x: hidden; 
+}
+
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); 
+    grid-gap: 1rem; 
+    max-height: 600px;
+    overflow: auto;
+
+}
+
+.categories {
+    background-color: rgb(255, 255, 255);
+    width: 1200px;
+    height: 70px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-radius: 10px;
+    overflow-y: hidden; 
+    overflow-x: hidden;
+}
+
+.pos {
+    position: absolute;
+    top: 90px;
+    width: 310px;
+    height: 675px;
+    background-color: rgb(255, 255, 255);
+    border-radius: 10px;
+}
+
+.title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .title h1 {
+    flex: 1;
+    text-align: center;
+  }
+
+  #customers {
+    font-family: Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  #customers td, #customers th {
+    padding: 8px;
+  }
+  
+  #customers tr:nth-child(even){background-color: #f2f2f2;}
+  
+  #customers tr:hover {background-color: #ddd;}
+  
+  #customers th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+  }
+
+  .checkoutpos {
+    margin-top: 20px;
+}
+
+.checkoutpos hr {
+    border: none;
+    height: 1px;
+    background-color: #ccc;
+    margin: 10px 0;
+}
+
+.checkoutpos div {
+    margin: 10px 0;
+}
+
+.checkoutpos button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.checkoutpos button:hover {
+    background-color: #0056b3;
+}

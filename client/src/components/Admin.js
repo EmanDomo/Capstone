@@ -5,6 +5,7 @@ import Card from 'react-bootstrap/Card';
 import axios from 'axios';
 import moment from "moment"
 import Alert from 'react-bootstrap/Alert';
+import '../styles/Admin.css';
 
 const Admin = () => {
 
@@ -50,20 +51,61 @@ const Admin = () => {
     }, [])
 
     return (
-        <>
+
+<div className='bg'>
+        <>  <div className='pos'>
+                <div className='pos2'>
+                <table id="customers">
+                    <tr>
+                        <th>Name</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                    </tr>
+                    <tr>
+                        <td>Adobo</td>
+                        <td>1</td>
+                        <td>P80</td>
+                    </tr>
+                    <tr>
+                        <td>Sinigang</td>
+                        <td>3</td>
+                        <td>P180</td>
+                    </tr>
+                    <tr>
+                        <td>Cheese Stick</td>
+                        <td>2</td>
+                        <td>P40</td>
+                    </tr>
+                    </table>
+                </div>
+                <div className='checkoutpos'>
+                    <hr />
+                    <div>Total Amount: P300</div>
+                    <button>Checkout</button>
+                </div>
+             </div>
+           
+            <div className="items">
+                <div className="categories">
+                    <h7>Savory Meals</h7>
+                    <h7>Snacks</h7>
+                    <h7>Deserts</h7>
+                    <h7>Drinks</h7>
+                </div>
+
             {
                 show ? <Alert variant="danger" onClose={() => setShow(false)} dismissible>
-                    User Delete
+                    Deleted
                 </Alert> : ""
             }
-            <div className="container mt-2">
-                <h1 className='text-center mt-2'>All Items</h1>
 
-                <div className='text-end'>
+
+                <div className='title'>
+                    <h1 className='text-center mt-2'>Savory Meals</h1>
                     <Button variant="primary"><NavLink to="/additem" className="text-decoration-none text-light"> Add Item</NavLink></Button>
                 </div>
 
-                <div className='d-flex justify-content-between align-iteams-center mt-5'>
+                <div className='card-container'>
                     {
                         data.length > 0 ? data.map((el, i) => {
                             return (
@@ -86,6 +128,7 @@ const Admin = () => {
                 </div>
             </div>
         </>
+        </div>
     )
 }
 
