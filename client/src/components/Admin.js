@@ -6,6 +6,7 @@ import axios from 'axios';
 import moment from "moment"
 import Alert from 'react-bootstrap/Alert';
 import '../styles/Admin.css';
+import Header from "./HeaderAdmin";
 
 const Admin = () => {
 
@@ -51,6 +52,8 @@ const Admin = () => {
     }, [])
 
     return (
+        <div>
+            <Header />
 
 <div className='bg'>
         <>  <div className='pos'>
@@ -128,6 +131,7 @@ const Admin = () => {
                 </div>
             </div>
         </>
+        </div>
         </div>
     )
 }

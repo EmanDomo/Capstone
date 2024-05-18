@@ -13,7 +13,9 @@
 	align-items: center;
 	padding-left: 150px;
   }
-  
+  h2{
+	color: white;
+  }
   .navbar .leftSide img {
 	width: 70px;
   }

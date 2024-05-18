@@ -13,7 +13,7 @@ function App() {
   return (
     <>
       {/* <Header /> */}
-      <HeaderAdmin />
+      {/* <HeaderAdmin /> */}
       <Routes>
         <Route path='/' element={<Homepage />} />
         <Route path='/admin' element={<Admin />} />
