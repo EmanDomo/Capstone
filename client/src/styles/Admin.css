@@ -35,7 +35,7 @@
 
 .pos {
     position: absolute;
-    top: 90px;
+    top: 85px;
     width: 310px;
     height: 675px;
     background-color: rgb(255, 255, 255);
@@ -82,7 +82,7 @@
 .checkoutpos hr {
     border: none;
     height: 1px;
-    background-color: #ccc;
+    background-color: #000000;
     margin: 10px 0;
 }
 

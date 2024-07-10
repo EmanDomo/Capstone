@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../styles/LoginForm.css';
+import '../styles/UserLogin.css';
 import { FaUser, FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,17 +14,18 @@ const Login = () => {
     const password = e.target.elements.password.value;
 
     try {
-      const response = await fetch('http://localhost:3000/LoginForm', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({ username, password }),
-});
-
+      const response = await fetch('http://localhost:3000/UserLogin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
       if (response.ok) {
-        navigate('/admin');
+        const data = await response.json();
+        localStorage.setItem('token', data.token); // Store the token in local storage
+        navigate('/menu');
       } else {
         const errorData = await response.json();
         setErrorMessage(errorData.message);
@@ -61,7 +62,7 @@ const Login = () => {
 
           <div className='register-link'>
             <p>
-              Don't have an account?<a href='#'>Register</a>
+              Don't have an account? <a href='#'>Register</a>
             </p>
           </div>
         </form>
