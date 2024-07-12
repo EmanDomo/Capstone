@@ -1,14 +1,15 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
+import '../../styles/Checkout.css';
 
 const Checkout = () => {
   const location = useLocation();
   const { cartItems } = location.state || { cartItems: [] };
 
   return (
-    <div>
-      <h1>Checkout Page</h1>
-      <ul>
+    <div classname="container">
+      <h1 classname="title">Checkout Page</h1>
+      <ul classname="items">
         {cartItems.map((item, index) => (
           <li key={index}>
             {item.itemname} - {item.quantity} x ₱{item.price}

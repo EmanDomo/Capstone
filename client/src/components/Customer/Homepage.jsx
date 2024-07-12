@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import BannerImage from "../Assets/home.jpg";
-import '../styles/Homepage.css';
+import BannerImage from '../../Assets/home.jpg';
+import '../../styles/Homepage.css';
 
 const Homepage = () => {
     

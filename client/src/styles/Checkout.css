@@ -1,0 +1,60 @@
+/* Style the entire page */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Style the container */
+  .container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+  
+  /* Style the header */
+  .title {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  /* Style the list of items */
+  .items {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .items li {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .items li:last-child {
+    border-bottom: none;
+  }
+  
+  /* Style the form */
+  form {
+    text-align: center;
+    margin-top: 20px;
+  }
+  
+  input[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  input[type="submit"]:hover {
+    background-color: #45a049;
+  }
+  

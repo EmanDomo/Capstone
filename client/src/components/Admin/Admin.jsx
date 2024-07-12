@@ -6,7 +6,7 @@ import Form from 'react-bootstrap/Form';
 import Alert from 'react-bootstrap/Alert';
 import axios from 'axios';
 import moment from 'moment';
-import '../styles/Admin.css';
+import '../../styles/Admin.css';
 import Header from './HeaderAdmin';
 
 const Admin = () => {

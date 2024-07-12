@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../styles/UserLogin.css';
+import '../../styles/UserLogin.css';
 import { FaUser, FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
@@ -35,6 +35,10 @@ const Login = () => {
     }
   };
 
+  const handleRegister = () => {
+    navigate('/register');
+  };
+
   return (
     <div className='Log'>
       <div className='wrapper'>
@@ -62,7 +66,7 @@ const Login = () => {
 
           <div className='register-link'>
             <p>
-              Don't have an account? <a href='#'>Register</a>
+              Don't have an account? <a onClick={handleRegister}>Register</a>
             </p>
           </div>
         </form>

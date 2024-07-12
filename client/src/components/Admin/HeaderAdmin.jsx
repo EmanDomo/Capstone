@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
-import "../styles/AdminHeader.css";
+import '../../styles/AdminHeader.css';
 
 function AdminHeader() {
   const [openLinks, setOpenLinks] = useState(false);

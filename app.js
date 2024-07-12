@@ -1,19 +1,18 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
-require("./db/conn");
+require("./routes/conn");
 const cors = require("cors");
 const router = require("./routes/router")
 const port = 8004;
 
-
 app.use(express.json());
 app.use(cors());
 
-app.use("/uploads",express.static("./uploads"))
+app.use("/uploads", express.static("./uploads"))
 app.use(router)
 
-app.listen(port,()=>{
+app.listen(port, () => {
     console.log("server start")
 })
 
@@ -22,10 +21,10 @@ const paypal = require('./routes/paypal')
 
 app.get('/', (req, res) => {
     res.render('index')
-}) 
+})
 
-app.post('/pay', async(req, res) => {
-    
+app.post('/pay', async (req, res) => {
+
     try {
         const url = await paypal.createOrder()
 
@@ -50,5 +49,6 @@ app.get('/complete-order', async (req, res) => {
 app.get('/cancel-order', (req, res) => {
     res.redirect('/')
 })
+
 
 
