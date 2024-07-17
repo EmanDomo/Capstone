@@ -3,21 +3,20 @@ import BannerImage from '../../Assets/home.jpg';
 import '../../styles/Homepage.css';
 
 const Homepage = () => {
-    
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
-    return ( 
+    return (
         <div>
             <header>
-                
+                {/* Add any header content if necessary */}
             </header>
-                <div className="home" style={{ backgroundImage: `url(${BannerImage})` }}>
-                    <div className="headerContainer">
+            <div className="home" style={{ backgroundImage: `url(${BannerImage})` }}>
+                <div className="headerContainer">
                     <button onClick={() => navigate('/userlogin')} className="order-now">ORDER NOW</button>
                 </div>
             </div>
         </div>
-     );
+    );
 }
- 
+
 export default Homepage;

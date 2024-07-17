@@ -6,8 +6,9 @@ import moment from 'moment';
 import Card from 'react-bootstrap/Card';
 import Modal from 'react-bootstrap/Modal';
 import { jwtDecode } from 'jwt-decode';
-import { ListGroup } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { ListGroup, Row, Col, Container } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import Alert from 'react-bootstrap/Alert';
 
 const Menu = () => {
   const [data, setData] = useState([]);
@@ -15,8 +16,9 @@ const Menu = () => {
   const [cartItems, setCartItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [addedItemName, setAddedItemName] = useState('');
-  const [showCart, setShowCart] = useState(false); // State for cart visibility
-  const navigate = useNavigate(); // Define navigate using useNavigate
+  const [showCart, setShowCart] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -39,13 +41,12 @@ const Menu = () => {
       });
 
       if (res.data.status === 201) {
-        console.log('Data fetched successfully');
         setData(res.data.data);
       } else {
-        console.log('Error fetching data');
+        setError('Error fetching data');
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      setError('Error fetching data');
     }
   };
 
@@ -62,10 +63,10 @@ const Menu = () => {
       if (res.data.status === 'success') {
         setCartItems(res.data.data);
       } else {
-        console.log('Error fetching cart data');
+        setError('Error fetching cart data');
       }
     } catch (error) {
-      console.error('Error fetching cart data:', error);
+      setError('Error fetching cart data');
     }
   };
 
@@ -75,10 +76,7 @@ const Menu = () => {
       const token = localStorage.getItem('token');
       const res = await axios.post(
         '/add-to-cart',
-        {
-          itemId,
-          quantity,
-        },
+        { itemId, quantity },
         {
           headers: {
             'Content-Type': 'application/json',
@@ -88,15 +86,17 @@ const Menu = () => {
       );
 
       if (res.data.status === 'success') {
-        console.log('Item added to cart successfully');
         setAddedItemName(itemName);
         setShowModal(true);
         getCartData();
+      } else if (res.data.message === 'Item already in cart') {
+        setAddedItemName(`${itemName} is already in the cart`);
+        setShowModal(true);
       } else {
-        console.log('Error adding item to cart');
+        setError('Error adding item to cart');
       }
     } catch (error) {
-      console.error('Error adding item to cart:', error);
+      setError('Error adding item to cart');
     }
   };
 
@@ -105,72 +105,59 @@ const Menu = () => {
   const handleCartShow = () => setShowCart(true);
   const handleCartClose = () => setShowCart(false);
 
-  const handleIncreaseQuantity = async (itemId) => {
-    await updateCartItemQuantity(itemId, 1);
+  const handleIncreaseQuantity = (index) => {
+    const updatedCart = cartItems.map((item, i) => (
+      i === index ? { ...item, quantity: item.quantity + 1 } : item
+    ));
+    setCartItems(updatedCart);
   };
-
-  const handleDecreaseQuantity = async (itemId) => {
-    await updateCartItemQuantity(itemId, -1);
+  
+  const handleDecreaseQuantity = (index) => {
+    const updatedCart = cartItems.map((item, i) => (
+      i === index ? { ...item, quantity: item.quantity > 0 ? item.quantity - 1 : 0 } : item
+    ));
+    setCartItems(updatedCart);
   };
-
-  const handleRemoveItem = async (itemId) => {
-    await removeCartItem(itemId);
-  };
-
-  const updateCartItemQuantity = async (itemId, change) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        '/update-cart',
-        {
-          itemId,
-          change,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-      getCartData();
-    } catch (error) {
-      console.error('Error updating cart item quantity:', error);
-    }
-  };
-
-  const removeCartItem = async (itemId) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        '/remove-cart-item',
-        {
-          itemId,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-      getCartData();
-    } catch (error) {
-      console.error('Error removing cart item:', error);
-    }
-  };
-
+  
   const handleCheckout = () => {
-    navigate('/checkout', { state: { cartItems } });
+    const grandTotal = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+    navigate('/checkout', { state: { cartItems, grandTotal } });
   };
-
+  
+  const handleRemoveItem = async (itemId, index) => {
+    console.log(`Attempting to remove item with id: ${itemId} at index: ${index}`);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post(
+        '/remove-cart-item',
+        { itemId },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          }
+        }
+      );
+  
+      if (res.data.status === 'success') {
+        // Remove the item from the front-end state only if the back-end deletion is successful
+        const updatedCart = cartItems.filter((_, i) => i !== index);
+        setCartItems(updatedCart);
+      } else {
+        setError('Error removing item from cart');
+      }
+    } catch (error) {
+      setError('Error removing item from cart');
+    }
+  };
+  
   return (
     <>
       <header>
         <Header />
       </header>
       <h3>Welcome Back, {userName}!</h3>
-      <Button onClick={handleCartShow}>View Cart</Button> {/* Button to show cart */}
+      <Button onClick={handleCartShow}>View Cart</Button>
       <div className='card-container'>
         {data.length > 0 &&
           data.map((el, i) => (
@@ -186,7 +173,11 @@ const Menu = () => {
                 <Card.Text>Date Added: {moment(el.date).format('DD-MM-YYYY')}</Card.Text>
                 <Card.Text>Quantity: {el.quantity}</Card.Text>
                 <Card.Text>Price: ₱{el.price}</Card.Text>
-                <Button variant='success' className='col-lg-6 text-center' onClick={() => handleAddToCart(el.id, el.itemname)}>
+                <Button
+                  variant='success'
+                  className='col-lg-6 text-center'
+                  onClick={() => handleAddToCart(el.id, el.itemname)}
+                >
                   Add
                 </Button>
               </Card.Body>
@@ -206,25 +197,38 @@ const Menu = () => {
         </Modal.Footer>
       </Modal>
 
-      <Modal show={showCart} onHide={handleCartClose}>
+      <Modal show={showCart} onHide={handleCartClose} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>Cart Items</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
+          {error && <Alert variant="danger">{error}</Alert>}
           <ListGroup>
             {cartItems.length > 0 ? (
               cartItems.map((item, index) => (
                 <ListGroup.Item key={index}>
-                  {item.itemname} - {item.quantity} x ₱{item.price}
-                  <Button variant='outline-primary' size='sm' onClick={() => handleIncreaseQuantity(item.id)}>
-                    +
-                  </Button>
-                  <Button variant='outline-primary' size='sm' onClick={() => handleDecreaseQuantity(item.id)}>
-                    -
-                  </Button>
-                  <Button variant='outline-danger' size='sm' onClick={() => handleRemoveItem(item.id)}>
-                    Remove
-                  </Button>
+                  <Container>
+                    <Row className="align-items-center">
+                      <Col xs={4}>
+                        {item.itemname}
+                      </Col>
+                      <Col xs={3}>
+                        <div className="d-flex align-items-center">
+                          <Button variant='outline-primary' size='sm' onClick={() => handleDecreaseQuantity(index)}>-</Button>
+                          <span className="mx-2">{item.quantity}</span>
+                          <Button variant='outline-primary' size='sm' onClick={() => handleIncreaseQuantity(index)}>+</Button>
+                        </div>
+                      </Col>
+                      <Col xs={3} className="text-right">
+                        <Button variant='outline-danger' size='sm' onClick={() => handleRemoveItem(item.id, index)}>Remove</Button>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <Col xs={{ span: 3, offset: 5 }}>
+                        <span>₱{item.price * item.quantity}.00</span>
+                      </Col>
+                    </Row>
+                  </Container>
                 </ListGroup.Item>
               ))
             ) : (
@@ -236,9 +240,11 @@ const Menu = () => {
           <Button variant='secondary' onClick={handleCartClose}>
             Close
           </Button>
-          <Button variant='primary' onClick={handleCheckout}>
-            Checkout
-          </Button>
+          {cartItems.length > 0 && (
+            <Button variant='primary' onClick={handleCheckout}>
+              Checkout
+            </Button>
+          )}
         </Modal.Footer>
       </Modal>
     </>

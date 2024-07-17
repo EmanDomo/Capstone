@@ -6,6 +6,33 @@ const router = new express.Router();
 const jwt = require('jsonwebtoken');
 const secretKey = '123'; // You should use an environment variable to store your secret key securely.
 
+const paypal = require('./paypal');
+const { createPaymongoLink } = require('./paymongo');
+
+router.post('/pay-gcash', async (req, res) => {
+    const { totalAmount } = req.body;
+
+    if (!totalAmount) {
+        res.status(400).send('Total amount is required');
+        return;
+    }
+
+    const parsedTotalAmount = parseFloat(totalAmount);
+    if (isNaN(parsedTotalAmount)) {
+        res.status(400).send('Total amount must be a number');
+        return;
+    }
+
+    try {
+        const paymongoLink = await createPaymongoLink(parsedTotalAmount, 'GCash Payment', 'GCash payment description');
+        res.json({ url: paymongoLink.data.attributes.checkout_url });
+    } catch (error) {
+        console.error('Error creating PayMongo GCash link:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -201,10 +228,9 @@ router.get("/getdata", authenticateToken, authorizeRoles('admin', 'customer'), (
 
 //add to cart, customer role
 router.post('/add-to-cart', authenticateToken, authorizeRoles('customer'), (req, res) => {
-    const userId = req.user.userId; // Extract userId from the token
+    const userId = req.user.userId;
     const { itemId, quantity } = req.body;
 
-    // Fetch price from tbl_items based on itemId
     conn.query(
         'SELECT price FROM tbl_items WHERE id = ?',
         [itemId],
@@ -214,18 +240,31 @@ router.post('/add-to-cart', authenticateToken, authorizeRoles('customer'), (req,
                 res.status(500).json({ status: 'error', message: 'Internal server error' });
             } else {
                 if (results.length > 0) {
-                    const price = results[0].price; // Get price from results
-                    // Insert or update cart item
+                    const price = results[0].price;
+                    // Check if the item is already in the cart
                     conn.query(
-                        'INSERT INTO tbl_cart (userId, id, quantity, price) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE quantity = quantity + ?, price = ?',
-                        [userId, itemId, quantity, price, quantity, price],
-                        (error, results, fields) => {
+                        'SELECT * FROM tbl_cart WHERE userId = ? AND id = ?',
+                        [userId, itemId],
+                        (error, results) => {
                             if (error) {
                                 console.error(error);
                                 res.status(500).json({ status: 'error', message: 'Internal server error' });
+                            } else if (results.length > 0) {
+                                res.status(400).json({ status: 'error', message: 'Item already in cart' });
                             } else {
-                                res.status(201).json({ status: 'success', message: 'Item added to cart' });
-                                console.log("Added to tbl_cart");
+                                // Insert new item to the cart
+                                conn.query(
+                                    'INSERT INTO tbl_cart (userId, id, quantity, price) VALUES (?, ?, ?, ?)',
+                                    [userId, itemId, quantity, price],
+                                    (error, results) => {
+                                        if (error) {
+                                            console.error(error);
+                                            res.status(500).json({ status: 'error', message: 'Internal server error' });
+                                        } else {
+                                            res.status(201).json({ status: 'success', message: 'Item added to cart' });
+                                        }
+                                    }
+                                );
                             }
                         }
                     );
@@ -236,6 +275,7 @@ router.post('/add-to-cart', authenticateToken, authorizeRoles('customer'), (req,
         }
     );
 });
+
 
 
 
@@ -260,42 +300,58 @@ router.get('/cart', authenticateToken, authorizeRoles('customer'), (req, res) =>
 router.post('/update-cart', authenticateToken, authorizeRoles('customer'), (req, res) => {
     const userId = req.user.userId;
     const { itemId, change } = req.body;
-  
-    conn.query(
-      'UPDATE tbl_cart SET quantity = quantity + ? WHERE userId = ? AND id = ?',
-      [change, userId, itemId],
-      (error, results) => {
-        if (error) {
-          console.error(error);
-          res.status(500).json({ status: 'error', message: 'Internal server error' });
-        } else {
-          res.status(200).json({ status: 'success', message: 'Cart updated' });
-        }
-      }
-    );
-  });
 
-  router.post('/remove-cart-item', authenticateToken, authorizeRoles('customer'), (req, res) => {
+    conn.query(
+        'UPDATE tbl_cart SET quantity = quantity + ? WHERE userId = ? AND id = ?',
+        [change, userId, itemId],
+        (error, results) => {
+            if (error) {
+                console.error(error);
+                res.status(500).json({ status: 'error', message: 'Internal server error' });
+            } else {
+                res.status(200).json({ status: 'success', message: 'Cart updated' });
+            }
+        }
+    );
+});
+
+router.post('/remove-cart-item', authenticateToken, authorizeRoles('customer'), (req, res) => {
     const userId = req.user.userId;
     const { itemId } = req.body;
   
+    console.log(`Attempting to remove item with id: ${itemId} for user: ${userId}`);
+  
     conn.query(
-      'DELETE FROM tbl_cart WHERE userId = ? AND id = ?',
+      'SELECT * FROM tbl_cart WHERE userId = ? AND id = ?',
       [userId, itemId],
       (error, results) => {
         if (error) {
-          console.error(error);
-          res.status(500).json({ status: 'error', message: 'Internal server error' });
-        } else {
-          res.status(200).json({ status: 'success', message: 'Item removed from cart' });
+          console.error('Error executing query:', error);
+          return res.status(500).json({ status: 'error', message: 'Internal server error' });
         }
+  
+        if (results.length === 0) {
+          console.warn('Item not found in cart.');
+          return res.status(404).json({ status: 'error', message: 'Item not found in cart' });
+        }
+  
+        conn.query(
+          'DELETE FROM tbl_cart WHERE userId = ? AND id = ?',
+          [userId, itemId],
+          (error, results) => {
+            if (error) {
+              console.error('Error executing query:', error);
+              return res.status(500).json({ status: 'error', message: 'Internal server error' });
+            }
+  
+            console.log('Item successfully deleted from cart.');
+            res.status(200).json({ status: 'success', message: 'Item removed from cart' });
+          }
+        );
       }
     );
   });
   
-  
-
-
 
 // router.get("/getsearch", (req, res) => {
 //     const { search } = req.query;
@@ -313,6 +369,61 @@ router.post('/update-cart', authenticateToken, authorizeRoles('customer'), (req,
 //         res.status(422).json({ status: 422, error });
 //     }
 // });
+
+router.post('/pay', async (req, res) => {
+    const { totalAmount } = req.body;
+    console.log('Request Body:', req.body);
+    console.log('Total Amount:', totalAmount, typeof totalAmount);
+
+    if (!totalAmount) {
+        res.status(400).send('Total amount is required');
+        return;
+    }
+
+    const parsedTotalAmount = parseFloat(totalAmount);
+    if (isNaN(parsedTotalAmount)) {
+        res.status(400).send('Total amount must be a number');
+        return;
+    }
+
+    try {
+        const url = await paypal.createOrder(parsedTotalAmount);
+
+        res.redirect(url);
+    } catch (error) {
+        res.send('Error: ' + error);
+    }
+});
+
+router.get('/complete-order', async (req, res) => {
+    try {
+        const token = req.query.token;
+        const payerID = req.query.PayerID;
+
+        if (!token || !payerID) {
+            console.error('Missing token or PayerID');
+            return res.status(400).send('Missing token or PayerID');
+        }
+
+        console.log('Token:', token);
+        console.log('PayerID:', payerID);
+
+        const result = await paypal.capturePayment(token);
+        console.log('Capture Result:', result);
+
+        res.send('Course purchased successfully');
+        console.log('PayPal payment success');
+    } catch (error) {
+        console.error('PayPal payment error:', error.message);
+        res.status(500).send('Error: ' + error.message);
+    }
+});
+
+  
+
+router.get('/cancel-order', (req, res) => {
+    res.redirect('/');
+});
 
 
 
