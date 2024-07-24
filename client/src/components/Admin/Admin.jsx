@@ -8,6 +8,7 @@ import axios from 'axios';
 import moment from 'moment';
 import '../../styles/Admin.css';
 import Header from './HeaderAdmin';
+import { VscTrash } from "react-icons/vsc";
 
 const Admin = () => {
     const [data, setData] = useState([]);
@@ -107,18 +108,27 @@ const Admin = () => {
                                 <tr>
                                     <th>Name</th>
                                     <th>Quantity</th>
+                                    <th className="pos-remove">Remove</th>
                                     <th>Price</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
                                     <td>Adobo</td>
-                                    <td>1</td>
+                                    <td id="quantity">
+                                <button className="pos-qty" id="add">+</button>
+                                <label id="pos-lbllQuantity">1</label>
+                                <button className="pos-qty" id="min">-</button></td>
+                                <td><button id="pos-remove"><VscTrash/></button></td>
                                     <td>P80</td>
                                 </tr>
                                 <tr>
                                     <td>Sinigang</td>
-                                    <td>3</td>
+                                    <td id="quantity">
+                                <button className="pos-qty" id="add">+</button>
+                                <label id="pos-lbllQuantity">1</label>
+                                <button className="pos-qty" id="min">-</button></td>
+                                <td><button id="pos-remove"><VscTrash/></button></td>
                                     <td>P180</td>
                                 </tr>
                             </tbody>
@@ -132,13 +142,16 @@ const Admin = () => {
                 </div>
 
                 <div className='items'>
-                    <div className='categories'>
-                        <button className=''>Savory Meals</button>
-                        <button className=''>Snacks</button>
-                        <button className=''>Deserts</button>
-                        <button className=''>Drinks</button>
+                <div className="pos-category">
+                        <div className="pos-btnCategory">
+                            <button className="pos-btnCat">Rice Meals</button>
+                            <button className="pos-btnCat">Pasta</button>
+                            <button className="pos-btnCat">Desserts</button>
+                            <button className="pos-btnCat">Snacks</button>
+                            <button className="pos-btnCat">Drinks</button>
+                        </div>
                     </div>
-
+                    
                     {show && (
                         <Alert variant='danger' onClose={() => setShow(false)} dismissible>
                             Deleted
@@ -146,39 +159,32 @@ const Admin = () => {
                     )}
 
                     <div className='title'>
-                        <h1 className='text-center mt-2'>Savory Meals</h1>
-                        <Button variant='primary' onClick={handleShow}>
+                        <h1 className='text-center mt-2'>MENU</h1>
+                        {/* <Button variant='primary' onClick={handleShow}>
                             Add Item
-                        </Button>
+                        </Button> */}
                     </div>
 
-                    <div className='card-container'>
+                    <div className='items1'>
                         {data.length > 0 ? (
                             data.map((el, i) => (
-                                <Card key={i} style={{ width: '22rem', height: '25rem' }} className='mb-3'>
-                                    <Card.Img
+                                <div key={i} className='item'>
+                                    <img
                                         variant='top'
                                         src={`/uploads/${el.img}`}
-                                        style={{ width: '100px', textAlign: 'center', margin: 'auto' }}
-                                        className='mt-2'
+                                        className="itm" alt="itm"
                                     />
-                                    <Card.Body className='text-center'>
-                                        <Card.Title>Name: {el.itemname}</Card.Title>
-                                        <Card.Text>Date Added: {moment(el.date).format('DD-MM-YYYY')}</Card.Text>
-                                        <Card.Text>Quantity: {el.quantity}</Card.Text>
-                                        <Card.Text>Price: ₱{el.price}</Card.Text>
-                                        <Button
-                                            variant='danger'
-                                            onClick={() => dltUser(el.id)}
-                                            className='col-lg-6 text-center'
-                                        >
-                                            Delete
-                                        </Button>
-                                        <Button variant='danger' className='col-lg-6 text-center'>
-                                            Add
-                                        </Button>
-                                    </Card.Body>
-                                </Card>
+                                    <div className='text-container'>
+                                        <h3>{el.itemname}</h3>
+                                        {/* <label>Date Added: {moment(el.date).format('DD-MM-YYYY')}</label>
+                                        <label>Quantity: {el.quantity}</label> */}
+                                        <label>₱{el.price}</label>
+                                        <div>
+                                            <button className="btnItem">Add</button>
+                                            <button onClick={() => dltUser(el.id)} className="btnItem">Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
                             ))
                         ) : (
                             <p>No items found</p>

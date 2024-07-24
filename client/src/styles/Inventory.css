@@ -1,0 +1,59 @@
+.inventory {
+    height: 400px;
+    width: 1000px;
+    background-color: white;
+    box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
+    margin: auto;
+    border-radius: 15px;
+    /* padding: 20px 0px 0px 30px; */
+    padding: 10px 0px 0px 40px;
+}
+
+#inventory {
+    text-align: center;
+    align-items: center;
+    margin: 20px 0px 30px 0px;
+}
+
+#table-inventory thead {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.256);
+    height: 40px;
+    font-size: 20px;
+}
+
+#table-inventory {
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+}
+
+.col1 {
+    width: 200px;
+}
+
+.col2 {
+    width: 100px;
+}
+
+.col3 {
+    width: 200px;
+}
+
+.col4 {
+    width: 200px;
+}
+
+.col5 {
+    width: 200px;
+}
+
+#inv-addproduct {
+    height: 50px;
+    width: 200px;
+    margin: 40px 40px 30px 1050px;
+    border-radius: 30px;
+    border: none;
+    background-color: #000000;
+    cursor: pointer;
+    color: rgb(255, 255, 255);
+}

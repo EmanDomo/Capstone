@@ -1,9 +1,19 @@
 .navbar {
 	width: 100%;
-	height: 75px;
-	background-color: #121619;
+	height: 80px;
+	background-color: #e78bb5;
 	display: flex;
 	flex-direction: row;
+  }
+  
+  .app-logo {
+	display: flex;
+	gap: 20px;
+  }
+  
+  .logo {
+	width: 30px;
+	height: 65px;
   }
   
   .navbar .leftSide {
@@ -11,11 +21,13 @@
 	height: 100%;
 	display: flex;
 	align-items: center;
-	padding-left: 150px;
+	padding-left: 100px;
   }
-  h2{
-	color: white;
+  
+  h2 {
+	color: rgb(0, 0, 0);
   }
+  
   .navbar .leftSide img {
 	width: 70px;
   }
@@ -28,10 +40,19 @@
 	justify-content: center;
   }
   
+  .rightSide .user {
+	margin-right: -35%;
+	margin-left: 15%;
+  }
+  
   .navbar a {
-	color: white;
+	color: rgb(0, 0, 0);
 	text-decoration: none;
 	margin: 20px;
+  }
+
+  .navbar a:focus, a:hover {
+	color: white;
   }
   
   .navbar .rightSide button {
@@ -48,6 +69,7 @@
   .navbar #open {
 	padding-left: 0px;
   }
+  
   .navbar #open img {
 	display: none;
   }
@@ -69,6 +91,7 @@
 	width: 70px;
 	margin: 5px;
   }
+  
   @media only screen and (max-width: 900px) {
 	.navbar .rightSide a {
 	  width: 70px;
@@ -102,4 +125,43 @@
 	  display: none;
 	}
   }
+  
+  /* Style for Active Links */
+  .navbar .activeLink {
+	border-bottom: 2px solid white;
+  }
+  
+  #user-header {
+	margin-top: 15px;
+  }
+
+  .cartTableRow {
+	display: flex;
+	align-items: center;
+	border-bottom: 1px solid #ddd;
+  }
+  
+  .cell {
+	flex: 1;
+	padding: 8px;
+	text-align: left;
+  }
+  
+  .actions {
+	display: flex;
+	gap: 5px; /* Space between buttons */
+  }
+  
+  .cartTableHeader {
+	display: flex;
+	font-weight: bold;
+	border-bottom: 1px solid #ddd;
+  }
+  
+  .headerCell {
+	flex: 1;
+	padding: 8px;
+	text-align: left;
+  }
+  
   

@@ -15,8 +15,8 @@ async function createPaymongoLink(amount, description, remarks) {
         data: {
           attributes: {
             amount: amount * 100, // PayMongo expects the amount in cents
-            description: description,
-            remarks: remarks
+            description: "You are making a payment to Saint Jerome Integrated School of Cabuyao .",
+            remarks: "Payment"
           }
         }
       }
@@ -34,3 +34,4 @@ async function createPaymongoLink(amount, description, remarks) {
 module.exports = {
   createPaymongoLink
 };
+

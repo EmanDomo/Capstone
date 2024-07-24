@@ -7,9 +7,10 @@ const jwt = require('jsonwebtoken');
 const secretKey = '123'; // You should use an environment variable to store your secret key securely.
 
 const paypal = require('./paypal');
-const { createPaymongoLink } = require('./paymongo');
+const { createPaymongoLink } = require('./paymongo'); // Correct import
+const { createPaymongoSource } = require('./gcash'); // Correct import
 
-router.post('/pay-gcash', async (req, res) => {
+router.post('/payment', async (req, res) => {
     const { totalAmount } = req.body;
 
     if (!totalAmount) {
@@ -32,6 +33,26 @@ router.post('/pay-gcash', async (req, res) => {
     }
 });
 
+router.post('/pay-gcash', async (req, res) => {
+    const { totalAmount } = req.body;
+
+    if (!totalAmount) {
+        return res.status(400).send('Total amount is required');
+    }
+
+    const parsedTotalAmount = parseFloat(totalAmount);
+    if (isNaN(parsedTotalAmount)) {
+        return res.status(400).send('Total amount must be a number');
+    }
+
+    try {
+        const paymongoSource = await createPaymongoSource(parsedTotalAmount, 'GCash Payment', 'GCash payment description');
+        return res.json({ url: paymongoSource.data.attributes.redirect.checkout_url });
+    } catch (error) {
+        console.error('Error creating PayMongo GCash link:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -351,6 +372,43 @@ router.post('/remove-cart-item', authenticateToken, authorizeRoles('customer'), 
       }
     );
   });
+
+  // Update cart item quantity
+router.post('/update-cart', authenticateToken, authorizeRoles('customer'), (req, res) => {
+    const userId = req.user.userId;
+    const { itemId, change } = req.body;
+
+    console.log(`Attempting to update item with id: ${itemId} by ${change} for user: ${userId}`);
+
+    conn.query(
+      'UPDATE tbl_cart SET quantity = quantity + ? WHERE userId = ? AND id = ?',
+      [change, userId, itemId],
+      (error, results) => {
+        if (error) {
+          console.error('Error executing query:', error);
+          return res.status(500).json({ status: 'error', message: 'Internal server error' });
+        }
+
+        // Optional: Ensure the updated quantity is valid (e.g., no negative quantities)
+        if (change < 0) {
+          conn.query(
+            'DELETE FROM tbl_cart WHERE userId = ? AND id = ? AND quantity <= 0',
+            [userId, itemId],
+            (error, results) => {
+              if (error) {
+                console.error('Error executing query:', error);
+                return res.status(500).json({ status: 'error', message: 'Internal server error' });
+              }
+              res.status(200).json({ status: 'success', message: 'Item quantity updated successfully' });
+            }
+          );
+        } else {
+          res.status(200).json({ status: 'success', message: 'Item quantity updated successfully' });
+        }
+      }
+    );
+});
+
   
 
 // router.get("/getsearch", (req, res) => {
@@ -426,7 +484,92 @@ router.get('/cancel-order', (req, res) => {
 });
 
 
+router.post('/place-order', authenticateToken, (req, res) => {
+    const userId = req.user.userId;
 
+    // Fetch cart items
+    conn.query('SELECT * FROM tbl_cart WHERE userId = ?', [userId], (error, cartItems) => {
+        if (error) {
+            console.error('Error fetching cart items:', error);
+            return res.status(500).json({ success: false, error: 'Failed to fetch cart items' });
+        }
 
+        if (cartItems.length === 0) {
+            return res.status(400).json({ success: false, error: 'Cart is empty' });
+        }
+
+        // Retrieve the highest current order number
+        conn.query('SELECT MAX(orderNumber) AS maxOrderNumber FROM tbl_orders', (err, results) => {
+            if (err) {
+                console.error('Error fetching max order number:', err);
+                return res.status(500).json({ success: false, error: 'Failed to fetch max order number' });
+            }
+
+            const maxOrderNumber = results[0].maxOrderNumber || 0;
+            const newOrderNumber = maxOrderNumber + 1;
+
+            // Insert cart items into tbl_orders
+            const itemCount = cartItems.length;
+            let processedItems = 0;
+
+            cartItems.forEach(item => {
+                conn.query('INSERT INTO tbl_orders (orderNumber, userId, id, quantity, price) VALUES (?, ?, ?, ?, ?)', [
+                    newOrderNumber,
+                    userId,
+                    item.id,
+                    item.quantity,
+                    item.price,
+                ], (err) => {
+                    if (err) {
+                        console.error('Error inserting order item:', err);
+                        return res.status(500).json({ success: false, error: 'Failed to place order' });
+                    }
+                    processedItems++;
+                    if (processedItems === itemCount) {
+                        // All items processed, now empty the cart
+                        conn.query('DELETE FROM tbl_cart WHERE userId = ?', [userId], (err) => {
+                            if (err) {
+                                console.error('Error emptying cart:', err);
+                                return res.status(500).json({ success: false, error: 'Failed to empty cart' });
+                            }
+                            res.json({ success: true, orderNumber: newOrderNumber });
+                        });
+                    }
+                });
+            });
+        });
+    });
+});
+
+router.get('/orders', (req, res) => {
+    console.log('Fetching orders...');
+    const query = `
+        SELECT 
+            tbl_orders.orderNumber, 
+            tbl_orders.orderId, 
+            tbl_orders.userId, 
+            tbl_orders.id, 
+            tbl_orders.quantity, 
+            tbl_orders.price, 
+            tbl_users.username, 
+            tbl_items.itemname
+        FROM 
+            tbl_orders
+        JOIN 
+            tbl_users ON tbl_orders.userId = tbl_users.userId
+        JOIN 
+            tbl_items ON tbl_orders.id = tbl_items.id
+        ORDER BY 
+            tbl_orders.orderNumber, tbl_orders.orderId
+    `;
+    conn.query(query, (error, rows) => {
+        if (error) {
+            console.error('Error fetching orders:', error);
+            return res.status(500).json({ message: 'Error fetching orders', error });
+        }
+        console.log('Orders fetched:', rows);
+        res.json(rows);
+    });
+});
 
 module.exports = router;

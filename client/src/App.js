@@ -7,6 +7,10 @@ import UserLogin from './components/Customer/UserLogin';
 import Checkout from './components/Customer/Checkout';
 import Register from './components/Customer/Register';
 import CompleteOrder from './components/Customer/CompleteOrder';
+import Inventory from './components/Admin/Inventory';
+import Success from './components/Customer/Success';
+import Failed from './components/Customer/Failed';
+import Orders from './components/Admin/Orders';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Routes, Route } from "react-router-dom";
 
@@ -21,8 +25,11 @@ function App() {
         <Route path='/userlogin' element={<UserLogin />} />
         <Route path='/checkout' element={<Checkout />} />
         <Route path='/register' element={<Register />} />
-
+        <Route path='/inventory' element={<Inventory />} />
         <Route path="/complete-order" element={<CompleteOrder />} />
+        <Route path='/success' element={<Success />} />
+        <Route path='/failed' element={<Failed />} />
+        <Route path='/orders' element={<Orders />} />
       </Routes>
     </>
   );

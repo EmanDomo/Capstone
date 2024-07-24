@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import BannerImage from '../../Assets/home.jpg';
+import { FaRegUserCircle } from "react-icons/fa";
+import Logo from "../../Assets/logo.png";
 import '../../styles/Homepage.css';
 
 const Homepage = () => {
@@ -7,13 +8,11 @@ const Homepage = () => {
 
     return (
         <div>
-            <header>
-                {/* Add any header content if necessary */}
-            </header>
-            <div className="home" style={{ backgroundImage: `url(${BannerImage})` }}>
-                <div className="headerContainer">
-                    <button onClick={() => navigate('/userlogin')} className="order-now">ORDER NOW</button>
-                </div>
+            <div className="banner">
+                <FaRegUserCircle id="home-admin" onClick={() => navigate('/loginform')}/>
+                <img src={Logo} className="logo1" alt="logo" />
+                <h1>Saint Jerome Integrated School of Cabuyao Canteen Ordering System</h1>
+                <button onClick={() => navigate('/userlogin')}  id="btn">ORDER NOW!</button>
             </div>
         </div>
     );
