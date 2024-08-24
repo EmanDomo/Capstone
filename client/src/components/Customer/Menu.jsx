@@ -171,8 +171,6 @@ const Menu = () => {
       <header>
         <Header />
       </header>
-      {/* <h3>Welcome Back, {userName}!</h3> */}
-      {/* <Button onClick={handleCartShow}>View Cart</Button> Button to show cart */}
       <h1 id='menu-title'>MENU</h1>
       <div className='card-container'>
         {data.length > 0 &&

@@ -4,7 +4,7 @@ const multer = require("multer");
 const moment = require("moment");
 const router = new express.Router();
 const jwt = require('jsonwebtoken');
-const secretKey = '123'; // You should use an environment variable to store your secret key securely.
+const secretKey = '123';
 
 const paypal = require('./paypal');
 const { createPaymongoLink } = require('./paymongo'); // Correct import
@@ -172,49 +172,158 @@ var upload = multer({
 
 // addItem
 router.post("/addItem", upload.single("photo"), (req, res) => {
-    const { fname, quantity, price } = req.body;
+    const { fname, price, category, ingredients } = req.body;
     const { filename } = req.file;
 
-    if (!fname || !filename || !quantity || !price) {
+    console.log('Received ingredients:', ingredients);
+
+    if (!fname || !filename || !price || !category || !ingredients || ingredients.length === 0) {
         res.status(422).json({ status: 422, message: "Fill all the details" });
+        return;
     }
 
     try {
+        let parsedIngredients;
+        if (typeof ingredients === "string") {
+            try {
+                parsedIngredients = JSON.parse(ingredients);
+            } catch (error) {
+                return res.status(422).json({ status: 422, message: "Invalid ingredients format" });
+            }
+        } else {
+            parsedIngredients = ingredients;
+        }
+
+        console.log('Parsed ingredients:', parsedIngredients);
+
+        if (!Array.isArray(parsedIngredients)) {
+            return res.status(422).json({ status: 422, message: "Ingredients should be an array" });
+        }
+
+        // Debugging: Check if stock_id is present
+        parsedIngredients.forEach((ingredient, index) => {
+            console.log(`Ingredient ${index}:`, ingredient);
+            if (ingredient.stock_id === undefined) {
+                console.log(`Error: stock_id is undefined for ingredient ${index}`);
+            }
+        });
+
+
         let date = moment(new Date()).format("YYYY-MM-DD hh:mm:ss");
 
-        conn.query("INSERT INTO tbl_items SET ?", { itemname: fname, img: filename, date: date, quantity: quantity, price: price }, (err, result) => {
-            if (err) {
-                console.log("error");
-            } else {
-                console.log("data added");
-                res.status(201).json({ status: 201, data: req.body });
+        conn.query(
+            "INSERT INTO tbl_items SET ?",
+            { itemname: fname, img: filename, date: date, price: price, category: category },
+            (err, result) => {
+                if (err) {
+                    console.log("error:", err);
+                    res.status(500).json({ status: 500, message: "Database insertion error" });
+                    return;
+                }
+
+                const itemId = result.insertId;
+                console.log('Item ID:', itemId);
+
+                let insertIngredientsQuery = "INSERT INTO tbl_item_ingredients (item_id, stock_id, quantity_required) VALUES ?";
+                let ingredientValues = parsedIngredients.map(ingredient => [itemId, ingredient.stock_id, ingredient.quantity]);
+
+
+                console.log('Ingredients to insert:', ingredientValues);
+
+                conn.query(insertIngredientsQuery, [ingredientValues], (err, result) => {
+                    if (err) {
+                        console.log("error:", err);
+                        res.status(500).json({ status: 500, message: "Error adding ingredients" });
+                    } else {
+                        console.log("Item and ingredients added");
+                        res.status(201).json({ status: 201, data: req.body });
+                    }
+                });
             }
-        })
+        );
     } catch (error) {
         res.status(422).json({ status: 422, error });
     }
 });
 
-// router.post("/category", (req, res) => {
-//     const { category } = req.body;
-//     console.log(req.body)
 
-//     if (!category) {
-//         return res.status(422).json({ status: 422, message: "Fill all the details" });
-//     }
 
-//     try {
-//         conn.query("INSERT INTO tbl_category SET ?", {category_name: category}, (err, result) => {
-//             if (err) {
-//                 console.log("error:", err);
-//             }
-//             console.log("data added");
-//             return res.status(201).json({ status: 201, data: req.body });
-//         });
-//     } catch (error) {
-//         res.status(422).json({ status: 422, error });
-//     }
-// });
+
+
+router.post("/category", (req, res) => {
+    const { category } = req.body;
+    console.log(req.body);
+
+    if (!category) {
+        return res.status(422).json({ status: 422, message: "Fill all the details" });
+    }
+
+    try {
+        conn.query("INSERT INTO tbl_category SET ?", { category_name: category }, (err, result) => {
+            if (err) {
+                console.log("error:", err);
+                return res.status(500).json({ status: 500, error: "Database insertion error" });
+            }
+            console.log("data added");
+            return res.status(201).json({ status: 201, data: req.body });
+        });
+    } catch (error) {
+        console.log("error:", error);
+        res.status(500).json({ status: 500, error: "Server error" });
+    }
+});
+
+// Route to fetch all categories
+router.get("/categories", (req, res) => {
+    try {
+        conn.query("SELECT * FROM tbl_category", (err, results) => {
+            if (err) {
+                console.log("error:", err);
+                return res.status(500).json({ status: 500, error: "Database query error" });
+            }
+            return res.status(200).json({ status: 200, data: results });
+        });
+    } catch (error) {
+        console.log("error:", error);
+        res.status(500).json({ status: 500, error: "Server error" });
+    }
+});
+
+router.post('/complete-order', authenticateToken, authorizeRoles('admin'), (req, res) => {
+    const { orderId, userId, totalAmount } = req.body;
+
+    console.log(`Received orderId: ${orderId}, userId: ${userId}, totalAmount: ${totalAmount}`);
+
+    conn.query(
+        'INSERT INTO tbl_sales (orderId, userId, totalAmount, saleDate) VALUES (?, ?, ?, NOW())',
+        [orderId, userId, totalAmount],
+        (err, result) => {
+            if (err) {
+                console.error('Error inserting sales record:', err);
+                return res.status(500).json({ success: false, error: 'Failed to insert sales record' });
+            }
+
+            console.log('Inserted into tbl_sales:', result);
+
+            conn.query(
+                'UPDATE tbl_orders SET status = ? WHERE orderId = ?',
+                ['completed', orderId],
+                (err, result) => {
+                    if (err) {
+                        console.error('Error updating order status:', err);
+                        return res.status(500).json({ success: false, error: 'Failed to update order status' });
+                    }
+
+                    console.log('Updated order status to completed:', result);
+
+                    return res.status(200).json({ success: true, message: 'Order completed and stored in sales' });
+                }
+            );
+        }
+    );
+});
+
+
 
 router.delete("/:id", authenticateToken, authorizeRoles('admin'), (req, res) => {
     const { id } = req.params;
@@ -246,6 +355,71 @@ router.get("/getdata", authenticateToken, authorizeRoles('admin', 'customer'), (
         res.status(422).json({ status: 422, error });
     }
 });
+
+router.get("/getinventorydata", authenticateToken, authorizeRoles('admin', 'customer'), (req, res) => {
+    try {
+        const sqlQuery = `
+            SELECT 
+    i.itemname AS itemname, 
+    i.category AS category,
+    i.price AS price,
+    s.stock_item_name AS stock_item_name, 
+    ii.quantity_required AS quantity_required, 
+    s.unit AS unit
+FROM 
+    tbl_item_ingredients ii
+JOIN 
+    tbl_items i ON ii.item_id = i.id
+JOIN 
+    tbl_stocks s ON ii.stock_id = s.stockId;
+
+        `;
+
+        conn.query(sqlQuery, (err, result) => {
+            if (err) {
+                console.error("Error fetching data: ", err);
+                res.status(500).json({ status: 500, message: "Internal Server Error" });
+            } else {
+                console.log("Data fetched successfully");
+                res.status(200).json({ status: 200, data: result });
+            }
+        });
+    } catch (error) {
+        console.error("Unexpected error: ", error);
+        res.status(422).json({ status: 422, error });
+    }
+});
+
+router.post('/addStock', authenticateToken, authorizeRoles('admin'), (req, res) => {
+    const { stockName, stockQuantity, stockUnit } = req.body;
+
+    if (!stockName || !stockQuantity || !stockUnit) {
+        return res.status(400).json({ error: 'Please provide all required fields.' });
+    }
+
+    const query = 'INSERT INTO tbl_stocks (stock_item_name, stock_quantity, unit) VALUES (?, ?, ?)';
+    conn.query(query, [stockName, stockQuantity, stockUnit], (err, results) => {
+        if (err) {
+            console.error('Error adding stock item:', err);
+            return res.status(500).json({ error: 'Internal server error.' });
+        }
+        res.status(201).json({ status: 'success', message: 'Stock item added successfully.' });
+    });
+});
+
+// Route to get stock items
+router.get('/getstock', authenticateToken, authorizeRoles('admin'), (req, res) => {
+    const query = 'SELECT * FROM tbl_stocks';
+    conn.query(query, (err, results) => {
+        if (err) {
+            console.error('Error fetching stock data:', err);
+            return res.status(500).json({ error: 'Internal server error.' });
+        }
+        res.status(200).json({ status: 'success', data: results });
+    });
+});
+
+
 
 //add to cart, customer role
 router.post('/add-to-cart', authenticateToken, authorizeRoles('customer'), (req, res) => {
@@ -305,7 +479,7 @@ router.get('/cart', authenticateToken, authorizeRoles('customer'), (req, res) =>
     const userId = req.user.userId;
 
     conn.query(
-        'SELECT tbl_items.itemname, tbl_cart.quantity, tbl_cart.price FROM tbl_cart JOIN tbl_items ON tbl_cart.id = tbl_items.id WHERE tbl_cart.userId = ?',
+        'SELECT tbl_items.itemname, tbl_cart.id AS itemId, tbl_cart.quantity, tbl_cart.price FROM tbl_cart JOIN tbl_items ON tbl_cart.id = tbl_items.id WHERE tbl_cart.userId = ?;',
         [userId],
         (error, results) => {
             if (error) {
@@ -318,98 +492,86 @@ router.get('/cart', authenticateToken, authorizeRoles('customer'), (req, res) =>
     );
 });
 
-router.post('/update-cart', authenticateToken, authorizeRoles('customer'), (req, res) => {
+router.post('/remove-cart-item', authenticateToken, authorizeRoles('customer'), (req, res) => {
     const userId = req.user.userId;
-    const { itemId, change } = req.body;
+    const { itemId } = req.body;
+
+    console.log(`Attempting to remove item with id: ${itemId} for user: ${userId}`);
 
     conn.query(
-        'UPDATE tbl_cart SET quantity = quantity + ? WHERE userId = ? AND id = ?',
-        [change, userId, itemId],
+        'SELECT * FROM tbl_cart WHERE userId = ? AND id = ?',
+        [userId, itemId],
         (error, results) => {
             if (error) {
-                console.error(error);
-                res.status(500).json({ status: 'error', message: 'Internal server error' });
-            } else {
-                res.status(200).json({ status: 'success', message: 'Cart updated' });
+                console.error('Error executing query:', error);
+                return res.status(500).json({ status: 'error', message: 'Internal server error' });
             }
+
+            if (results.length === 0) {
+                console.warn('Item not found in cart.');
+                return res.status(404).json({ status: 'error', message: 'Item not found in cart' });
+            }
+
+            conn.query(
+                'DELETE FROM tbl_cart WHERE userId = ? AND id = ?',
+                [userId, itemId],
+                (error, results) => {
+                    if (error) {
+                        console.error('Error executing query:', error);
+                        return res.status(500).json({ status: 'error', message: 'Internal server error' });
+                    }
+
+                    console.log('Item successfully deleted from cart.');
+                    res.status(200).json({ status: 'success', message: 'Item removed from cart' });
+                }
+            );
         }
     );
 });
 
-router.post('/remove-cart-item', authenticateToken, authorizeRoles('customer'), (req, res) => {
-    const userId = req.user.userId;
-    const { itemId } = req.body;
-  
-    console.log(`Attempting to remove item with id: ${itemId} for user: ${userId}`);
-  
-    conn.query(
-      'SELECT * FROM tbl_cart WHERE userId = ? AND id = ?',
-      [userId, itemId],
-      (error, results) => {
-        if (error) {
-          console.error('Error executing query:', error);
-          return res.status(500).json({ status: 'error', message: 'Internal server error' });
-        }
-  
-        if (results.length === 0) {
-          console.warn('Item not found in cart.');
-          return res.status(404).json({ status: 'error', message: 'Item not found in cart' });
-        }
-  
-        conn.query(
-          'DELETE FROM tbl_cart WHERE userId = ? AND id = ?',
-          [userId, itemId],
-          (error, results) => {
-            if (error) {
-              console.error('Error executing query:', error);
-              return res.status(500).json({ status: 'error', message: 'Internal server error' });
-            }
-  
-            console.log('Item successfully deleted from cart.');
-            res.status(200).json({ status: 'success', message: 'Item removed from cart' });
-          }
-        );
-      }
-    );
-  });
-
-  // Update cart item quantity
+// Update cart item quantity
 router.post('/update-cart', authenticateToken, authorizeRoles('customer'), (req, res) => {
     const userId = req.user.userId;
     const { itemId, change } = req.body;
 
     console.log(`Attempting to update item with id: ${itemId} by ${change} for user: ${userId}`);
 
-    conn.query(
-      'UPDATE tbl_cart SET quantity = quantity + ? WHERE userId = ? AND id = ?',
-      [change, userId, itemId],
-      (error, results) => {
-        if (error) {
-          console.error('Error executing query:', error);
-          return res.status(500).json({ status: 'error', message: 'Internal server error' });
-        }
+    if (!itemId) {
+        return res.status(400).json({ status: 'error', message: 'Item ID is required' });
+    }
 
-        // Optional: Ensure the updated quantity is valid (e.g., no negative quantities)
-        if (change < 0) {
-          conn.query(
-            'DELETE FROM tbl_cart WHERE userId = ? AND id = ? AND quantity <= 0',
-            [userId, itemId],
-            (error, results) => {
-              if (error) {
+    conn.query(
+        'UPDATE tbl_cart SET quantity = quantity + ? WHERE userId = ? AND id = ?',
+        [change, userId, itemId],
+        (error, results) => {
+            if (error) {
                 console.error('Error executing query:', error);
                 return res.status(500).json({ status: 'error', message: 'Internal server error' });
-              }
-              res.status(200).json({ status: 'success', message: 'Item quantity updated successfully' });
             }
-          );
-        } else {
-          res.status(200).json({ status: 'success', message: 'Item quantity updated successfully' });
+
+            // Optional: Ensure the updated quantity is valid (e.g., no negative quantities)
+            if (change < 0) {
+                conn.query(
+                    'DELETE FROM tbl_cart WHERE userId = ? AND id = ? AND quantity <= 0',
+                    [userId, itemId],
+                    (error, results) => {
+                        if (error) {
+                            console.error('Error executing query:', error);
+                            return res.status(500).json({ status: 'error', message: 'Internal server error' });
+                        }
+                        res.status(200).json({ status: 'success', message: 'Item quantity updated successfully' });
+                    }
+                );
+            } else {
+                res.status(200).json({ status: 'success', message: 'Item quantity updated successfully' });
+            }
         }
-      }
     );
 });
 
-  
+
+
+
 
 // router.get("/getsearch", (req, res) => {
 //     const { search } = req.query;
@@ -477,17 +639,18 @@ router.get('/complete-order', async (req, res) => {
     }
 });
 
-  
+
 
 router.get('/cancel-order', (req, res) => {
     res.redirect('/');
 });
 
 
-router.post('/place-order', authenticateToken, (req, res) => {
+router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (req, res) => {
     const userId = req.user.userId;
+    const qrCodeImage = req.file ? req.file.filename : null; // Get the uploaded QR code image filename
 
-    // Fetch cart items
+    // Fetch cart items for the user
     conn.query('SELECT * FROM tbl_cart WHERE userId = ?', [userId], (error, cartItems) => {
         if (error) {
             console.error('Error fetching cart items:', error);
@@ -508,22 +671,29 @@ router.post('/place-order', authenticateToken, (req, res) => {
             const maxOrderNumber = results[0].maxOrderNumber || 0;
             const newOrderNumber = maxOrderNumber + 1;
 
-            // Insert cart items into tbl_orders
+            // Insert each cart item into tbl_orders with the new order number
             const itemCount = cartItems.length;
             let processedItems = 0;
 
             cartItems.forEach(item => {
-                conn.query('INSERT INTO tbl_orders (orderNumber, userId, id, quantity, price) VALUES (?, ?, ?, ?, ?)', [
-                    newOrderNumber,
+                const query = `INSERT INTO tbl_orders 
+                               (userId, id, quantity, price, orderNumber, status, qrCodeImage) 
+                               VALUES (?, ?, ?, ?, ?, 'pending', ?)`;
+                const values = [
                     userId,
                     item.id,
                     item.quantity,
                     item.price,
-                ], (err) => {
+                    newOrderNumber,
+                    qrCodeImage
+                ];
+
+                conn.query(query, values, (err) => {
                     if (err) {
                         console.error('Error inserting order item:', err);
                         return res.status(500).json({ success: false, error: 'Failed to place order' });
                     }
+
                     processedItems++;
                     if (processedItems === itemCount) {
                         // All items processed, now empty the cart
@@ -539,6 +709,32 @@ router.post('/place-order', authenticateToken, (req, res) => {
             });
         });
     });
+});
+
+// Route to upload QR code image and insert order
+router.post('/upload-qr-code', upload.single('qrCodeImage'), async (req, res) => {
+    const { userId, id, quantity, price, orderNumber } = req.body;
+    const qrCodeImage = req.file ? req.file.filename : null;
+
+    // Check for undefined values
+    if (!userId || !id || !quantity || !price || !orderNumber || !qrCodeImage) {
+        return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    try {
+        // Insert new order with 'pending' status
+        const query = `INSERT INTO tbl_orders (userId, id, quantity, price, orderNumber, status, qrCodeImage)
+                       VALUES (?, ?, ?, ?, ?, 'pending', ?)`;
+        const values = [userId, id, quantity, price, orderNumber, qrCodeImage];
+
+        // Execute the query
+        await conn.execute(query, values);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error inserting order:', error);
+        res.status(500).json({ success: false, error: 'Failed to complete order' });
+    }
 });
 
 router.get('/orders', (req, res) => {
@@ -559,6 +755,8 @@ router.get('/orders', (req, res) => {
             tbl_users ON tbl_orders.userId = tbl_users.userId
         JOIN 
             tbl_items ON tbl_orders.id = tbl_items.id
+        WHERE 
+            tbl_orders.status != 'completed'
         ORDER BY 
             tbl_orders.orderNumber, tbl_orders.orderId
     `;
@@ -571,5 +769,74 @@ router.get('/orders', (req, res) => {
         res.json(rows);
     });
 });
+
+router.get('/api/sales/today', authenticateToken, authorizeRoles('admin'), (req, res) => {
+    const query = `
+        SELECT * FROM tbl_sales 
+        WHERE DATE(saleDate) = CURDATE()
+    `;
+    conn.query(query, (err, results) => {
+        if (err) {
+            console.error('Error fetching today\'s sales:', err);
+            return res.status(500).json({ success: false, error: 'Internal server error' });
+        }
+        res.status(200).json(results);
+    });
+});
+
+// Route to get sales for this week
+router.get('/api/sales/week', authenticateToken, authorizeRoles('admin'), (req, res) => {
+    const query = `
+        SELECT * FROM tbl_sales 
+        WHERE YEARWEEK(saleDate, 1) = YEARWEEK(CURDATE(), 1)
+    `;
+    conn.query(query, (err, results) => {
+        if (err) {
+            console.error('Error fetching this week\'s sales:', err);
+            return res.status(500).json({ success: false, error: 'Internal server error' });
+        }
+        res.status(200).json(results);
+    });
+});
+
+// Route to get sales for this month
+router.get('/api/sales/month', authenticateToken, authorizeRoles('admin'), (req, res) => {
+    const query = `
+        SELECT * FROM tbl_sales 
+        WHERE YEAR(saleDate) = YEAR(CURDATE()) AND MONTH(saleDate) = MONTH(CURDATE())
+    `;
+    conn.query(query, (err, results) => {
+        if (err) {
+            console.error('Error fetching this month\'s sales:', err);
+            return res.status(500).json({ success: false, error: 'Internal server error' });
+        }
+        res.status(200).json(results);
+    });
+});
+
+// Fetch orders for the authenticated user
+router.get('/my-orders', authenticateToken, authorizeRoles('customer'), (req, res) => {
+    const userId = req.user.userId;
+
+    const query = `
+        SELECT o.orderId, i.itemname, o.quantity, o.price, o.orderNumber, o.status 
+        FROM tbl_orders o
+        JOIN tbl_items i ON o.id = i.id
+        WHERE o.userId = ?
+        ORDER BY o.orderId DESC
+    `;
+
+    conn.query(query, [userId], (err, results) => {
+        if (err) {
+            console.error('Error fetching orders:', err);
+            return res.status(500).json({ success: false, error: 'Failed to fetch orders' });
+        }
+
+        res.status(200).json({ success: true, orders: results });
+    });
+});
+
+
+
 
 module.exports = router;

@@ -22,6 +22,7 @@ function AdminHeader() {
           <Link to="/"> POS </Link>
           <Link to="/Menu"> Inventory </Link>
           <Link to="/Order"> Orders </Link>
+          <Link to="/sales"> Sales </Link>
         </div>
       </div>
       <div className="rightSide">

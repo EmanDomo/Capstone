@@ -52,7 +52,9 @@ h2 {
   margin-top: 20px;
 }
 
-.paypal-button, .gcash-button, .other-payment-button {
+.paypal-button,
+.gcash-button,
+.other-payment-button {
   padding: 15px 40px;
   font-size: 16px;
   cursor: pointer;
@@ -85,4 +87,16 @@ h2 {
 
 .other-payment-button:hover {
   background-color: #e65c50;
+}
+
+.qr-image {
+  width: 100%;
+  height: auto;
+  max-width: 400px;
+  display: block;
+  margin: 0 auto;
+}
+
+.qr-modal-content {
+  text-align: center;
 }

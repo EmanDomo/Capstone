@@ -12,6 +12,8 @@ import { VscTrash } from "react-icons/vsc";
 
 const Admin = () => {
     const [data, setData] = useState([]);
+    const [filteredData, setFilteredData] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [show, setShow] = useState(false);
     const [modalShow, setModalShow] = useState(false);
 
@@ -36,13 +38,26 @@ const Admin = () => {
             });
 
             if (res.data.status === 201) {
-                console.log('Data fetched successfully');
                 setData(res.data.data);
+                setFilteredData(res.data.data);
             } else {
                 console.log('Error fetching data');
             }
         } catch (error) {
             console.error('Error fetching data:', error);
+        }
+    };
+
+    const getCategories = async () => {
+        try {
+            const res = await axios.get('/categories');
+            if (res.data.status === 200) {
+                setCategories(res.data.data);
+            } else {
+                console.log('Error fetching categories');
+            }
+        } catch (error) {
+            console.error('Error fetching categories:', error);
         }
     };
 
@@ -92,8 +107,18 @@ const Admin = () => {
         }
     }
 
+    const handleCategoryClick = (category) => {
+        const filteredItems = data.filter(item => item.category === category);
+        setFilteredData(filteredItems);
+    };
+
+    const handleShowAll = () => {
+        setFilteredData(data);
+    };
+
     useEffect(() => {
         getUserData();
+        getCategories();
     }, []);
 
     return (
@@ -142,16 +167,17 @@ const Admin = () => {
                 </div>
 
                 <div className='items'>
-                <div className="pos-category">
+                    <div className="pos-category">
                         <div className="pos-btnCategory">
-                            <button className="pos-btnCat">Rice Meals</button>
-                            <button className="pos-btnCat">Pasta</button>
-                            <button className="pos-btnCat">Desserts</button>
-                            <button className="pos-btnCat">Snacks</button>
-                            <button className="pos-btnCat">Drinks</button>
+                            {categories.map((cat, i) => (
+                                <button key={i} className="pos-btnCat" onClick={() => handleCategoryClick(cat.category_name)}>
+                                    {cat.category_name}
+                                </button>
+                            ))}
+                            <button className="pos-btnCat" onClick={handleShowAll}>Show All</button>
                         </div>
                     </div>
-                    
+
                     {show && (
                         <Alert variant='danger' onClose={() => setShow(false)} dismissible>
                             Deleted
@@ -160,14 +186,11 @@ const Admin = () => {
 
                     <div className='title'>
                         <h1 className='text-center mt-2'>MENU</h1>
-                        {/* <Button variant='primary' onClick={handleShow}>
-                            Add Item
-                        </Button> */}
                     </div>
 
                     <div className='items1'>
-                        {data.length > 0 ? (
-                            data.map((el, i) => (
+                        {filteredData.length > 0 ? (
+                            filteredData.map((el, i) => (
                                 <div key={i} className='item'>
                                     <img
                                         variant='top'
@@ -176,8 +199,6 @@ const Admin = () => {
                                     />
                                     <div className='text-container'>
                                         <h3>{el.itemname}</h3>
-                                        {/* <label>Date Added: {moment(el.date).format('DD-MM-YYYY')}</label>
-                                        <label>Quantity: {el.quantity}</label> */}
                                         <label>₱{el.price}</label>
                                         <div>
                                             <button className="btnItem">Add</button>
@@ -193,56 +214,6 @@ const Admin = () => {
                 </div>
             </div>
 
-            <Modal show={modalShow} onHide={handleClose}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Add New Item</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form>
-                        <Form.Group className="mb-3" controlId="formBasicEmail">
-                            <Form.Label>Name</Form.Label>
-                            <Form.Control
-                                type="text"
-                                name='fname'
-                                value={fname}
-                                onChange={(e) => setFName(e.target.value)}
-                            />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3" controlId="formBasicEmail">
-                            <Form.Label>Quantity</Form.Label>
-                            <Form.Control
-                                type="text"
-                                name='quantity'
-                                value={quantity}
-                                onChange={(e) => setQuantity(e.target.value)}
-                            />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3" controlId="formBasicEmail">
-                            <Form.Label>Price</Form.Label>
-                            <Form.Control
-                                type="text"
-                                name='price'
-                                value={price}
-                                onChange={(e) => setItemPrice(e.target.value)}
-                            />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3" controlId="formBasicPassword">
-                            <Form.Label>Select Your Image</Form.Label>
-                            <Form.Control
-                                type="file"
-                                name='photo'
-                                onChange={(e) => setFile(e.target.files[0])}
-                            />
-                        </Form.Group>
-                        <Button variant="primary" type="submit" onClick={addUserData}>
-                            Submit
-                        </Button>
-                    </Form>
-                </Modal.Body>
-            </Modal>
         </div>
     );
 };

@@ -8,21 +8,21 @@ import { HiOutlineUserCircle } from "react-icons/hi2";
 import { jwtDecode } from 'jwt-decode';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
-import { ListGroup } from 'react-bootstrap';
+import { ListGroup, Table, Container, Alert } from 'react-bootstrap';
 import axios from 'axios';
-
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-
+import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const [data, setData] = useState([]);
   const [userName, setUserName] = useState('');
   const [openLinks, setOpenLinks] = useState(false);
   const [cartItems, setCartItems] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [addedItemName, setAddedItemName] = useState('');
-  const [showCart, setShowCart] = useState(false); // State for cart visibility
-  const navigate = useNavigate(); // Define navigate using useNavigate
+  const [showCart, setShowCart] = useState(false);
+  const [showOrders, setShowOrders] = useState(false); // State for orders modal
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -45,7 +45,6 @@ const Header = () => {
       });
 
       if (res.data.status === 201) {
-        console.log('Data fetched successfully');
         setData(res.data.data);
       } else {
         console.log('Error fetching data');
@@ -75,19 +74,43 @@ const Header = () => {
     }
   };
 
-  const handleCloseModal = () => setShowModal(false);
+  const fetchOrders = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get('/my-orders', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        setOrders(response.data.orders);
+    } catch (error) {
+        setError(error.response ? error.response.data.message : error.message);
+    } finally {
+        setLoading(false);
+    }
+};
+
+fetchOrders();
 
   const handleCartShow = () => setShowCart(true);
   const handleCartClose = () => setShowCart(false);
 
+  const handleOrdersShow = () => {
+    setShowOrders(true);
+    setLoading(true);
+    setError(null);
+    fetchOrders();
+  };
+  const handleOrdersClose = () => setShowOrders(false);
+
   const handleIncreaseQuantity = async (itemId) => {
     await updateCartItemQuantity(itemId, 1);
   };
-  
+
   const handleDecreaseQuantity = async (itemId) => {
     await updateCartItemQuantity(itemId, -1);
   };
-  
+
   const handleRemoveItem = async (itemId) => {
     await removeCartItem(itemId);
   };
@@ -97,10 +120,7 @@ const Header = () => {
       const token = localStorage.getItem('token');
       await axios.post(
         '/update-cart',
-        {
-          itemId,
-          change,
-        },
+        { itemId, change },
         {
           headers: {
             'Content-Type': 'application/json',
@@ -119,9 +139,7 @@ const Header = () => {
       const token = localStorage.getItem('token');
       await axios.post(
         '/remove-cart-item',
-        {
-          itemId,
-        },
+        { itemId },
         {
           headers: {
             'Content-Type': 'application/json',
@@ -136,89 +154,115 @@ const Header = () => {
   };
 
   getCartData();
-  
+
   const handleCheckout = () => {
     navigate('/checkout', { state: { cartItems } });
   };
-  
-
 
   const toggleNavbar = () => {
     setOpenLinks(!openLinks);
   };
+
   return (
     <>
       <div className="navbar">
-      <div className="leftSide" id={openLinks ? "open" : "close"}>
-        <div className="app-logo">
+        <div className="leftSide" id={openLinks ? "open" : "close"}>
+          <div className="app-logo">
             <img src={Logo} className="logo" alt="logo" />
-            {/* <h2>Saint Jerome Integrated School of Cabuyao</h2> */}
             <h4 id="user-header">Welcome Back, {userName}!</h4>
+          </div>
+          <div className="hiddenLinks">
+            <Link to="/"> Home </Link>
+            <Link to="/Menu"> Menu </Link>
+            <Link to="/Order"> Order </Link>
+          </div>
         </div>
-        <div className="hiddenLinks">
-          <Link to="/"> Home </Link>
-          <Link to="/Menu"> Menu </Link>
-          <Link to="/Order"> Order </Link>
-        </div>
-      </div>
-      <div className="rightSide">
+        <div className="rightSide">
           <Link to="/"> Home </Link>
           <Link to="/Menu"> Menu </Link>
           <Link onClick={handleCartShow}><CiShoppingCart /></Link>
+          <Link onClick={handleOrdersShow}> My Orders </Link>
           <Link to="/Admin" className="user"><HiOutlineUserCircle /></Link>
-        <button onClick={toggleNavbar}>
-          <GiHamburgerMenu />
-        </button>
+          <button onClick={toggleNavbar}>
+            <GiHamburgerMenu />
+          </button>
+        </div>
       </div>
-    </div>
-    <Modal show={showCart} onHide={handleCartClose}>
+
+      <Modal show={showCart} onHide={handleCartClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Cart Items</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {cartItems.length > 0 ? (
+            <div className="cartTable">
+              <div className="cartTableHeader">
+                <div className="headerCell">Name</div>
+                <div className="headerCell">Quantity</div>
+                <div className="headerCell">Price</div>
+                <div className="headerCell">Actions</div>
+              </div>
+              {cartItems.map((item) => (
+                <div className="cartTableRow" key={item.itemId}>
+                  <div className="cell">{item.itemname}</div>
+                  <div className="cell">{item.quantity}</div>
+                  <div className="cell">₱{item.price}</div>
+                  <div className="cell actions">
+                    <Button variant='outline-primary' size='sm' onClick={() => handleIncreaseQuantity(item.itemId)}>+</Button>
+                    <Button variant='outline-primary' size='sm' onClick={() => handleDecreaseQuantity(item.itemId)}>-</Button>
+                    <Button variant='outline-danger' size='sm' onClick={() => handleRemoveItem(item.itemId)}>Remove</Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>Your cart is empty</p>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant='secondary' onClick={handleCartClose}>Close</Button>
+          <Button variant='primary' onClick={handleCheckout}>Checkout</Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showOrders} onHide={handleOrdersClose}>
   <Modal.Header closeButton>
-    <Modal.Title>Cart Items</Modal.Title>
+    <Modal.Title>My Orders</Modal.Title>
   </Modal.Header>
   <Modal.Body>
-    {cartItems.length > 0 ? (
-      <div className="cartTable">
+    {loading ? (
+      <p>Loading...</p>
+    ) : error ? (
+      <Alert variant="danger">{error}</Alert>
+    ) : orders.length === 0 ? (
+      <Alert variant="info">No orders found.</Alert>
+    ) : (
+      <div>
         <div className="cartTableHeader">
+          <div className="headerCell">Order Number</div>
           <div className="headerCell">Name</div>
           <div className="headerCell">Quantity</div>
           <div className="headerCell">Price</div>
-          <div className="headerCell">Actions</div>
+          <div className="headerCell">Status</div>
         </div>
-        {cartItems.map((item) => (
-  <div className="cartTableRow" key={item.id}>
-    <div className="cell">{item.itemname}</div>
-    <div className="cell">{item.quantity}</div>
-    <div className="cell">₱{item.price}</div>
-    <div className="cell actions">
-      <Button variant='outline-primary' size='sm' onClick={() => handleIncreaseQuantity(item.id)}>
-        +
-      </Button>
-      <Button variant='outline-primary' size='sm' onClick={() => handleDecreaseQuantity(item.id)}>
-        -
-      </Button>
-      <Button variant='outline-danger' size='sm' onClick={() => handleRemoveItem(item.id)}>
-        Remove
-      </Button>
-    </div>
-  </div>
-))}
-
+        {orders.map(order => (
+          <div key={order.orderId} className="cartTableRow">
+            <div className="cell">{order.orderNumber}</div>
+            <div className="cell">{order.itemname}</div>
+            <div className="cell">{order.quantity}</div>
+            <div className="cell">{order.price}</div>
+            <div className="cell">{order.status}</div>
+          </div>
+        ))}
       </div>
-    ) : (
-      <p>Your cart is empty</p>
     )}
   </Modal.Body>
   <Modal.Footer>
-    <Button variant='secondary' onClick={handleCartClose}>
-      Close
-    </Button>
-    <Button variant='primary' onClick={handleCheckout}>
-      Checkout
-    </Button>
+    <Button variant="secondary" onClick={handleOrdersClose}>Close</Button>
   </Modal.Footer>
 </Modal>
 
-        </>
+    </>
   );
 };
 

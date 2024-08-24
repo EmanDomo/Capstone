@@ -1,59 +1,137 @@
-.inventory {
+.inventory-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+.inventory-title {
+    text-align: center;
+    margin: 20px 0 30px 0;
+}
+
+.inventory-table-container {
     height: 400px;
     width: 1000px;
     background-color: white;
     box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
     margin: auto;
     border-radius: 15px;
-    /* padding: 20px 0px 0px 30px; */
-    padding: 10px 0px 0px 40px;
+    padding: 10px 0 0 40px;
+    overflow-y: auto; /* Add vertical scrollbar */
 }
 
-#inventory {
-    text-align: center;
-    align-items: center;
-    margin: 20px 0px 30px 0px;
+.stock-table-container {
+    height: 400px;
+    width: 1000px;
+    background-color: white;
+    box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
+    margin: auto;
+    border-radius: 15px;
+    padding: 10px 0 0 40px;
+    overflow-y: auto; /* Add vertical scrollbar */
 }
 
-#table-inventory thead {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.256);
-    height: 40px;
-    font-size: 20px;
-}
-
-#table-inventory {
+.inventory-table {
+    width: 100%;
+    border-collapse: collapse;
     text-align: center;
     align-items: center;
     justify-content: center;
+    border: none; /* Remove border from the table */
 }
 
-.col1 {
+.stock-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    border: none; /* Remove border from the table */
+}
+
+.stock-col1 {
     width: 200px;
 }
 
-.col2 {
+.stock-col2 {
     width: 100px;
 }
 
-.col3 {
+.stock-col3 {
     width: 200px;
 }
 
-.col4 {
+.inventory-table thead {
+    height: 40px;
+    font-size: 20px;
+    position: sticky;
+    top: 0;
+    background-color: white; /* Ensure the header remains visible */
+    border: none; /* Remove border from the thead */
+}
+
+.inventory-table th, .inventory-table td {
+    border: none; /* Remove border from table headers and data cells */
+}
+
+.inventory-col1 {
     width: 200px;
 }
 
-.col5 {
+.inventory-col2 {
+    width: 100px;
+}
+
+.inventory-col3 {
     width: 200px;
 }
 
-#inv-addproduct {
+.inventory-col4 {
+    width: 200px;
+}
+
+.inventory-col5 {
+    width: 200px;
+}
+
+.add-product-btn-container {
+    margin: 40px 40px 30px 0;
+    display: flex;
+    justify-content: flex-end;
+    width: 1000px;
+}
+
+.add-product-btn {
     height: 50px;
     width: 200px;
-    margin: 40px 40px 30px 1050px;
     border-radius: 30px;
     border: none;
     background-color: #000000;
     cursor: pointer;
-    color: rgb(255, 255, 255);
+    color: #ffffff;
+}
+
+.delete-btn {
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.form-item-name,
+.form-item-quantity,
+.form-item-price,
+.form-item-category,
+.form-new-category,
+.form-item-photo {
+    margin-bottom: 15px;
+}
+
+.submit-btn,
+.add-category-btn {
+    margin-top: 10px;
+    width: 100%;
+    border-radius: 5px;
 }

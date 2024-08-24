@@ -1,13 +1,12 @@
-
 .items {
   height: 600px;
   width: 1000px;
   position: relative;
   left: 500px;
   bottom: -10px;
-  overflow: auto; 
-  overflow-y: hidden; 
-  overflow-x: hidden; 
+  overflow: auto;
+  overflow-y: hidden;
+  overflow-x: hidden;
 }
 
 .card-container {
@@ -18,20 +17,26 @@
   overflow: auto;
 }
 
-.pos-btnCategory .pos-btnCat {
-margin-top: 10px;
-height: 40px;
-width: 120px;
-margin: 10px 40px 30px 40px;
-border-radius: 30px;
-border: none;
-background-color: #eccfdc;
-cursor: pointer;
-color: black;
+.pos-btnCategory {
+  display: flex;
+  flex-wrap: wrap; /* Allows buttons to wrap to the next line */
+  gap: 10px; /* Adds spacing between buttons */
+  margin-top: 10px;
+}
+
+.pos-btnCat {
+  height: 40px;
+  padding: 0 20px; /* Adjust padding for spacing */
+  border-radius: 30px;
+  border: none;
+  background-color: #eccfdc;
+  cursor: pointer;
+  color: black;
+  display: inline-block; /* Ensures button size adjusts based on text */
 }
 
 .pos-btnCat:hover {
-background-color: #e78bb5;
+  background-color: #e78bb5;
 }
 
 .pos {
@@ -58,7 +63,6 @@ background-color: #e78bb5;
 }
 
 #customers {
-  /* font-family: Arial, Helvetica, sans-serif; */
   border-collapse: collapse;
   width: 100%;
 }
@@ -67,9 +71,13 @@ background-color: #e78bb5;
   padding: 8px;
 }
 
-#customers tr:nth-child(even){background-color: #f2f2f2;}
+#customers tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
 
-#customers tr:hover {background-color: #ddd;}
+#customers tr:hover {
+  background-color: #ddd;
+}
 
 #customers th {
   padding-top: 12px;
@@ -95,75 +103,74 @@ background-color: #e78bb5;
 }
 
 #pos-remove {
-font-size: 20px;
-background-color: transparent;
-border: none;
-color: black;
+  font-size: 20px;
+  background-color: transparent;
+  border: none;
+  color: black;
 }
 
 #pos-remove:hover {
-cursor: pointer;
-color: red;
+  cursor: pointer;
+  color: red;
 }
 
 .pos-qty {
-color: #000000;
-background-color: transparent;
-border: 1px solid black;
-height: 30px;
-width: 30px;
-padding: 0px;
-border-radius: 20px;
+  color: #000000;
+  background-color: transparent;
+  border: 1px solid black;
+  height: 30px;
+  width: 30px;
+  padding: 0px;
+  border-radius: 20px;
 }
 
 .pos-qty:hover {
-background-color: #e78bb5;;
-border: none;
-cursor: pointer;
+  background-color: #e78bb5;
+  border: none;
+  cursor: pointer;
 }
 
 #pos-lbllQuantity {
-padding: 10.9px 5px 5px 5px;
-font-size: 15px;
-height: 40px;
+  padding: 10.9px 5px 5px 5px;
+  font-size: 15px;
+  height: 40px;
 }
 
-
 .itm {
-height: 250px;
-width: 300px;
-border-top-left-radius: 15px;
-border-top-right-radius: 15px;
+  height: 250px;
+  width: 300px;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
 }
 
 .items1 {
-display: grid;
-grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); 
-grid-gap: 2rem; 
-height: 600px;
-overflow: auto;
-padding: 20px 0px 200px 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Adjusted to fit 3 cards per row */
+  grid-gap: 1rem; /* Reduced gap */
+  height: 600px;
+  overflow: auto;
+  padding: 20px 10px 200px 10px; /* Adjusted padding */
 }
 
 .item {
-height: 400px;
-width: 300px;
-background-color: white;
-box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
-text-align: left;
-border-radius: 15px;
-transition: transform 0.2s ease;
+  height: 400px;
+  width: 100%;
+  background-color: white;
+  box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
+  text-align: left;
+  border-radius: 15px;
+  transition: transform 0.2s ease;
 }
 
 .item h3, label {
-padding-left: 20px;
+  padding-left: 20px;
 }
 
 .btnItem {
-background-color: #000000;
-border-radius: 20px;
-margin: 20px 20px 0px 25px;
-font-size: 12px;
-height: 40px;
-width: 100px;
+  background-color: #000000;
+  border-radius: 20px;
+  margin: 20px 20px 0px 25px;
+  font-size: 12px;
+  height: 40px;
+  width: 100px;
 }

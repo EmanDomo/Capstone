@@ -164,4 +164,32 @@
 	text-align: left;
   }
   
+  .cartTableRow {
+	display: flex;
+	align-items: center;
+	border-bottom: 1px solid #ddd;
+  }
+  
+  .cell {
+	flex: 1;
+	padding: 8px;
+	text-align: left;
+  }
+  
+  .actions {
+	display: flex;
+	gap: 5px; /* Space between buttons */
+  }
+  
+  .cartTableHeader {
+	display: flex;
+	font-weight: bold;
+	border-bottom: 1px solid #ddd;
+  }
+  
+  .headerCell {
+	flex: 1;
+	padding: 8px;
+	text-align: left;
+  }
   
