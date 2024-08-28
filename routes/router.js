@@ -671,45 +671,101 @@ router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (re
             const maxOrderNumber = results[0].maxOrderNumber || 0;
             const newOrderNumber = maxOrderNumber + 1;
 
-            // Insert each cart item into tbl_orders with the new order number
-            const itemCount = cartItems.length;
-            let processedItems = 0;
+            // Process each cart item sequentially
+            const processCartItem = (itemIndex) => {
+                if (itemIndex >= cartItems.length) {
+                    // All items processed, now empty the cart
+                    conn.query('DELETE FROM tbl_cart WHERE userId = ?', [userId], (err) => {
+                        if (err) {
+                            console.error('Error emptying cart:', err);
+                            return res.status(500).json({ success: false, error: 'Failed to empty cart' });
+                        }
+                        res.json({ success: true, orderNumber: newOrderNumber });
+                    });
+                    return;
+                }
 
-            cartItems.forEach(item => {
-                const query = `INSERT INTO tbl_orders 
-                               (userId, id, quantity, price, orderNumber, status, qrCodeImage) 
-                               VALUES (?, ?, ?, ?, ?, 'pending', ?)`;
-                const values = [
-                    userId,
-                    item.id,
-                    item.quantity,
-                    item.price,
-                    newOrderNumber,
-                    qrCodeImage
-                ];
+                const item = cartItems[itemIndex];
+                // Fetch required ingredients for this item
+                const getIngredientsQuery = `
+                    SELECT i.stock_id, i.quantity_required, s.stock_quantity
+                    FROM tbl_item_ingredients i
+                    JOIN tbl_stocks s ON i.stock_id = s.stockId
+                    WHERE i.item_id = ?
+                `;
 
-                conn.query(query, values, (err) => {
+                conn.query(getIngredientsQuery, [item.id], (err, ingredients) => {
                     if (err) {
-                        console.error('Error inserting order item:', err);
-                        return res.status(500).json({ success: false, error: 'Failed to place order' });
+                        console.error('Error fetching ingredients:', err);
+                        return res.status(500).json({ success: false, error: 'Failed to fetch ingredients' });
                     }
 
-                    processedItems++;
-                    if (processedItems === itemCount) {
-                        // All items processed, now empty the cart
-                        conn.query('DELETE FROM tbl_cart WHERE userId = ?', [userId], (err) => {
-                            if (err) {
-                                console.error('Error emptying cart:', err);
-                                return res.status(500).json({ success: false, error: 'Failed to empty cart' });
-                            }
-                            res.json({ success: true, orderNumber: newOrderNumber });
-                        });
+                    // Check if enough stock is available
+                    const insufficientStock = ingredients.some(ingredient =>
+                        ingredient.stock_quantity < ingredient.quantity_required * item.quantity
+                    );
+
+                    if (insufficientStock) {
+                        return res.status(400).json({ success: false, error: 'Insufficient stock for order' });
                     }
+
+                    // Deduct stock quantities
+                    const updateStock = (ingredientIndex) => {
+                        if (ingredientIndex >= ingredients.length) {
+                            // All ingredients processed, insert order item
+                            const insertOrderQuery = `
+                                INSERT INTO tbl_orders 
+                                (userId, id, quantity, price, orderNumber, status, qrCodeImage) 
+                                VALUES (?, ?, ?, ?, ?, 'pending', ?)
+                            `;
+                            const insertOrderValues = [
+                                userId,
+                                item.id,
+                                item.quantity,
+                                item.price,
+                                newOrderNumber,
+                                qrCodeImage
+                            ];
+
+                            conn.query(insertOrderQuery, insertOrderValues, (err) => {
+                                if (err) {
+                                    console.error('Error inserting order item:', err);
+                                    return res.status(500).json({ success: false, error: 'Failed to place order' });
+                                }
+
+                                // Move to the next cart item
+                                processCartItem(itemIndex + 1);
+                            });
+                            return;
+                        }
+
+                        const ingredient = ingredients[ingredientIndex];
+                        const newStockQuantity = ingredient.stock_quantity - (ingredient.quantity_required * item.quantity);
+
+                        conn.query('UPDATE tbl_stocks SET stock_quantity = ? WHERE stockId = ?', 
+                            [newStockQuantity, ingredient.stock_id], (err) => {
+                                if (err) {
+                                    console.error('Error deducting stock:', err);
+                                    return res.status(500).json({ success: false, error: 'Failed to deduct stock' });
+                                }
+
+                                // Move to the next ingredient
+                                updateStock(ingredientIndex + 1);
+                            });
+                    };
+
+                    // Start processing ingredients
+                    updateStock(0);
                 });
-            });
+            };
+
+            // Start processing cart items
+            processCartItem(0);
         });
     });
 });
+
+
 
 // Route to upload QR code image and insert order
 router.post('/upload-qr-code', upload.single('qrCodeImage'), async (req, res) => {
@@ -833,6 +889,20 @@ router.get('/my-orders', authenticateToken, authorizeRoles('customer'), (req, re
         }
 
         res.status(200).json({ success: true, orders: results });
+    });
+});
+
+router.get('/warning-stocks', authenticateToken, authorizeRoles('admin'), (req, res) => {
+    const query = `
+        SELECT * FROM tbl_stocks where stock_quantity >= 20;
+    `;
+    conn.query(query, (err, results) => {
+        if (err) {
+            console.error('Error fetching the warning stocks:', err);
+
+            return res.status(500).json({ success: false, error: 'Internal server error' });
+        }
+        res.status(200).json(results);
     });
 });
 
