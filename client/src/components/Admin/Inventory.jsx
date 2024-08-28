@@ -94,7 +94,7 @@ const Inventory = () => {
                     'Authorization': `Bearer ${token}`,
                 },
             });
-            console.log('Stock data response:', res.data); // Log the response here
+        
             if (res.data.status === 'success') {
                 setStockData(res.data.data);
                 setIngredients(res.data.data);
@@ -254,33 +254,28 @@ const addUserData = async (e) => {
                 <table className='inventory-table'>
                     <thead>
                         <tr>
-                        <th className='inventory-col1'>Name</th>
-                        <th className='inventory-col2'>Category</th>
-                        <th className='inventory-col3'>Ingredients</th>
-                        <th className='inventory-col4'>Quantity Required</th>
-                        <th className='inventory-col5'>Unit</th>
-                        <th className='inventory-col6'>Price</th>
-                        <th className='inventory-col7'>Action</th>
+                            <th className='inventory-col1'>Item Name</th>
+                            <th className='inventory-col2'>Ingredients</th>
+                            <th className='inventory-col3'>Quantities Required</th>
+                            <th className='inventory-col4'>Units</th>
+                            <th className='inventory-col5'>Price</th>
+                            <th className='inventory-col6'>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {data.map((el, i) => (
                             <tr key={i}>
-                                <td>{el.itemname}</td>
-                                <td>{el.category}</td>
-                                <td>{el.stock_item_name}</td>
-                                <td>{el.quantity_required}</td>
-                                <td>{el.unit}</td>
-                                <td>{el.price}</td>
+                                <td>{el.Item_Name}</td>
+                                <td>{el.Stock_Names}</td>
+                                <td>{el.Quantities_Required}</td>
+                                <td>{el.Units}</td>
+                                <td>{el.Price}</td>
                                 <td>
-                                    <button className='delete-btn' onClick={() => dltUser(el.itemname)}>Delete</button>
-                                    {/* Replace el.itemname with the appropriate unique identifier */}
+                                    <button className='delete-btn' onClick={() => dltUser(el.Item_Name)}>Delete</button>
                                 </td>
                             </tr>
                         ))}
-</tbody>
-
-
+                    </tbody>
                 </table>
             </div>
             <div className='stock-table-container'>

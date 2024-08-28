@@ -359,19 +359,24 @@ router.get("/getdata", authenticateToken, authorizeRoles('admin', 'customer'), (
 router.get("/getinventorydata", authenticateToken, authorizeRoles('admin', 'customer'), (req, res) => {
     try {
         const sqlQuery = `
-            SELECT 
-    i.itemname AS itemname, 
-    i.category AS category,
-    i.price AS price,
-    s.stock_item_name AS stock_item_name, 
-    ii.quantity_required AS quantity_required, 
-    s.unit AS unit
+           SELECT 
+    i.itemname AS Item_Name, 
+    i.category AS Category,
+    i.price AS Price,
+    GROUP_CONCAT(s.stock_item_name ORDER BY s.stock_item_name SEPARATOR ', ') AS Stock_Names, 
+    GROUP_CONCAT(ii.quantity_required ORDER BY s.stock_item_name SEPARATOR ', ') AS Quantities_Required, 
+    GROUP_CONCAT(s.unit ORDER BY s.stock_item_name SEPARATOR ', ') AS Units
 FROM 
     tbl_item_ingredients ii
 JOIN 
     tbl_items i ON ii.item_id = i.id
 JOIN 
-    tbl_stocks s ON ii.stock_id = s.stockId;
+    tbl_stocks s ON ii.stock_id = s.stockId
+GROUP BY 
+    i.itemname, 
+    i.category,
+    i.price;
+
 
         `;
 
