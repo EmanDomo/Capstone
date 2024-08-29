@@ -172,26 +172,23 @@ const Menu = () => {
         <Header />
       </header>
       <h1 id='menu-title'>MENU</h1>
-      <div className='card-container'>
+      <div className='menu-items1'>
         {data.length > 0 &&
           data.map((el, i) => (
-            <Card key={i} style={{ width: '22rem', height: '25rem' }} className='mb-3'>
-              <Card.Img
+            <div key={i} className='menu-item'>
+              <img
                 variant='top'
                 src={`/uploads/${el.img}`}
-                style={{ width: '100px', textAlign: 'center', margin: 'auto' }}
-                className='mt-2'
+                className="menu-itm" alt="itm"
               />
-              <Card.Body className='text-center'>
-                <Card.Title>Name: {el.itemname}</Card.Title>
-                <Card.Text>Date Added: {moment(el.date).format('DD-MM-YYYY')}</Card.Text>
-                <Card.Text>Quantity: {el.quantity}</Card.Text>
-                <Card.Text>Price: ₱{el.price}</Card.Text>
-                <Button variant='success' className='col-lg-6 text-center' onClick={() => handleAddToCart(el.id, el.itemname)}>
-                  Add
-                </Button>
-              </Card.Body>
-            </Card>
+              <div className='text-container'>
+                <h3 className='menu-text'>{el.itemname}</h3>
+                {/* <label>Date Added: {moment(el.date).format('DD-MM-YYYY')}</label>
+                <label>Quantity: {el.quantity}</label> */}
+                <label className='menu-text1'>₱{el.price}</label>
+                <button className="btnMenuItem" onClick={() => handleAddToCart(el.id, el.itemname)}>Add to Cart</button>
+              </div>
+            </div>
           ))}
           
       </div>

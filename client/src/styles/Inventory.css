@@ -7,7 +7,7 @@
 
 .inventory-title {
     text-align: center;
-    margin: 20px 0 30px 0;
+    margin: 5px 0 5px 0;
 }
 
 .inventory-table-container {
@@ -17,18 +17,18 @@
     box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
     margin: auto;
     border-radius: 15px;
-    padding: 10px 0 0 40px;
+    padding: 0px 0 0 0px;
     overflow-y: auto; /* Add vertical scrollbar */
 }
 
 .stock-table-container {
     height: 400px;
-    width: 1000px;
+    width: 700px;
     background-color: white;
     box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
     margin: auto;
     border-radius: 15px;
-    padding: 10px 0 0 40px;
+    padding: 0px 0 0 0px;
     overflow-y: auto; /* Add vertical scrollbar */
 }
 
@@ -59,12 +59,13 @@
 }
 
 .stock-col3 {
-    width: 200px;
+    width: 100px;
 }
 
-.inventory-table thead {
+
+.inventory-table thead, .stock-table thead{
     height: 40px;
-    font-size: 20px;
+    font-size: 15px;
     position: sticky;
     top: 0;
     background-color: white; /* Ensure the header remains visible */
@@ -76,11 +77,11 @@
 }
 
 .inventory-col1 {
-    width: 200px;
+    width: 400px;
 }
 
 .inventory-col2 {
-    width: 100px;
+    width: 400px;
 }
 
 .inventory-col3 {
@@ -92,17 +93,25 @@
 }
 
 .inventory-col5 {
-    width: 200px;
+    width: 100px;
 }
 
-.add-product-btn-container {
+.inventory-col6 {
+    width: 100px;
+}
+
+.stock-col2-td, .stock-col3-td {
+    text-align: center;
+}
+
+.add-product-btn-container, .add-stock-btn-container  {
     margin: 40px 40px 30px 0;
     display: flex;
     justify-content: flex-end;
     width: 1000px;
 }
 
-.add-product-btn {
+.add-product-btn, .add-stock-btn {
     height: 50px;
     width: 200px;
     border-radius: 30px;
@@ -135,3 +144,89 @@
     width: 100%;
     border-radius: 5px;
 }
+
+.inv-btn, .inv-btn1 {
+    height: 40px;
+    width: 200px;
+    padding: 0 20px; /* Adjust padding for spacing */
+    border-radius: 30px;
+    border: none;
+    background-color: #eccfdc;
+    cursor: pointer;
+    color: black;
+    display: inline-block; /* Ensures button size adjusts based on text */
+    margin: 10px 20px 20px 0px;
+}
+
+  .inv-btn:hover, .inv-btn1:hover {
+    background-color: #e78bb5;
+  }
+
+  .table-ingredients {
+    border: 1px solid rgba(0, 0, 0, 0.152);
+  }
+
+  .table-ingredients th {
+    text-align: center;
+  }
+
+  .ing-th {
+    width: 150px;
+  }
+
+  .ing-th1 {
+    width: 50px;
+  }
+
+  .ing-td {
+    text-align: center;
+  }
+
+  .add-ingredient-btn {
+    height: 40px;
+    width: 200px;
+    border-radius: 30px !important;
+    border: none;
+    background-color: #000000 !important;
+    border:  none !important;
+    cursor: pointer;
+    color: rgb(255, 255, 255) !important;
+    display: inline-block; /* Ensures button size adjusts based on text */
+    align-items: center;
+    justify-content: center;
+    margin-left: 260px;
+  }
+
+  .btn-remove-ingredient {
+    color: rgb(0, 0, 0);
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    font-size: 20px;
+  }
+
+  .btn-remove-ingredient:hover {
+    color: red;
+    cursor: pointer;
+    background-color: transparent;
+  }
+
+  .btn-save-product, .btn-close-product {
+    height: 40px;
+    width: 200px;
+    border-radius: 30px !important;
+    border: none;
+    background-color: #000000 !important;
+    border:  none !important;
+    cursor: pointer;
+    color: rgb(255, 255, 255) !important;
+    display: inline-block; /* Ensures button size adjusts based on text */
+    align-items: center;
+    justify-content: center;
+    margin-right: 20px !important;
+  }
+
+ .btn-close-product {
+    background-color: #a09b9b !important;
+    color: rgb(0, 0, 0) !important;
+  }

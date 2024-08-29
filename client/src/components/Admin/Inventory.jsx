@@ -5,6 +5,7 @@ import Header from './HeaderAdmin';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
+import { IoTrashOutline } from "react-icons/io5";
 
 const Inventory = () => {
     const [data, setData] = useState([]);
@@ -33,6 +34,9 @@ const Inventory = () => {
     const [stockName, setStockName] = useState('');
     const [stockQuantity, setStockQuantity] = useState('');
     const [stockUnit, setStockUnit] = useState('');
+
+    const [showInventory, setShowInventory] = useState(true);
+    const [showStocks, setShowStocks] = useState(false);
 
     useEffect(() => {
         getUserData();
@@ -152,8 +156,6 @@ const Inventory = () => {
 };
 
 
-
-
 const removeIngredient = (index) => {
     setSelectedIngredients(prevIngredients => prevIngredients.filter((_, i) => i !== index));
 };
@@ -166,6 +168,7 @@ const handleIngredientSelection = (e) => {
     setSelectedIngredient(selected);
     setSelectedIngredientUnit(ingredient ? ingredient.unit : '');
 };
+
 const addUserData = async (e) => {
     e.preventDefault();
 
@@ -196,8 +199,6 @@ const addUserData = async (e) => {
         console.error("Error submitting data:", error);
     }
 };
-
-
 
 
     const addStockData = async (e) => {
@@ -247,9 +248,20 @@ const addUserData = async (e) => {
     };
 
     return (
-        <div className="inventory-container">
+        <div>
             <Header />
+        <div className="inventory-container">
+        
             <h1 className='inventory-title'>INVENTORY</h1>
+
+            <div className='btn-container'>
+                <button className="inv-btn" onClick={() => { setShowInventory(true); setShowStocks(false); }}>Show Inventory</button>
+                <button className="inv-btn1" onClick={() => { setShowStocks(true); setShowInventory(false); }}>Show Stocks</button>
+            </div>
+
+            {showInventory && (
+                <>            
+
             <div className='inventory-table-container'>
                 <table className='inventory-table'>
                     <thead>
@@ -278,6 +290,14 @@ const addUserData = async (e) => {
                     </tbody>
                 </table>
             </div>
+            <div className='add-product-btn-container'>
+                <button className='add-product-btn' onClick={handleShow}>Add Product</button>
+            </div>
+            </>
+            )}
+
+            {showStocks && (
+            <>
             <div className='stock-table-container'>
                 <table className='stock-table'>
                     <thead>
@@ -291,20 +311,22 @@ const addUserData = async (e) => {
                         {stockData.map((el, i) => (
                             <tr key={i}>
                                 <td>{el.stock_item_name}</td>
-                                <td>{el.stock_quantity}</td>
-                                <td>{el.unit}</td>
+                                <td className='stock-col2-td'>{el.stock_quantity}</td>
+                                <td className='stock-col3-td'>{el.unit}</td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
-
             <div className='add-stock-btn-container'>
                 <button className='add-stock-btn' onClick={handleStockShow}>Add Stocks</button>
             </div>
+            </>
+            )}
+            
 
-            <div className='add-product-btn-container'>
-                <button className='add-product-btn' onClick={handleShow}>Add Product</button>
+
+
             </div>
 
             {/* Add Product Modal */}
@@ -368,22 +390,22 @@ const addUserData = async (e) => {
                             </Form.Group>
                         )}
 
-<Form.Group className="mb-3" controlId="formItemIngredients">
-    <Form.Label>Ingredients</Form.Label>
-    <Form.Select
-        aria-label="Select Ingredient"
-        value={selectedIngredient}
-        onChange={handleIngredientSelection}
-        className='form-item-ingredient'
-    >
-        <option>Select Ingredient</option>
-        {ingredients.map((ingredient, i) => (
-            <option key={i} value={ingredient.stock_item_name}>
-                {ingredient.stock_item_name}
-            </option>
-        ))}
-    </Form.Select>
-</Form.Group>
+                        <Form.Group className="mb-3" controlId="formItemIngredients">
+                            <Form.Label>Ingredients</Form.Label>
+                            <Form.Select
+                                aria-label="Select Ingredient"
+                                value={selectedIngredient}
+                                onChange={handleIngredientSelection}
+                                className='form-item-ingredient'
+                            >
+                                <option>Select Ingredient</option>
+                                {ingredients.map((ingredient, i) => (
+                                    <option key={i} value={ingredient.stock_item_name}>
+                                        {ingredient.stock_item_name}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                        </Form.Group>
 
 {selectedIngredient && (
     <>
@@ -407,7 +429,7 @@ const addUserData = async (e) => {
             />
         </Form.Group>
 
-        <Button variant="secondary" onClick={addIngredient} className='add-ingredient-btn'>
+        <Button onClick={addIngredient} className='add-ingredient-btn'>
             Add Ingredient
         </Button>
     </>
@@ -416,14 +438,21 @@ const addUserData = async (e) => {
 {selectedIngredients.length > 0 && (
     <div className="ingredients-list">
         <h5>Added Ingredients</h5>
-        <ul>
-            {selectedIngredients.map((ingredient, index) => (
-                <li key={index}>
-                    {ingredient.name} - {ingredient.quantity} {ingredient.unit}
-                    <button type="button" onClick={() => removeIngredient(index)}>Remove</button>
-                </li>
-            ))}
-        </ul>
+                <table className='table-ingredients'>
+                    <tr>
+                        <th>Ingredient Name</th>
+                        <th className='ing-th'>Quantity & Unit</th>
+                        <th className='ing-th1'>Action</th>
+                    </tr>
+                    {selectedIngredients.map((ingredient, index) => (
+                    <tr  key={index}>
+
+                        <td>{ingredient.name}</td>
+                        <td className='ing-td'>{ingredient.quantity} {ingredient.unit}</td>
+                        <td><button type="button" className="btn-remove-ingredient" onClick={() => removeIngredient(index)}><IoTrashOutline/></button></td>
+                    </tr>
+                     ))}
+                </table>
     </div>
 )}
 
@@ -439,10 +468,10 @@ const addUserData = async (e) => {
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={handleClose}>
+                    <Button className="btn-close-product" onClick={handleClose}>
                         Close
                     </Button>
-                    <Button variant="primary" onClick={addUserData}>
+                    <Button className="btn-save-product" onClick={addUserData}>
                         Save Changes
                     </Button>
                 </Modal.Footer>
@@ -499,6 +528,7 @@ const addUserData = async (e) => {
                 </Modal.Footer>
             </Modal>
         </div>
+
     );
 }
 

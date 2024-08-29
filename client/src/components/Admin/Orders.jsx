@@ -86,8 +86,9 @@ const Orders = () => {
     };
 
     return (
-        <div className="order-container">
+        <div>            
             <Header />
+        <div className="order-container">
             <h1 className="order-title">Orders</h1>
             {orders.length > 0 ? (
                 <>
@@ -124,6 +125,7 @@ const Orders = () => {
                             ))}
                         </tbody>
                     </table>
+                
 
                     {/* Cancel Order Modal */}
                     <Modal show={showCancelModal} onHide={handleCloseCancelModal}>
@@ -153,6 +155,7 @@ const Orders = () => {
             ) : (
                 <p className="order-no-data">No orders found.</p>
             )}
+        </div>
         </div>
     );
 };
