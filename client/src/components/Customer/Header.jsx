@@ -11,6 +11,7 @@ import Button from 'react-bootstrap/Button';
 import { ListGroup, Table, Container, Alert } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { FaTrash } from 'react-icons/fa'; // Import trash icon
 
 const Header = () => {
   const [data, setData] = useState([]);
@@ -90,8 +91,6 @@ const Header = () => {
     }
 };
 
-fetchOrders();
-
   const handleCartShow = () => setShowCart(true);
   const handleCartClose = () => setShowCart(false);
 
@@ -153,15 +152,30 @@ fetchOrders();
     }
   };
 
-  getCartData();
-
   const handleCheckout = () => {
     navigate('/checkout', { state: { cartItems } });
+  };
+
+  const deleteOrder = async (orderId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`/delete-order/${orderId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      fetchOrders(); // Refresh the order list after deletion
+    } catch (error) {
+      setError(error.response ? error.response.data.message : error.message);
+    }
   };
 
   const toggleNavbar = () => {
     setOpenLinks(!openLinks);
   };
+
+  getCartData();
+  getUserData();
 
   return (
     <>
@@ -226,42 +240,55 @@ fetchOrders();
       </Modal>
 
       <Modal show={showOrders} onHide={handleOrdersClose}>
-  <Modal.Header closeButton>
-    <Modal.Title>My Orders</Modal.Title>
-  </Modal.Header>
-  <Modal.Body>
-    {loading ? (
-      <p>Loading...</p>
-    ) : error ? (
-      <Alert variant="danger">{error}</Alert>
-    ) : orders.length === 0 ? (
-      <Alert variant="info">No orders found.</Alert>
-    ) : (
-      <div>
-        <div className="cartTableHeader">
-          <div className="headerCell">Order Number</div>
-          <div className="headerCell">Name</div>
-          <div className="headerCell">Quantity</div>
-          <div className="headerCell">Price</div>
-          <div className="headerCell">Status</div>
-        </div>
-        {orders.map(order => (
-          <div key={order.orderId} className="cartTableRow">
-            <div className="cell">{order.orderNumber}</div>
-            <div className="cell">{order.itemname}</div>
-            <div className="cell">{order.quantity}</div>
-            <div className="cell">{order.price}</div>
-            <div className="cell">{order.status}</div>
-          </div>
-        ))}
-      </div>
-    )}
-  </Modal.Body>
-  <Modal.Footer>
-    <Button variant="secondary" onClick={handleOrdersClose}>Close</Button>
-  </Modal.Footer>
-</Modal>
-
+        <Modal.Header closeButton>
+          <Modal.Title>My Orders</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {loading ? (
+            <p>Loading...</p>
+          ) : error ? (
+            <Alert variant="danger">{error}</Alert>
+          ) : orders.length === 0 ? (
+            <Alert variant="info">No orders found.</Alert>
+          ) : (
+            <Table striped bordered hover>
+              <thead>
+                <tr>
+                  <th>Order Number</th>
+                  <th>Name</th>
+                  <th>Quantity</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Cancellation Reason</th>
+                  <th>Actions</th> {/* Add Actions column */}
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map(order => (
+                  <tr key={order.orderId}>
+                    <td>{order.orderNumber}</td>
+                    <td>{order.itemname}</td>
+                    <td>{order.quantity}</td>
+                    <td>₱{order.price}</td>
+                    <td>{order.status}</td>
+                    <td>{order.cancelReason || 'N/A'}</td>
+                    <td>
+                      {order.status === 'completed' || order.status === 'cancelled' ? (
+                        <Button variant="outline-danger" onClick={() => deleteOrder(order.orderId)}>
+                          <FaTrash />
+                        </Button>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleOrdersClose}>Close</Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 };

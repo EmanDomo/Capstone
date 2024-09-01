@@ -10,16 +10,24 @@ body {
     margin-bottom: 30px;
 }
 
-.menu-items1 {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* Adjusted to fit 3 cards per row */
-    grid-gap: 1rem; /* Reduced gap */
-    height: 600px;
-    overflow-y: auto;
-    padding: 20px 10px 200px 10px; /* Adjusted padding */
-    margin-left: 40px;
-  }
-  
+.top-selling-items {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 items per row */
+  grid-gap: 1rem; /* Space between items */
+  padding: 20px 10px;
+  margin-bottom: 30px;
+}
+
+.menu-items {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4 items per row */
+  grid-gap: 1rem; /* Reduced gap */
+  height: 600px;
+  overflow-y: auto;
+  padding: 20px 10px 200px 10px; /* Adjusted padding */
+  margin-left: 40px;
+}
+
 .menu-itm {
     height: 250px;
     width: 300px;

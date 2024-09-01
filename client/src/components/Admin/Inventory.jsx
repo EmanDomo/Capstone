@@ -218,7 +218,8 @@ const addUserData = async (e) => {
 
         if (res.data.status === 201) {
             handleClose();
-            getStockData(); // Refresh stock data
+            getStockData();
+            setStockModalShow(false);
         } else {
             console.log("error");
         }

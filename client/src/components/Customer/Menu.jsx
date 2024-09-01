@@ -2,31 +2,23 @@ import React, { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Header from './Header';
 import axios from 'axios';
-import moment from 'moment';
-import Card from 'react-bootstrap/Card';
 import Modal from 'react-bootstrap/Modal';
 import { ListGroup } from 'react-bootstrap';
-import { jwtDecode } from 'jwt-decode';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 import '../../styles/Menu.css';
 
 const Menu = () => {
   const [data, setData] = useState([]);
-  const [userName, setUserName] = useState('');
+  const [topSellingItems, setTopSellingItems] = useState([]);
   const [cartItems, setCartItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [addedItemName, setAddedItemName] = useState('');
-  const [showCart, setShowCart] = useState(false); // State for cart visibility
-  const navigate = useNavigate(); // Define navigate using useNavigate
-  
+  const [showCart, setShowCart] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const decodedToken = jwtDecode(token);
-      setUserName(decodedToken.name);
-    }
     getUserData();
+    getTopSellingItems();
     getCartData();
   }, []);
 
@@ -41,13 +33,32 @@ const Menu = () => {
       });
 
       if (res.data.status === 201) {
-        console.log('Data fetched successfully');
         setData(res.data.data);
       } else {
         console.log('Error fetching data');
       }
     } catch (error) {
       console.error('Error fetching data:', error);
+    }
+  };
+
+  const getTopSellingItems = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('/top-selling', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (res.status === 200) {
+        setTopSellingItems(res.data.data);
+      } else {
+        console.log('Error fetching top-selling items');
+      }
+    } catch (error) {
+      console.error('Error fetching top-selling items:', error);
     }
   };
 
@@ -90,7 +101,6 @@ const Menu = () => {
       );
 
       if (res.data.status === 'success') {
-        console.log('Item added to cart successfully');
         setAddedItemName(itemName);
         setShowModal(true);
         getCartData();
@@ -167,13 +177,36 @@ const Menu = () => {
   };
 
   return (
-    <div className='menu'>
+    <div className='menu' style={{ maxHeight: '100vh', overflowY: 'auto' }}>
       <header>
         <Header />
       </header>
-      <h1 id='menu-title'>MENU</h1>
-      <div className='menu-items1'>
-        {data.length > 0 &&
+
+      <h1 id='menu-title'>Top Selling Items</h1>
+      <div className='top-selling-items'>
+        {topSellingItems.length > 0 ? (
+          topSellingItems.map((item, index) => (
+            <div key={index} className='menu-item'>
+              <img
+                variant='top'
+                src={`/uploads/${item.img}`}
+                className="menu-itm" alt="itm"
+              />
+              <div className='text-container'>
+                <h3 className='menu-text'>{item.itemname}</h3>
+                <label className='menu-text1'>₱{item.price}</label>
+                <button className="btnMenuItem" onClick={() => handleAddToCart(item.id, item.itemname)}>Add to Cart</button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p>No top-selling items available.</p>
+        )}
+      </div>
+
+      <h1 id='menu-title'>Menu</h1>
+      <div className='menu-items'>
+        {data.length > 0 ? (
           data.map((el, i) => (
             <div key={i} className='menu-item'>
               <img
@@ -183,16 +216,17 @@ const Menu = () => {
               />
               <div className='text-container'>
                 <h3 className='menu-text'>{el.itemname}</h3>
-                {/* <label>Date Added: {moment(el.date).format('DD-MM-YYYY')}</label>
-                <label>Quantity: {el.quantity}</label> */}
                 <label className='menu-text1'>₱{el.price}</label>
                 <button className="btnMenuItem" onClick={() => handleAddToCart(el.id, el.itemname)}>Add to Cart</button>
               </div>
             </div>
-          ))}
-          
+          ))
+        ) : (
+          <p>No items available in the menu.</p>
+        )}
       </div>
 
+      {/* Modals */}
       <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
           <Modal.Title>Item Added</Modal.Title>
@@ -240,7 +274,7 @@ const Menu = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-      </div>
+    </div>
   );
 };
 

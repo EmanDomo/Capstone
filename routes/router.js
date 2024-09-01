@@ -356,6 +356,41 @@ router.get("/getdata", authenticateToken, authorizeRoles('admin', 'customer'), (
     }
 });
 
+router.get("/top-selling", authenticateToken, authorizeRoles('customer'), (req, res) => {
+    try {
+        // Assume req.user contains the user's information, including gender
+        const userGender = req.user.gender; // Retrieve the user's gender from the token
+
+        // SQL query with user gender parameterized to avoid SQL injection
+        const query = `
+        SELECT i.id, i.itemname, i.img, i.price, SUM(o.quantity) AS total_quantity_sold
+FROM tbl_orders o
+JOIN tbl_items i ON o.id = i.id
+JOIN tbl_sales s ON o.orderId = s.orderId
+WHERE o.status = 'completed'
+  AND s.saleDate >= CURDATE()
+  AND s.saleDate < CURDATE() + INTERVAL 1 DAY
+GROUP BY i.id, i.itemname, i.img, i.price
+ORDER BY total_quantity_sold DESC
+LIMIT 3;
+
+        `;
+
+        conn.query(query, [userGender], (err, result) => {
+            if (err) {
+                console.error("Database query error:", err);
+                res.status(500).json({ status: 500, error: "Database query failed" });
+            } else {
+                res.status(200).json({ status: 200, data: result });
+            }
+        });
+    } catch (error) {
+        console.error("Server error:", error);
+        res.status(422).json({ status: 422, error: "Server error" });
+    }
+});
+
+
 router.get("/getinventorydata", authenticateToken, authorizeRoles('admin', 'customer'), (req, res) => {
     try {
         const sqlQuery = `
@@ -645,17 +680,120 @@ router.get('/complete-order', async (req, res) => {
 });
 
 
+ 
 
-router.get('/cancel-order', (req, res) => {
-    res.redirect('/');
+//                 const updateStockForIngredients = (ingredientIndex) => {
+//                     if (ingredientIndex >= ingredients.length) {
+//                         updateStock(index + 1);
+//                         return;
+//                     }
+
+//                     const ingredient = ingredients[ingredientIndex];
+//                     // Fetch the current stock quantity
+//                     conn.query('SELECT stock_quantity FROM tbl_stocks WHERE stockId = ?', [ingredient.stock_id], (err, stockResults) => {
+//                         if (err) {
+//                             return res.json({ success: false, error: err.message });
+//                         }
+
+//                         if (stockResults.length === 0 || stockResults[0].stock_quantity === null) {
+//                             console.error(`Stock not found or quantity is null for stockId: ${ingredient.stock_id}`);
+//                             return res.json({ success: false, error: `Stock not found or quantity is null for stockId: ${ingredient.stock_id}` });
+//                         }
+
+//                         const currentStockQuantity = stockResults[0].stock_quantity;
+//                         const newStockQuantity = roundToTwoDecimalPlaces(currentStockQuantity + item.quantity);
+
+//                         conn.query('UPDATE tbl_stocks SET stock_quantity = ? WHERE stockId = ?', 
+//                             [newStockQuantity, ingredient.stock_id], (err) => {
+//                                 if (err) {
+//                                     return res.json({ success: false, error: err.message });
+//                                 }
+
+//                                 updateStockForIngredients(ingredientIndex + 1);
+//                             });
+//                     });
+//                 };
+
+//                 updateStockForIngredients(0);
+//             });
+//         };
+
+//         updateStock(0);
+//     });
+// });
+
+router.post('/cancel-order', authenticateToken, (req, res) => {
+    const { orderId, reason } = req.body;
+
+    // Query to get order items
+    const getOrderQuery = `
+        SELECT o.id, o.quantity, i.id AS item_id, ii.stock_id, ii.quantity_required
+        FROM tbl_orders o
+        JOIN tbl_items i ON o.id = i.id
+        JOIN tbl_item_ingredients ii ON i.id = ii.item_id
+        WHERE o.orderId = ? AND o.status = 'pending';
+    `;
+
+    conn.query(getOrderQuery, [orderId], (err, orderItems) => {
+        if (err) {
+            console.error('Error fetching order items:', err);
+            return res.status(500).json({ success: false, error: 'Failed to fetch order items' });
+        }
+
+        if (orderItems.length === 0) {
+            return res.status(400).json({ success: false, error: 'No such pending order found' });
+        }
+
+        // Function to update stock quantities
+        const updateStocks = (index) => {
+            if (index >= orderItems.length) {
+                // Update the order status to 'cancelled'
+                const cancelOrderQuery = `
+                    UPDATE tbl_orders 
+                    SET status = 'cancelled', cancelReason = ?
+                    WHERE orderId = ?
+                `;
+                conn.query(cancelOrderQuery, [reason, orderId], (err) => {
+                    if (err) {
+                        console.error('Error canceling order:', err);
+                        return res.status(500).json({ success: false, error: 'Failed to cancel order' });
+                    }
+                    return res.json({ success: true, message: 'Order canceled successfully' });
+                });
+                return;
+            }
+
+            const item = orderItems[index];
+            const restoreStockQuantity = item.quantity * item.quantity_required;
+
+            // Update stock quantities
+            conn.query(
+                'UPDATE tbl_stocks SET stock_quantity = stock_quantity + ? WHERE stockId = ?',
+                [restoreStockQuantity, item.stock_id],
+                (err) => {
+                    if (err) {
+                        console.error('Error restoring stock:', err);
+                        return res.status(500).json({ success: false, error: 'Failed to restore stock' });
+                    }
+                    // Recursively call updateStocks to handle the next item
+                    updateStocks(index + 1);
+                }
+            );
+        };
+
+        updateStocks(0);
+    });
 });
+
+    
+
 
 
 router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (req, res) => {
     const userId = req.user.userId;
     const qrCodeImage = req.file ? req.file.filename : null; // Get the uploaded QR code image filename
+    let stockUpdates = []; // Array to track stock updates
 
-    // Fetch cart items for the user
     conn.query('SELECT * FROM tbl_cart WHERE userId = ?', [userId], (error, cartItems) => {
         if (error) {
             console.error('Error fetching cart items:', error);
@@ -666,7 +804,6 @@ router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (re
             return res.status(400).json({ success: false, error: 'Cart is empty' });
         }
 
-        // Retrieve the highest current order number
         conn.query('SELECT MAX(orderNumber) AS maxOrderNumber FROM tbl_orders', (err, results) => {
             if (err) {
                 console.error('Error fetching max order number:', err);
@@ -676,22 +813,38 @@ router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (re
             const maxOrderNumber = results[0].maxOrderNumber || 0;
             const newOrderNumber = maxOrderNumber + 1;
 
-            // Process each cart item sequentially
             const processCartItem = (itemIndex) => {
                 if (itemIndex >= cartItems.length) {
-                    // All items processed, now empty the cart
                     conn.query('DELETE FROM tbl_cart WHERE userId = ?', [userId], (err) => {
                         if (err) {
                             console.error('Error emptying cart:', err);
                             return res.status(500).json({ success: false, error: 'Failed to empty cart' });
                         }
-                        res.json({ success: true, orderNumber: newOrderNumber });
+
+                        // Insert stock updates into a temporary table
+                        const insertStockUpdates = (index) => {
+                            if (index >= stockUpdates.length) {
+                                return res.json({ success: true, orderNumber: newOrderNumber });
+                            }
+
+                            const { stockId, newStockQuantity } = stockUpdates[index];
+                            conn.query('UPDATE tbl_stocks SET stock_quantity = ? WHERE stockId = ?', 
+                                [newStockQuantity, stockId], (err) => {
+                                    if (err) {
+                                        console.error('Error updating stock:', err);
+                                        return res.status(500).json({ success: false, error: 'Failed to update stock' });
+                                    }
+
+                                    insertStockUpdates(index + 1);
+                                });
+                        };
+
+                        insertStockUpdates(0);
                     });
                     return;
                 }
 
                 const item = cartItems[itemIndex];
-                // Fetch required ingredients for this item
                 const getIngredientsQuery = `
                     SELECT i.stock_id, i.quantity_required, s.stock_quantity
                     FROM tbl_item_ingredients i
@@ -705,7 +858,6 @@ router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (re
                         return res.status(500).json({ success: false, error: 'Failed to fetch ingredients' });
                     }
 
-                    // Check if enough stock is available
                     const insufficientStock = ingredients.some(ingredient =>
                         ingredient.stock_quantity < ingredient.quantity_required * item.quantity
                     );
@@ -714,10 +866,8 @@ router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (re
                         return res.status(400).json({ success: false, error: 'Insufficient stock for order' });
                     }
 
-                    // Deduct stock quantities
                     const updateStock = (ingredientIndex) => {
                         if (ingredientIndex >= ingredients.length) {
-                            // All ingredients processed, insert order item
                             const insertOrderQuery = `
                                 INSERT INTO tbl_orders 
                                 (userId, id, quantity, price, orderNumber, status, qrCodeImage) 
@@ -738,7 +888,6 @@ router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (re
                                     return res.status(500).json({ success: false, error: 'Failed to place order' });
                                 }
 
-                                // Move to the next cart item
                                 processCartItem(itemIndex + 1);
                             });
                             return;
@@ -746,6 +895,7 @@ router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (re
 
                         const ingredient = ingredients[ingredientIndex];
                         const newStockQuantity = ingredient.stock_quantity - (ingredient.quantity_required * item.quantity);
+                        stockUpdates.push({ stockId: ingredient.stock_id, newStockQuantity });
 
                         conn.query('UPDATE tbl_stocks SET stock_quantity = ? WHERE stockId = ?', 
                             [newStockQuantity, ingredient.stock_id], (err) => {
@@ -754,17 +904,14 @@ router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (re
                                     return res.status(500).json({ success: false, error: 'Failed to deduct stock' });
                                 }
 
-                                // Move to the next ingredient
                                 updateStock(ingredientIndex + 1);
                             });
                     };
 
-                    // Start processing ingredients
                     updateStock(0);
                 });
             };
 
-            // Start processing cart items
             processCartItem(0);
         });
     });
@@ -878,9 +1025,8 @@ router.get('/api/sales/month', authenticateToken, authorizeRoles('admin'), (req,
 // Fetch orders for the authenticated user
 router.get('/my-orders', authenticateToken, authorizeRoles('customer'), (req, res) => {
     const userId = req.user.userId;
-
     const query = `
-        SELECT o.orderId, i.itemname, o.quantity, o.price, o.orderNumber, o.status 
+        SELECT o.orderId, i.itemname, o.quantity, o.price, o.orderNumber, o.status, o.cancelReason
         FROM tbl_orders o
         JOIN tbl_items i ON o.id = i.id
         WHERE o.userId = ?
@@ -896,6 +1042,25 @@ router.get('/my-orders', authenticateToken, authorizeRoles('customer'), (req, re
         res.status(200).json({ success: true, orders: results });
     });
 });
+
+router.delete('/delete-order/:orderId', authenticateToken, authorizeRoles('customer'), (req, res) => {
+    const orderId = req.params.orderId;
+    const query = `DELETE FROM tbl_orders WHERE orderId = ? AND (status = 'completed' OR status = 'cancelled')`;
+
+    conn.query(query, [orderId], (err, results) => {
+        if (err) {
+            console.error('Error deleting order:', err);
+            return res.status(500).json({ success: false, error: 'Failed to delete order' });
+        }
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ success: false, error: 'Order not found or cannot be deleted' });
+        }
+
+        res.status(200).json({ success: true, message: 'Order deleted successfully' });
+    });
+});
+
 
 router.get('/warning-stocks', authenticateToken, authorizeRoles('admin'), (req, res) => {
     const query = `

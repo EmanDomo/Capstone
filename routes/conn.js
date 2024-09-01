@@ -4,8 +4,8 @@ const mysql = require("mysql2");
 const conn = mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "root",
-    database: "capstone"
+    password: "Qw01093512734863",
+    database: "userimgupload"
 })
 
 conn.connect((error)=>{
