@@ -7,11 +7,12 @@ import Alert from 'react-bootstrap/Alert';
 import axios from 'axios';
 import moment from 'moment';
 import '../../styles/Admin.css';
-import Header from './HeaderAdmin';
+import Header from '../Admin/HeaderAdmin';
 import { VscTrash } from "react-icons/vsc";
 
 const Admin = () => {
     const [data, setData] = useState([]);
+    const [posItems, setPosItems] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [categories, setCategories] = useState([]);
     const [show, setShow] = useState(false);
@@ -107,6 +108,31 @@ const Admin = () => {
         }
     }
 
+    const addToPOS = async (itemId, quantity, price) => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(
+                '/add-to-pos',
+                { itemId, quantity, price },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    }
+                }
+            );
+    
+            if (res.data.status === 'success') {
+                console.log('Item added to POS');
+                getPosItems();
+            } else {
+                console.error('Error adding item to POS:', res.data.message);
+            }
+        } catch (error) {
+            console.error('Error adding item to POS:', error);
+        }
+    };
+    
+
     const handleCategoryClick = (category) => {
         const filteredItems = data.filter(item => item.category === category);
         setFilteredData(filteredItems);
@@ -116,10 +142,108 @@ const Admin = () => {
         setFilteredData(data);
     };
 
+    const getPosItems = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.get('/getpos', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                }
+            });
+    
+            if (res.data.status === 'success') {
+                setPosItems(res.data.data);
+            } else {
+                console.log('Error fetching POS items');
+            }
+        } catch (error) {
+            console.error('Error fetching POS items:', error);
+        }
+    };
+
+    const removeFromPOS = async (itemId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(
+                '/remove-pos-item',
+                { itemId },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    }
+                }
+            );
+    
+            if (res.data.status === 'success') {
+                console.log('Item removed from POS');
+                getPosItems();  // Refresh POS items after removal
+            } else {
+                console.error('Error removing item from POS:', res.data.message);
+            }
+        } catch (error) {
+            console.error('Error removing item from POS:', error);
+        }
+    };
+
+    const updatePos = async (itemId, change) => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(
+                '/update-pos',
+                { itemId, change },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    }
+                }
+            );
+    
+            if (res.data.status === 'success') {
+                console.log('Item quantity updated');
+                getPosItems();  // Refresh POS items after updating
+            } else {
+                console.error('Error updating item quantity:', res.data.message);
+            }
+        } catch (error) {
+            console.error('Error updating item quantity:', error);
+        }
+    };
+    
+    const calculateTotal = () => {
+        return posItems.reduce((total, item) => total + item.price * item.quantity, 0);
+    };
+    
+    const handleCheckout = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.post(
+                '/pos-place-order',
+                { posItems },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+    
+            if (res.data.success) {
+                console.log('Order placed successfully');
+                setPosItems([]); // Clear POS items after successful order placement
+            } else {
+                console.error('Error placing order:', res.data.error);
+            }
+        } catch (error) {
+            console.error('Error placing order:', error);
+        }
+    };
+    
+    // Call getPosItems when component mounts or data changes
     useEffect(() => {
         getUserData();
         getCategories();
+        getPosItems();
     }, []);
+    
 
     return (
         <div>
@@ -138,32 +262,54 @@ const Admin = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>Adobo</td>
-                                    <td id="quantity">
-                                <button className="pos-qty" id="add">+</button>
-                                <label id="pos-lbllQuantity">1</label>
-                                <button className="pos-qty" id="min">-</button></td>
-                                <td><button id="pos-remove"><VscTrash/></button></td>
-                                    <td>P80</td>
-                                </tr>
-                                <tr>
-                                    <td>Sinigang</td>
-                                    <td id="quantity">
-                                <button className="pos-qty" id="add">+</button>
-                                <label id="pos-lbllQuantity">1</label>
-                                <button className="pos-qty" id="min">-</button></td>
-                                <td><button id="pos-remove"><VscTrash/></button></td>
-                                    <td>P180</td>
-                                </tr>
-                            </tbody>
+    {posItems.length > 0 ? (
+        posItems.map((item, index) => (
+            <tr key={index}>
+                <td>{item.itemname}</td>
+                <td id="quantity">
+                    <button 
+                        className="pos-qty" 
+                        id="add" 
+                        onClick={() => updatePos(item.itemId, 1)} // Increase quantity
+                    >
+                        +
+                    </button>
+                    <label id="pos-lbllQuantity">{item.quantity}</label>
+                    <button 
+                        className="pos-qty" 
+                        id="min" 
+                        onClick={() => updatePos(item.itemId, -1)} // Decrease quantity
+                    >
+                        -
+                    </button>
+                </td>
+                <td>
+                    <button id="pos-remove">
+                        <VscTrash onClick={() => removeFromPOS(item.itemId)} />
+                    </button>
+                </td>
+                <td>₱{item.price}</td>
+            </tr>
+        ))
+    ) : (
+        <tr>
+            <td colSpan="4">No items in POS</td>
+        </tr>
+    )}
+</tbody>
+
+
                         </table>
                     </div>
                     <div className='checkoutpos'>
-                        <hr className='divider' />
-                        <h2>Total Amount: P300.00</h2>
-                        <button className='checkout'>Checkout</button>
-                    </div>
+    <hr className='divider' />
+    <h2>Total Amount: ₱{calculateTotal().toFixed(2)}</h2>
+    <button className='checkout' onClick={handleCheckout}>
+    Checkout
+</button>
+
+</div>
+
                 </div>
 
                 <div className='items'>
@@ -189,28 +335,34 @@ const Admin = () => {
                     </div>
 
                     <div className='items1'>
-                        {filteredData.length > 0 ? (
-                            filteredData.map((el, i) => (
-                                <div key={i} className='item'>
-                                    <img
-                                        variant='top'
-                                        src={`/uploads/${el.img}`}
-                                        className="itm" alt="itm"
-                                    />
-                                    <div className='text-container'>
-                                        <h3>{el.itemname}</h3>
-                                        <label>₱{el.price}</label>
-                                        <div>
-                                            <button className="btnItem">Add</button>
-                                            <button onClick={() => dltUser(el.id)} className="btnItem">Delete</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p>No items found</p>
-                        )}
+    {filteredData.length > 0 ? (
+        filteredData.map((el, i) => (
+            <div key={i} className='item'>
+                <img
+                    variant='top'
+                    src={`/uploads/${el.img}`}
+                    className="itm" alt="itm"
+                />
+                <div className='text-container'>
+                    <h3>{el.itemname}</h3>
+                    <label>₱{el.price}</label>
+                    <div>
+                        <button
+                            className="btnItem"
+                            onClick={() => addToPOS(el.id, 1, el.price)} // Quantity is 1 for now
+                        >
+                            Add
+                        </button>
+                        <button onClick={() => dltUser(el.id)} className="btnItem">Delete</button>
                     </div>
+                </div>
+            </div>
+        ))
+    ) : (
+        <p>No items found</p>
+    )}
+</div>
+
                 </div>
             </div>
 

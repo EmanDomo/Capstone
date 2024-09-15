@@ -42,7 +42,7 @@ function AdminHeader() {
       if (res.data.length > 0) {
         setWarningStocks(res.data);
         setWarningCount(res.data.length);
-        setShowModal(false);
+        setShowModal(true);
       } else {
         setShowModal(false);
       }
@@ -51,9 +51,6 @@ function AdminHeader() {
     }
   };
 
-  useEffect(() => {
-    getWarningStocksData(); // Fetch data on component mount
-  }, []); // Empty dependency array ensures this runs once on mount
 
   useEffect(() => {
     if (showModal) {

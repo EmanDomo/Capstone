@@ -75,7 +75,7 @@ const Sales = () => {
 
   return (
     <div className="sales-container">
-      <Header/>
+      <Header />
       <h2>Sales for Today</h2>
       {renderSales(dailySales)}
       <h2>Sales for This Week</h2>

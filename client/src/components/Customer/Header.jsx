@@ -33,6 +33,7 @@ const Header = () => {
     }
     getUserData();
     getCartData();
+    fetchOrders();
   }, []);
 
   const getUserData = async () => {
@@ -176,7 +177,8 @@ const Header = () => {
 
   getCartData();
   getUserData();
-
+  fetchOrders();
+  
   return (
     <>
       <div className="navbar">

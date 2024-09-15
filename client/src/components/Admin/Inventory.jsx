@@ -63,7 +63,7 @@ const Inventory = () => {
                     'Authorization': `Bearer ${token}`,
                 },
             });
-    
+
             if (res.data.status === 200) {
                 console.log('Data fetched successfully:', res.data.data);
                 setData(res.data.data);
@@ -74,7 +74,7 @@ const Inventory = () => {
             console.error('Error fetching data:', error);
         }
     };
-    
+
 
     const getCategories = async () => {
         try {
@@ -98,7 +98,7 @@ const Inventory = () => {
                     'Authorization': `Bearer ${token}`,
                 },
             });
-        
+
             if (res.data.status === 'success') {
                 setStockData(res.data.data);
                 setIngredients(res.data.data);
@@ -112,93 +112,93 @@ const Inventory = () => {
     };
 
     const dltUser = async (id) => {
-      try {
-          const token = localStorage.getItem('token');
-          const res = await axios.delete(`/delete/${id}`, {
-              headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`,
-              },
-          });
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.delete(`/delete/${id}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
 
-          if (res.data.status === 201) {
-              getUserData();
-              setShow(true);
-          } else {
-              console.error('Failed to delete item');
-          }
-      } catch (error) {
-          console.error('Error deleting item:', error);
-      }
-  };
-
-  const addIngredient = () => {
-    const ingredient = ingredients.find(ing => ing.stock_item_name === selectedIngredient);
-
-    if (ingredient && ingredientQuantity && selectedIngredientUnit) {
-        setSelectedIngredients(prevIngredients => [
-            ...prevIngredients,
-            { 
-                stock_id: ingredient.stockId,  // Correct the key to match your database column
-                name: selectedIngredient, 
-                quantity: ingredientQuantity, 
-                unit: selectedIngredientUnit 
+            if (res.data.status === 201) {
+                getUserData();
+                setShow(true);
+            } else {
+                console.error('Failed to delete item');
             }
-        ]);
-
-        // Clear the input fields
-        setSelectedIngredient('');
-        setIngredientQuantity('');
-        setSelectedIngredientUnit('');
-    } else {
-        console.error('Failed to add ingredient. Ingredient or quantity/unit is missing.');
-    }
-};
-
-
-const removeIngredient = (index) => {
-    setSelectedIngredients(prevIngredients => prevIngredients.filter((_, i) => i !== index));
-};
-
-
-const handleIngredientSelection = (e) => {
-    const selected = e.target.value;
-    const ingredient = ingredients.find(ing => ing.stock_item_name === selected);
-
-    setSelectedIngredient(selected);
-    setSelectedIngredientUnit(ingredient ? ingredient.unit : '');
-};
-
-const addUserData = async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData();
-    formData.append("photo", file);
-    formData.append("fname", fname);
-    formData.append("quantity", quantity);
-    formData.append("price", price);
-    formData.append("category", category);
-    formData.append("ingredients", JSON.stringify(selectedIngredients));
-
-    console.log('Form Data:', formData.get("fname"), formData.get("price"), formData.get("category"), formData.get("ingredients"));
-
-    try {
-        const res = await axios.post("/addItem", formData, {
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
-        });
-
-        if (res.data.status === 201) {
-            handleClose();
-            getUserData(); // Refresh data
-        } else {
-            console.log("Error:", res.data.message);
+        } catch (error) {
+            console.error('Error deleting item:', error);
         }
-    } catch (error) {
-        console.error("Error submitting data:", error);
-    }
-};
+    };
+
+    const addIngredient = () => {
+        const ingredient = ingredients.find(ing => ing.stock_item_name === selectedIngredient);
+
+        if (ingredient && ingredientQuantity && selectedIngredientUnit) {
+            setSelectedIngredients(prevIngredients => [
+                ...prevIngredients,
+                {
+                    stock_id: ingredient.stockId,  // Correct the key to match your database column
+                    name: selectedIngredient,
+                    quantity: ingredientQuantity,
+                    unit: selectedIngredientUnit
+                }
+            ]);
+
+            // Clear the input fields
+            setSelectedIngredient('');
+            setIngredientQuantity('');
+            setSelectedIngredientUnit('');
+        } else {
+            console.error('Failed to add ingredient. Ingredient or quantity/unit is missing.');
+        }
+    };
+
+
+    const removeIngredient = (index) => {
+        setSelectedIngredients(prevIngredients => prevIngredients.filter((_, i) => i !== index));
+    };
+
+
+    const handleIngredientSelection = (e) => {
+        const selected = e.target.value;
+        const ingredient = ingredients.find(ing => ing.stock_item_name === selected);
+
+        setSelectedIngredient(selected);
+        setSelectedIngredientUnit(ingredient ? ingredient.unit : '');
+    };
+
+    const addUserData = async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append("photo", file);
+        formData.append("fname", fname);
+        formData.append("quantity", quantity);
+        formData.append("price", price);
+        formData.append("category", category);
+        formData.append("ingredients", JSON.stringify(selectedIngredients));
+
+        console.log('Form Data:', formData.get("fname"), formData.get("price"), formData.get("category"), formData.get("ingredients"));
+
+        try {
+            const res = await axios.post("/addItem", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            });
+
+            if (res.data.status === 201) {
+                handleClose();
+                getUserData(); // Refresh data
+            } else {
+                console.log("Error:", res.data.message);
+            }
+        } catch (error) {
+            console.error("Error submitting data:", error);
+        }
+    };
 
 
     const addStockData = async (e) => {
@@ -251,80 +251,80 @@ const addUserData = async (e) => {
     return (
         <div>
             <Header />
-        <div className="inventory-container">
-        
-            <h1 className='inventory-title'>INVENTORY</h1>
+            <div className="inventory-container">
 
-            <div className='btn-container'>
-                <button className="inv-btn" onClick={() => { setShowInventory(true); setShowStocks(false); }}>Show Inventory</button>
-                <button className="inv-btn1" onClick={() => { setShowStocks(true); setShowInventory(false); }}>Show Stocks</button>
-            </div>
+                <h1 className='inventory-title'>INVENTORY</h1>
 
-            {showInventory && (
-                <>            
+                <div className='btn-container'>
+                    <button className="inv-btn" onClick={() => { setShowInventory(true); setShowStocks(false); }}>Show Inventory</button>
+                    <button className="inv-btn1" onClick={() => { setShowStocks(true); setShowInventory(false); }}>Show Stocks</button>
+                </div>
 
-            <div className='inventory-table-container'>
-                <table className='inventory-table'>
-                    <thead>
-                        <tr>
-                            <th className='inventory-col1'>Item Name</th>
-                            <th className='inventory-col2'>Ingredients</th>
-                            <th className='inventory-col3'>Quantities Required</th>
-                            <th className='inventory-col4'>Units</th>
-                            <th className='inventory-col5'>Price</th>
-                            <th className='inventory-col6'>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {data.map((el, i) => (
-                            <tr key={i}>
-                                <td>{el.Item_Name}</td>
-                                <td>{el.Stock_Names}</td>
-                                <td>{el.Quantities_Required}</td>
-                                <td>{el.Units}</td>
-                                <td>{el.Price}</td>
-                                <td>
-                                    <button className='delete-btn' onClick={() => dltUser(el.Item_Name)}>Delete</button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-            <div className='add-product-btn-container'>
-                <button className='add-product-btn' onClick={handleShow}>Add Product</button>
-            </div>
-            </>
-            )}
+                {showInventory && (
+                    <>
 
-            {showStocks && (
-            <>
-            <div className='stock-table-container'>
-                <table className='stock-table'>
-                    <thead>
-                        <tr>
-                            <th className='stock-col1'>Name</th>
-                            <th className='stock-col2'>Quantity</th>
-                            <th className='stock-col3'>Unit</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {stockData.map((el, i) => (
-                            <tr key={i}>
-                                <td>{el.stock_item_name}</td>
-                                <td className='stock-col2-td'>{el.stock_quantity}</td>
-                                <td className='stock-col3-td'>{el.unit}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-            <div className='add-stock-btn-container'>
-                <button className='add-stock-btn' onClick={handleStockShow}>Add Stocks</button>
-            </div>
-            </>
-            )}
-            
+                        <div className='inventory-table-container'>
+                            <table className='inventory-table'>
+                                <thead>
+                                    <tr>
+                                        <th className='inventory-col1'>Item Name</th>
+                                        <th className='inventory-col2'>Ingredients</th>
+                                        <th className='inventory-col3'>Quantities Required</th>
+                                        <th className='inventory-col4'>Units</th>
+                                        <th className='inventory-col5'>Price</th>
+                                        <th className='inventory-col6'>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.map((el, i) => (
+                                        <tr key={i}>
+                                            <td>{el.Item_Name}</td>
+                                            <td>{el.Stock_Names}</td>
+                                            <td>{el.Quantities_Required}</td>
+                                            <td>{el.Units}</td>
+                                            <td>{el.Price}</td>
+                                            <td>
+                                                <button className='delete-btn' onClick={() => dltUser(el.Item_Name)}>Delete</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className='add-product-btn-container'>
+                            <button className='add-product-btn' onClick={handleShow}>Add Product</button>
+                        </div>
+                    </>
+                )}
+
+                {showStocks && (
+                    <>
+                        <div className='stock-table-container'>
+                            <table className='stock-table'>
+                                <thead>
+                                    <tr>
+                                        <th className='stock-col1'>Name</th>
+                                        <th className='stock-col2'>Quantity</th>
+                                        <th className='stock-col3'>Unit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {stockData.map((el, i) => (
+                                        <tr key={i}>
+                                            <td>{el.stock_item_name}</td>
+                                            <td className='stock-col2-td'>{el.stock_quantity}</td>
+                                            <td className='stock-col3-td'>{el.unit}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className='add-stock-btn-container'>
+                            <button className='add-stock-btn' onClick={handleStockShow}>Add Stocks</button>
+                        </div>
+                    </>
+                )}
+
 
 
 
@@ -408,54 +408,54 @@ const addUserData = async (e) => {
                             </Form.Select>
                         </Form.Group>
 
-{selectedIngredient && (
-    <>
-        <Form.Group className="mb-3" controlId="formIngredientQuantity">
-            <Form.Label>Quantity</Form.Label>
-            <Form.Control
-                type="number"
-                value={ingredientQuantity}
-                onChange={(e) => setIngredientQuantity(e.target.value)}
-                className='form-ingredient-quantity'
-            />
-        </Form.Group>
+                        {selectedIngredient && (
+                            <>
+                                <Form.Group className="mb-3" controlId="formIngredientQuantity">
+                                    <Form.Label>Quantity</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        value={ingredientQuantity}
+                                        onChange={(e) => setIngredientQuantity(e.target.value)}
+                                        className='form-ingredient-quantity'
+                                    />
+                                </Form.Group>
 
-        <Form.Group className="mb-3" controlId="formIngredientUnit">
-            <Form.Label>Unit</Form.Label>
-            <Form.Control
-                type="text"
-                value={selectedIngredientUnit}
-                readOnly
-                className='form-ingredient-unit'
-            />
-        </Form.Group>
+                                <Form.Group className="mb-3" controlId="formIngredientUnit">
+                                    <Form.Label>Unit</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        value={selectedIngredientUnit}
+                                        readOnly
+                                        className='form-ingredient-unit'
+                                    />
+                                </Form.Group>
 
-        <Button onClick={addIngredient} className='add-ingredient-btn'>
-            Add Ingredient
-        </Button>
-    </>
-)}
+                                <Button onClick={addIngredient} className='add-ingredient-btn'>
+                                    Add Ingredient
+                                </Button>
+                            </>
+                        )}
 
-{selectedIngredients.length > 0 && (
-    <div className="ingredients-list">
-        <h5>Added Ingredients</h5>
-                <table className='table-ingredients'>
-                    <tr>
-                        <th>Ingredient Name</th>
-                        <th className='ing-th'>Quantity & Unit</th>
-                        <th className='ing-th1'>Action</th>
-                    </tr>
-                    {selectedIngredients.map((ingredient, index) => (
-                    <tr  key={index}>
+                        {selectedIngredients.length > 0 && (
+                            <div className="ingredients-list">
+                                <h5>Added Ingredients</h5>
+                                <table className='table-ingredients'>
+                                    <tr>
+                                        <th>Ingredient Name</th>
+                                        <th className='ing-th'>Quantity & Unit</th>
+                                        <th className='ing-th1'>Action</th>
+                                    </tr>
+                                    {selectedIngredients.map((ingredient, index) => (
+                                        <tr key={index}>
 
-                        <td>{ingredient.name}</td>
-                        <td className='ing-td'>{ingredient.quantity} {ingredient.unit}</td>
-                        <td><button type="button" className="btn-remove-ingredient" onClick={() => removeIngredient(index)}><IoTrashOutline/></button></td>
-                    </tr>
-                     ))}
-                </table>
-    </div>
-)}
+                                            <td>{ingredient.name}</td>
+                                            <td className='ing-td'>{ingredient.quantity} {ingredient.unit}</td>
+                                            <td><button type="button" className="btn-remove-ingredient" onClick={() => removeIngredient(index)}><IoTrashOutline /></button></td>
+                                        </tr>
+                                    ))}
+                                </table>
+                            </div>
+                        )}
 
                         <Form.Group className="mb-3" controlId="formItemImage">
                             <Form.Label>Image</Form.Label>

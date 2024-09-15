@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Header from './HeaderAdmin';
+import Header from '../Admin/HeaderAdmin';
 import "../../styles/Orders.css";
 import { FaCheck, FaTimes, FaEye } from "react-icons/fa";
 import Modal from 'react-bootstrap/Modal';
@@ -125,12 +125,12 @@ const Orders = () => {
                                         <td className="order-cell">₱{order.price * order.quantity}.00</td>
                                         <td className="order-cell">
                                             <FaCheck
-                                                style={{ cursor: 'pointer', marginRight: '10px' }} 
-                                                onClick={() => handleCompleteOrder(order.orderId, order.userId, order.price * order.quantity)} 
+                                                style={{ cursor: 'pointer', marginRight: '10px' }}
+                                                onClick={() => handleCompleteOrder(order.orderId, order.userId, order.price * order.quantity)}
                                             />
-                                            <FaTimes 
-                                                style={{ cursor: 'pointer', color: 'red', marginRight: '10px' }} 
-                                                onClick={() => handleShowCancelModal(order.orderId)} 
+                                            <FaTimes
+                                                style={{ cursor: 'pointer', color: 'red', marginRight: '10px' }}
+                                                onClick={() => handleShowCancelModal(order.orderId)}
                                             />
                                             <FaEye
                                                 style={{ cursor: 'pointer', color: 'blue' }}
