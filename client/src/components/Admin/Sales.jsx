@@ -41,29 +41,38 @@ const Sales = () => {
   };
 
   const renderSales = (sales) => (
-    <table>
-      <thead>
-        <tr>
-          <th>Sale ID</th>
-          <th>Order ID</th>
-          <th>User ID</th>
-          <th>Total Amount</th>
-          <th>Sale Date</th>
-        </tr>
-      </thead>
-      <tbody>
-        {sales.map((sale) => (
-          <tr key={sale.saleId}>
-            <td>{sale.saleId}</td>
-            <td>{sale.orderId}</td>
-            <td>{sale.userId}</td>
-            <td>{sale.totalAmount}</td>
-            <td>{new Date(sale.saleDate).toLocaleString()}</td>
+    <div className="table-wrapper">
+      <table className="table table-striped table-bordered table-hover">
+        <thead className="thead-dark">
+          <tr>
+            <th>Sale ID</th>
+            <th>Order ID</th>
+            <th>Username</th> {/* Adjusted to show username */}
+            <th>Total Amount (₱)</th> {/* Added currency symbol */}
+            <th>Sale Date</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {sales.map((sale) => {
+            // Ensure totalAmount is a valid number
+            const totalAmount = parseFloat(sale.totalAmount) || 0;
+  
+            return (
+              <tr key={sale.saleId}>
+                <td>{sale.saleId}</td>
+                <td>{sale.orderId}</td>
+                <td>{sale.username}</td> {/* Use sale.username for displaying the username */}
+                <td>₱{totalAmount.toFixed(2)}</td> {/* Format as currency */}
+                <td>{new Date(sale.saleDate).toLocaleString()}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
+  
+  
 
   if (loading) {
     return <div>Loading...</div>;
@@ -74,14 +83,17 @@ const Sales = () => {
   }
 
   return (
+    <div>
+            <Header />
     <div className="sales-container">
-      <Header />
+
       <h2>Sales for Today</h2>
       {renderSales(dailySales)}
       <h2>Sales for This Week</h2>
       {renderSales(weeklySales)}
       <h2>Sales for This Month</h2>
       {renderSales(monthlySales)}
+    </div>
     </div>
   );
 };

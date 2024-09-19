@@ -1,9 +1,23 @@
+/* Ensure the body and html take the full height */
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: auto; /* Ensure scrolling is enabled */
+}
+
 .sales-container {
   padding: 20px;
+  min-height: 100vh; /* Ensure the container takes at least the full viewport height */
+  box-sizing: border-box; /* Include padding in the height calculation */
 }
 
 .sales-container h2 {
   margin-top: 20px;
+}
+
+.table-wrapper {
+  max-height: 500px; /* Adjust the height as needed */
+  overflow-y: auto;  /* Enable vertical scrolling for the table content */
 }
 
 table {

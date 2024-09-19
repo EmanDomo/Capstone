@@ -15,6 +15,10 @@ async function createPaymongoLink(amount, description, remarks) {
         data: {
           attributes: {
             amount: amount * 100, // PayMongo expects the amount in cents
+            redirect: {
+              success: 'http://localhost:3000/success', // Ensure this URL matches your front-end success page
+              failed: 'http://localhost:3000/failed'
+            },
             description: "You are making a payment to Saint Jerome Integrated School of Cabuyao .",
             remarks: "Payment"
           }
@@ -34,4 +38,3 @@ async function createPaymongoLink(amount, description, remarks) {
 module.exports = {
   createPaymongoLink
 };
-

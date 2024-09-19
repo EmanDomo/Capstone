@@ -54,6 +54,30 @@ router.post('/pay-gcash', async (req, res) => {
     }
 });
 
+router.post('/pay-others', async (req, res) => {
+    const { totalAmount } = req.body;
+
+    if (!totalAmount) {
+        res.status(400).send('Total amount is required');
+        return;
+    }
+
+    const parsedTotalAmount = parseFloat(totalAmount);
+    if (isNaN(parsedTotalAmount)) {
+        res.status(400).send('Total amount must be a number');
+        return;
+    }
+
+    try {
+        const paymongoLink = await createPaymongoLink(parsedTotalAmount, 'GCash Payment', 'GCash payment description');
+        res.json({ url: paymongoLink.data.attributes.checkout_url });
+    } catch (error) {
+        console.error('Error creating PayMongo GCash link:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -75,6 +99,34 @@ const authorizeRoles = (...roles) => {
         next();
     };
 };
+router.post('/SuperAdminLoginForm', (req, res) => { 
+    const { username, password } = req.body;
+
+    const query = `SELECT * FROM tbl_superadmins WHERE username = ? AND password = ?`;
+    conn.query(query, [username, password], (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        if (results.length > 0) {
+            const user = results[0];
+            const token = jwt.sign(
+                { userId: user.id, role: 'superadmin' }, // SuperAdmin role
+                secretKey, 
+                { expiresIn: '1h' }
+            );
+            
+            res.status(200).json({ 
+                message: 'SuperAdmin login successful', 
+                token, 
+                role: 'superadmin' 
+            });
+        } else {
+            res.status(401).json({ message: 'Invalid username or password' });
+        }
+    });
+});
 
 
 // Admin login
@@ -403,7 +455,7 @@ LIMIT 3;
 });
 
 
-router.get("/getinventorydata", authenticateToken, authorizeRoles('admin', 'customer'), (req, res) => {
+router.get("/getinventorydata", authenticateToken, authorizeRoles( 'superadmin'), (req, res) => {
     try {
         const sqlQuery = `
            SELECT 
@@ -442,7 +494,7 @@ GROUP BY
     }
 });
 
-router.post('/addStock', authenticateToken, authorizeRoles('admin'), (req, res) => {
+router.post('/addStock', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
     const { stockName, stockQuantity, stockUnit } = req.body;
 
     if (!stockName || !stockQuantity || !stockUnit) {
@@ -460,7 +512,7 @@ router.post('/addStock', authenticateToken, authorizeRoles('admin'), (req, res) 
 });
 
 // Route to get stock items
-router.get('/getstock', authenticateToken, authorizeRoles('admin'), (req, res) => {
+router.get('/getstock', authenticateToken, authorizeRoles('superadmin', 'superadmin'), (req, res) => {
     const query = 'SELECT * FROM tbl_stocks';
     conn.query(query, (err, results) => {
         if (err) {
@@ -1075,8 +1127,8 @@ router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (re
     });
 });
 
-router.post('/pos-place-order', authenticateToken, authorizeRoles('admin'), (req, res) => {
-    const userId = req.user.userId;
+router.post('/pos-place-order', authenticateToken, (req, res) => {
+    const userId = req.user.userId || req.user.adminId; // Use adminId if userId is not available
     const qrCodeImage = req.file ? req.file.filename : null;
     const posItems = req.body.posItems;
     let stockUpdates = [];
@@ -1105,46 +1157,7 @@ router.post('/pos-place-order', authenticateToken, authorizeRoles('admin'), (req
 
             const processPosItem = (itemIndex) => {
                 if (itemIndex >= posItems.length) {
-                    // All items processed, now update the stock
-                    const updateStocks = (index) => {
-                        if (index >= stockUpdates.length) {
-                            // All stock updates completed, now delete POS items and commit the transaction
-                            conn.query('DELETE FROM tbl_pos WHERE adminId = ?', [userId], (err) => {
-                                if (err) {
-                                    return conn.rollback(() => {
-                                        console.error('Error emptying POS:', err);
-                                        return res.status(500).json({ success: false, error: 'Failed to empty POS' });
-                                    });
-                                }
-
-                                conn.commit((err) => {
-                                    if (err) {
-                                        return conn.rollback(() => {
-                                            console.error('Transaction commit failed:', err);
-                                            return res.status(500).json({ success: false, error: 'Transaction commit failed' });
-                                        });
-                                    }
-
-                                    res.json({ success: true, orderNumber: newOrderNumber });
-                                });
-                            });
-                            return;
-                        }
-
-                        const { stockId, newStockQuantity } = stockUpdates[index];
-                        conn.query('UPDATE tbl_stocks SET stock_quantity = ? WHERE stockId = ?', 
-                            [newStockQuantity, stockId], (err) => {
-                                if (err) {
-                                    return conn.rollback(() => {
-                                        console.error('Error updating stock:', err);
-                                        return res.status(500).json({ success: false, error: 'Failed to update stock' });
-                                    });
-                                }
-
-                                updateStocks(index + 1);
-                            });
-                    };
-
+                    // All items processed, now update the stock and commit
                     updateStocks(0);
                     return;
                 }
@@ -1181,20 +1194,20 @@ router.post('/pos-place-order', authenticateToken, authorizeRoles('admin'), (req
                             (userId, id, quantity, price, orderNumber, status, qrCodeImage) 
                             VALUES (?, ?, ?, ?, ?, 'pending', ?)`;
                         
-                        const insertOrderValues = [
-                            userId, item.itemId, item.quantity, item.price, newOrderNumber, qrCodeImage
-                        ];
+                            const insertOrderValues = [
+                                userId, item.itemId, item.quantity, item.price, newOrderNumber, qrCodeImage
+                            ];
                         
-                        conn.query(insertOrderQuery, insertOrderValues, (err) => {
-                            if (err) {
-                                return conn.rollback(() => {
-                                    console.error('Error inserting order item:', err);
-                                    return res.status(500).json({ success: false, error: 'Failed to place order' });
-                                });
-                            }
+                            conn.query(insertOrderQuery, insertOrderValues, (err) => {
+                                if (err) {
+                                    return conn.rollback(() => {
+                                        console.error('Error inserting order item:', err);
+                                        return res.status(500).json({ success: false, error: 'Failed to place order' });
+                                    });
+                                }
                         
-                            processPosItem(itemIndex + 1);
-                        });
+                                processPosItem(itemIndex + 1);
+                            });
                         
                             return;
                         }
@@ -1224,6 +1237,7 @@ router.post('/pos-place-order', authenticateToken, authorizeRoles('admin'), (req
         });
     });
 });
+
 
 
 
@@ -1287,10 +1301,15 @@ router.get('/orders', (req, res) => {
 });
 
 
-router.get('/api/sales/today', authenticateToken, authorizeRoles('admin'), (req, res) => {
+router.get('/api/sales/today', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
     const query = `
-        SELECT * FROM tbl_sales 
-        WHERE DATE(saleDate) = CURDATE()
+        SELECT s.saleId, s.orderId, s.userId, s.totalAmount, s.saleDate, u.username, i.itemname
+        FROM tbl_sales s
+        JOIN tbl_orders o ON s.orderId = o.orderId
+        JOIN tbl_users u ON s.userId = u.userId
+        JOIN tbl_items i ON o.id = i.id
+        WHERE DATE(s.saleDate) = CURDATE()
+        ORDER BY s.saleId
     `;
     conn.query(query, (err, results) => {
         if (err) {
@@ -1301,11 +1320,17 @@ router.get('/api/sales/today', authenticateToken, authorizeRoles('admin'), (req,
     });
 });
 
+
 // Route to get sales for this week
-router.get('/api/sales/week', authenticateToken, authorizeRoles('admin'), (req, res) => {
+router.get('/api/sales/week', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
     const query = `
-        SELECT * FROM tbl_sales 
-        WHERE YEARWEEK(saleDate, 1) = YEARWEEK(CURDATE(), 1)
+        SELECT s.saleId, s.orderId, s.userId, s.totalAmount, s.saleDate, u.username, i.itemname
+        FROM tbl_sales s
+        JOIN tbl_orders o ON s.orderId = o.orderId
+        JOIN tbl_users u ON s.userId = u.userId
+        JOIN tbl_items i ON o.id = i.id
+        WHERE YEARWEEK(s.saleDate, 1) = YEARWEEK(CURDATE(), 1)
+        ORDER BY s.saleId
     `;
     conn.query(query, (err, results) => {
         if (err) {
@@ -1316,11 +1341,17 @@ router.get('/api/sales/week', authenticateToken, authorizeRoles('admin'), (req, 
     });
 });
 
+
 // Route to get sales for this month
-router.get('/api/sales/month', authenticateToken, authorizeRoles('admin'), (req, res) => {
+router.get('/api/sales/month', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
     const query = `
-        SELECT * FROM tbl_sales 
-        WHERE YEAR(saleDate) = YEAR(CURDATE()) AND MONTH(saleDate) = MONTH(CURDATE())
+        SELECT s.saleId, s.orderId, s.userId, s.totalAmount, s.saleDate, u.username, i.itemname
+        FROM tbl_sales s
+        JOIN tbl_orders o ON s.orderId = o.orderId
+        JOIN tbl_users u ON s.userId = u.userId
+        JOIN tbl_items i ON o.id = i.id
+        WHERE YEAR(s.saleDate) = YEAR(CURDATE()) AND MONTH(s.saleDate) = MONTH(CURDATE())
+        ORDER BY s.saleId
     `;
     conn.query(query, (err, results) => {
         if (err) {
@@ -1330,6 +1361,8 @@ router.get('/api/sales/month', authenticateToken, authorizeRoles('admin'), (req,
         res.status(200).json(results);
     });
 });
+
+
 
 // Fetch orders for the authenticated user
 router.get('/my-orders', authenticateToken, authorizeRoles('customer'), (req, res) => {
@@ -1371,9 +1404,9 @@ router.delete('/delete-order/:orderId', authenticateToken, authorizeRoles('custo
 });
 
 
-router.get('/warning-stocks', authenticateToken, authorizeRoles('admin'), (req, res) => {
+router.get('/warning-stocks', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
     const query = `
-        SELECT * FROM tbl_stocks where stock_quantity >= 20;
+        SELECT * FROM tbl_stocks where stock_quantity <= 20;
     `;
     conn.query(query, (err, results) => {
         if (err) {

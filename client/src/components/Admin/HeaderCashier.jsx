@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import Logo from "../../Assets/logo.png";
 import { Link, useLocation } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
-import { MdInventory } from "react-icons/md";
 import { IoLogOutOutline } from "react-icons/io5";
-import { IoIosAlert } from "react-icons/io";
-import { AiOutlineStock } from "react-icons/ai";
+import { IoIosNotifications } from "react-icons/io";
+import { MdOutlinePointOfSale } from "react-icons/md";
+import { IoFastFood } from "react-icons/io5";
 import { jwtDecode } from 'jwt-decode';
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
@@ -67,10 +67,11 @@ function AdminHeader() {
           <img src={Logo} className="logo" alt="logo" />
         </div>
         <div className="hiddenLinks">
-          <Link to="/Menu"> <MdInventory /> </Link>
-          <Link to="/sales"> <AiOutlineStock /></Link>
+          <Link to="/"> POS </Link>
+          <Link to="/Menu"> Inventory </Link>
+          <Link to="/Order"> Orders </Link>
           <div className="notification-icon" onClick={getWarningStocksData}>
-          <IoIosAlert />
+            <IoIosNotifications />
             {warningCount > 0 && (
               <span className="notification-badge">{warningCount}</span>
             )}
@@ -78,14 +79,12 @@ function AdminHeader() {
         </div>
       </div>
       <div className="rightSide">
-        <Link to="/inventory"> <MdInventory /> </Link>
-        <Link to="/sales"> <AiOutlineStock /> </Link>
-        <div className="notification-icon" onClick={getWarningStocksData}>
-        <IoIosAlert />
-          {warningCount > 0 && (
-            <span className="notification-badge">{warningCount}</span>
-          )}
-        </div>
+        <Link to="/pos"> <MdOutlinePointOfSale /> </Link>
+        <div className="orders-icon">
+      <Link to="/orders">
+        <IoFastFood />
+      </Link>
+    </div>
         <Link to="/" className="user">
           <IoLogOutOutline />
         </Link>
@@ -103,7 +102,7 @@ function AdminHeader() {
             <ul>
               {warningStocks.map((stock) => (
                 <li key={stock.id}>
-                  {stock.stock_item_name}: {stock.stock_quantity} {stock.unit}/s left.
+                  {stock.stock_item_name}: {stock.stock_quantity} {stock.unit}
                 </li>
               ))}
             </ul>

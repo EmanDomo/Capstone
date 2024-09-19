@@ -32,10 +32,26 @@ const Checkout = () => {
       console.error('Error:', error);
     }
   };
-
   const handleOtherPayment = async () => {
-    // Existing function code remains unchanged
-  };
+    try {
+        const response = await fetch('/pay-others', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ totalAmount: overallTotal }),
+        });
+        const data = await response.json();
+        if (data.url) {
+            window.location.href = data.url;
+        } else {
+            console.error('Failed to get payment link');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+};
+
 
   const handleQR = () => {
     setShowQRModal(true);

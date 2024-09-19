@@ -4,10 +4,12 @@
 	background-color: #e78bb5;
 	display: flex;
 	flex-direction: row;
+	align-items: center;
   }
   
   .app-logo {
 	display: flex;
+	align-items: center;
 	gap: 20px;
   }
   
@@ -24,33 +26,21 @@
 	padding-left: 30px;
   }
   
-  h2 {
-	color: rgb(0, 0, 0);
-  }
-  
-  .navbar .leftSide img {
-	width: 70px;
-  }
-  
   .navbar .rightSide {
 	flex: 50%;
 	height: 100%;
 	display: flex;
 	align-items: center;
-	justify-content: center;
-  }
-  
-  .rightSide .user {
-	margin-right: -35%;
-	margin-left: 10%;
+	justify-content: flex-end; /* Align icons to the right */
+	padding-right: 20px; /* Adjust padding as needed */
   }
   
   .navbar a {
 	color: rgb(0, 0, 0);
 	text-decoration: none;
-	margin: 20px;
+	margin: 0 10px; /* Equal space between icons */
   }
-
+  
   .navbar a:focus, a:hover {
 	color: white;
   }
@@ -66,6 +56,7 @@
 	font-size: 40px;
   }
   
+  /* Ensure logo remains in place and left side items stay unchanged */
   .navbar #open {
 	padding-left: 0px;
   }
@@ -96,6 +87,7 @@
 	.navbar .rightSide a {
 	  width: 70px;
 	}
+  
 	.navbar .leftSide {
 	  padding-left: 50px;
 	}
@@ -124,72 +116,5 @@
 	.hiddenLinks {
 	  display: none;
 	}
-  }
-  
-  /* Style for Active Links */
-  .navbar .activeLink {
-	border-bottom: 2px solid white;
-  }
-  
-  #user-header {
-	margin-top: 15px;
-  }
-
-  .cartTableRow {
-	display: flex;
-	align-items: center;
-	border-bottom: 1px solid #ddd;
-  }
-  
-  .cell {
-	flex: 1;
-	padding: 8px;
-	text-align: left;
-  }
-  
-  .actions {
-	display: flex;
-	gap: 5px; /* Space between buttons */
-  }
-  
-  .cartTableHeader {
-	display: flex;
-	font-weight: bold;
-	border-bottom: 1px solid #ddd;
-  }
-  
-  .headerCell {
-	flex: 1;
-	padding: 8px;
-	text-align: left;
-  }
-  
-  .cartTableRow {
-	display: flex;
-	align-items: center;
-	border-bottom: 1px solid #ddd;
-  }
-  
-  .cell {
-	flex: 1;
-	padding: 8px;
-	text-align: left;
-  }
-  
-  .actions {
-	display: flex;
-	gap: 5px; /* Space between buttons */
-  }
-  
-  .cartTableHeader {
-	display: flex;
-	font-weight: bold;
-	border-bottom: 1px solid #ddd;
-  }
-  
-  .headerCell {
-	flex: 1;
-	padding: 8px;
-	text-align: left;
   }
   

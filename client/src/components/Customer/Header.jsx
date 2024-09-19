@@ -3,8 +3,10 @@ import "../../styles/Header.css";
 import Logo from "../../Assets/logo.png";
 import { Link } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
-import { CiShoppingCart } from "react-icons/ci";
+import { BsFillCartFill } from "react-icons/bs";
 import { HiOutlineUserCircle } from "react-icons/hi2";
+import { IoFastFoodSharp } from "react-icons/io5";
+import { IoIosHome } from "react-icons/io";
 import { jwtDecode } from 'jwt-decode';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
@@ -188,17 +190,16 @@ const Header = () => {
             <h4 id="user-header">Welcome Back, {userName}!</h4>
           </div>
           <div className="hiddenLinks">
-            <Link to="/"> Home </Link>
-            <Link to="/Menu"> Menu </Link>
+            <Link to="/"> <IoIosHome /> </Link>
+            <Link to="/Menu"> <IoFastFoodSharp /> </Link>
             <Link to="/Order"> Order </Link>
           </div>
         </div>
         <div className="rightSide">
-          <Link to="/"> Home </Link>
-          <Link to="/Menu"> Menu </Link>
-          <Link onClick={handleCartShow}><CiShoppingCart /></Link>
+          <Link to="/"> <IoIosHome /> </Link>
+          <Link to="/Menu"> <IoFastFoodSharp /> </Link>
+          <Link onClick={handleCartShow}><BsFillCartFill /></Link>
           <Link onClick={handleOrdersShow}> My Orders </Link>
-          <Link to="/Admin" className="user"><HiOutlineUserCircle /></Link>
           <button onClick={toggleNavbar}>
             <GiHamburgerMenu />
           </button>

@@ -6,8 +6,8 @@ import Form from 'react-bootstrap/Form';
 import Alert from 'react-bootstrap/Alert';
 import axios from 'axios';
 import moment from 'moment';
-import '../../styles/Admin.css';
-import Header from '../Admin/HeaderAdmin';
+import '../../styles/POS.css';
+import Header from './HeaderCashier';
 import { VscTrash } from "react-icons/vsc";
 
 const Admin = () => {
@@ -120,7 +120,7 @@ const Admin = () => {
                     }
                 }
             );
-    
+
             if (res.data.status === 'success') {
                 console.log('Item added to POS');
                 getPosItems();
@@ -131,7 +131,7 @@ const Admin = () => {
             console.error('Error adding item to POS:', error);
         }
     };
-    
+
 
     const handleCategoryClick = (category) => {
         const filteredItems = data.filter(item => item.category === category);
@@ -150,7 +150,7 @@ const Admin = () => {
                     'Authorization': `Bearer ${token}`,
                 }
             });
-    
+
             if (res.data.status === 'success') {
                 setPosItems(res.data.data);
             } else {
@@ -173,7 +173,7 @@ const Admin = () => {
                     }
                 }
             );
-    
+
             if (res.data.status === 'success') {
                 console.log('Item removed from POS');
                 getPosItems();  // Refresh POS items after removal
@@ -197,7 +197,7 @@ const Admin = () => {
                     }
                 }
             );
-    
+
             if (res.data.status === 'success') {
                 console.log('Item quantity updated');
                 getPosItems();  // Refresh POS items after updating
@@ -208,11 +208,11 @@ const Admin = () => {
             console.error('Error updating item quantity:', error);
         }
     };
-    
+
     const calculateTotal = () => {
         return posItems.reduce((total, item) => total + item.price * item.quantity, 0);
     };
-    
+
     const handleCheckout = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -225,7 +225,7 @@ const Admin = () => {
                     },
                 }
             );
-    
+
             if (res.data.success) {
                 console.log('Order placed successfully');
                 setPosItems([]); // Clear POS items after successful order placement
@@ -236,14 +236,14 @@ const Admin = () => {
             console.error('Error placing order:', error);
         }
     };
-    
+
     // Call getPosItems when component mounts or data changes
     useEffect(() => {
         getUserData();
         getCategories();
         getPosItems();
     }, []);
-    
+
 
     return (
         <div>
@@ -262,53 +262,53 @@ const Admin = () => {
                                 </tr>
                             </thead>
                             <tbody>
-    {posItems.length > 0 ? (
-        posItems.map((item, index) => (
-            <tr key={index}>
-                <td>{item.itemname}</td>
-                <td id="quantity">
-                    <button 
-                        className="pos-qty" 
-                        id="add" 
-                        onClick={() => updatePos(item.itemId, 1)} // Increase quantity
-                    >
-                        +
-                    </button>
-                    <label id="pos-lbllQuantity">{item.quantity}</label>
-                    <button 
-                        className="pos-qty" 
-                        id="min" 
-                        onClick={() => updatePos(item.itemId, -1)} // Decrease quantity
-                    >
-                        -
-                    </button>
-                </td>
-                <td>
-                    <button id="pos-remove">
-                        <VscTrash onClick={() => removeFromPOS(item.itemId)} />
-                    </button>
-                </td>
-                <td>₱{item.price}</td>
-            </tr>
-        ))
-    ) : (
-        <tr>
-            <td colSpan="4">No items in POS</td>
-        </tr>
-    )}
-</tbody>
+                                {posItems.length > 0 ? (
+                                    posItems.map((item, index) => (
+                                        <tr key={index}>
+                                            <td>{item.itemname}</td>
+                                            <td id="quantity">
+                                                <button
+                                                    className="pos-qty"
+                                                    id="add"
+                                                    onClick={() => updatePos(item.itemId, 1)} // Increase quantity
+                                                >
+                                                    +
+                                                </button>
+                                                <label id="pos-lbllQuantity">{item.quantity}</label>
+                                                <button
+                                                    className="pos-qty"
+                                                    id="min"
+                                                    onClick={() => updatePos(item.itemId, -1)} // Decrease quantity
+                                                >
+                                                    -
+                                                </button>
+                                            </td>
+                                            <td>
+                                                <button id="pos-remove">
+                                                    <VscTrash onClick={() => removeFromPOS(item.itemId)} />
+                                                </button>
+                                            </td>
+                                            <td>₱{item.price}</td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="4">No items in POS</td>
+                                    </tr>
+                                )}
+                            </tbody>
 
 
                         </table>
                     </div>
                     <div className='checkoutpos'>
-    <hr className='divider' />
-    <h2>Total Amount: ₱{calculateTotal().toFixed(2)}</h2>
-    <button className='checkout' onClick={handleCheckout}>
-    Checkout
-</button>
+                        <hr className='divider' />
+                        <h2>Total Amount: ₱{calculateTotal().toFixed(2)}</h2>
+                        <button className='checkout' onClick={handleCheckout}>
+                            Checkout
+                        </button>
 
-</div>
+                    </div>
 
                 </div>
 
@@ -335,33 +335,33 @@ const Admin = () => {
                     </div>
 
                     <div className='items1'>
-    {filteredData.length > 0 ? (
-        filteredData.map((el, i) => (
-            <div key={i} className='item'>
-                <img
-                    variant='top'
-                    src={`/uploads/${el.img}`}
-                    className="itm" alt="itm"
-                />
-                <div className='text-container'>
-                    <h3>{el.itemname}</h3>
-                    <label>₱{el.price}</label>
-                    <div>
-                        <button
-                            className="btnItem"
-                            onClick={() => addToPOS(el.id, 1, el.price)} // Quantity is 1 for now
-                        >
-                            Add
-                        </button>
-                        <button onClick={() => dltUser(el.id)} className="btnItem">Delete</button>
+                        {filteredData.length > 0 ? (
+                            filteredData.map((el, i) => (
+                                <div key={i} className='item'>
+                                    <img
+                                        variant='top'
+                                        src={`/uploads/${el.img}`}
+                                        className="itm" alt="itm"
+                                    />
+                                    <div className='text-container'>
+                                        <h3>{el.itemname}</h3>
+                                        <label>₱{el.price}</label>
+                                        <div>
+                                            <button
+                                                className="btnItem"
+                                                onClick={() => addToPOS(el.id, 1, el.price)} // Quantity is 1 for now
+                                            >
+                                                Add
+                                            </button>
+                                            <button onClick={() => dltUser(el.id)} className="btnItem">Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p>No items found</p>
+                        )}
                     </div>
-                </div>
-            </div>
-        ))
-    ) : (
-        <p>No items found</p>
-    )}
-</div>
 
                 </div>
             </div>

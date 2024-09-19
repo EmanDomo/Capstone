@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Header from '../Admin/HeaderAdmin';
+import Header from './HeaderCashier';
 import "../../styles/Orders.css";
 import { FaCheck, FaTimes, FaEye } from "react-icons/fa";
 import Modal from 'react-bootstrap/Modal';

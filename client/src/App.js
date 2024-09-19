@@ -1,5 +1,5 @@
 import './App.css';
-import Admin from './components/Admin/Admin';
+import POS from './components/Admin/POS';
 import Homepage from './components/Customer/Homepage';
 import Login from './components/Admin/LoginForm';
 import Menu from './components/Customer/Menu';
@@ -13,6 +13,7 @@ import Failed from './components/Customer/Failed';
 import Orders from './components/Admin/Orders';
 import MyOrders from './components/Customer/MyOrders';
 import Sales from './components/Admin/Sales';
+import SuperAdmin from './components/Admin/SuperAdmin';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Routes, Route } from "react-router-dom";
 
@@ -21,7 +22,7 @@ function App() {
     <>
       <Routes>
         <Route path='/' element={<Homepage />} />
-        <Route path='/admin' element={<Admin />} />
+        <Route path='/pos' element={<POS />} />
         <Route path='/loginform' element={<Login />} />
         <Route path='/menu' element={<Menu />} />
         <Route path='/userlogin' element={<UserLogin />} />
@@ -34,6 +35,7 @@ function App() {
         <Route path='/orders' element={<Orders />} />
         <Route path='/myorders' element={<MyOrders />} />
         <Route path='/sales' element={<Sales />} />
+        <Route path='/superadmin' element={<SuperAdmin />} />
       </Routes>
     </>
   );

@@ -3,6 +3,7 @@
   justify-content: center; 
   align-items: center; 
   flex-direction: column;
+  position: relative; /* To control absolute positioning inside */
 }
 
 .logo1 {
@@ -33,12 +34,21 @@
   transform: translateY(2px);
 }
 
-#home-admin {
-  font-size: 40px;
-  margin: 20px 0px 0px 1400px;
-  cursor: pointer;
+/* Styling for icons container */
+.admin-icons {
+  display: flex;
+  position: absolute;
+  top: 20px;
+  right: 40px;
+  gap: 20px; /* Space between the icons */
 }
 
-#home-admin:hover {
+.home-admin {
+  font-size: 40px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.home-admin:hover {
   color: #e78bb5;
 }
