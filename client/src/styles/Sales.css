@@ -84,3 +84,36 @@ html, body {
   overflow-y: auto; /* Scroll for the entire page */
   max-height: 100vh; /* Prevent content from overflowing outside the view */
 }
+
+.sales-pie-chart {
+  margin-top: 20px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pie-chart-container {
+  width: 30%; /* Adjust width as needed */
+  float: right; /* Align to the right */
+  margin: 20px; /* Add some margin */
+  text-align: center; /* Center the text */
+}
+
+.total-amount {
+  margin-top: 10px;
+  font-weight: bold;
+  font-size: 1.2rem;
+  display: flex;
+  flex-direction: column; /* Stack items vertically */
+  align-items: flex-start; /* Align text to the left */
+}
+
+
+.sales-page-wrapper {
+  display: flex;
+  justify-content: space-between; /* Allow space between the sales content and pie chart */
+}
+
+
+
+
