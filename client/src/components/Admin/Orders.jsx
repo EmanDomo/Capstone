@@ -23,27 +23,32 @@ const Orders = () => {
                         'Authorization': `Bearer ${token}`
                     }
                 });
+                console.log(response.data); // Log the data to check for userName
                 setOrders(response.data);
             } catch (error) {
                 console.error('Error fetching orders:', error);
             }
         };
-
+    
         fetchOrders();
     }, [token]);
+    
 
-    const handleCompleteOrder = async (orderId, userId, totalAmount) => {
+    const handleCompleteOrder = async (orderId, userId, totalAmount, posId, adminId, userName) => {
         try {
             const response = await axios.post('/complete-order', {
                 orderId,
                 userId,
-                totalAmount
+                totalAmount,
+                posId,    // Add posId
+                adminId,  // Add adminId
+                userName  // Add userName
             }, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-
+    
             if (response.data.success) {
                 setOrders(orders.filter(order => order.orderId !== orderId));
             } else {
@@ -53,6 +58,7 @@ const Orders = () => {
             console.error('Error completing order:', error);
         }
     };
+    
 
     const handleCancelOrder = async () => {
         try {
@@ -115,31 +121,41 @@ const Orders = () => {
                                     <th className="order-header-cell">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                {orders.map(order => (
-                                    <tr key={order.orderId} className="order-row">
-                                        <td className="order-cell">{order.orderNumber}</td>
-                                        <td className="order-cell">{order.username}</td>
-                                        <td className="order-cell">{order.itemname}</td>
-                                        <td className="order-cell">{order.quantity}</td>
-                                        <td className="order-cell">₱{order.price * order.quantity}.00</td>
-                                        <td className="order-cell">
+                                                            <tbody>
+                                    {orders.map(order => (
+                                        <tr key={order.orderId} className="order-row">
+                                            <td className="order-cell">{order.orderNumber}</td>
+                                            <td className="order-cell">{order.userName}</td> {/* Ensure order.userName exists */}
+                                            <td className="order-cell">{order.itemname}</td>
+                                            <td className="order-cell">{order.quantity}</td>
+                                            <td className="order-cell">₱{order.price * order.quantity}.00</td>
+                                            <td className="order-cell">
                                             <FaCheck
-                                                style={{ cursor: 'pointer', marginRight: '10px' }}
-                                                onClick={() => handleCompleteOrder(order.orderId, order.userId, order.price * order.quantity)}
-                                            />
-                                            <FaTimes
-                                                style={{ cursor: 'pointer', color: 'red', marginRight: '10px' }}
-                                                onClick={() => handleShowCancelModal(order.orderId)}
-                                            />
-                                            <FaEye
-                                                style={{ cursor: 'pointer', color: 'blue' }}
-                                                onClick={() => handleShowImageModal(order.qrCodeImage)}
-                                            />
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
+    style={{ cursor: 'pointer', marginRight: '10px' }}
+    onClick={() => handleCompleteOrder(
+        order.orderId, 
+        order.userId, 
+        order.price * order.quantity,
+        order.posId,  // Ensure posId is available
+    
+        order.userName // Ensure userName is available
+    )}
+/>
+
+                                                <FaTimes
+                                                    style={{ cursor: 'pointer', color: 'red', marginRight: '10px' }}
+                                                    onClick={() => handleShowCancelModal(order.orderId)}
+                                                />
+                                                <FaEye
+                                                    style={{ cursor: 'pointer', color: 'blue' }}
+                                                    onClick={() => handleShowImageModal(order.qrCodeImage)}
+                                                />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+
+
                         </table>
 
                         {/* Cancel Order Modal */}

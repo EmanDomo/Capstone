@@ -1,40 +1,86 @@
-/* Ensure the body and html take the full height */
+/* Ensure the entire page is scrollable */
 html, body {
   height: 100%;
   margin: 0;
-  overflow: auto; /* Ensure scrolling is enabled */
+  padding: 0;
+  overflow: auto;
 }
 
-.sales-container {
+.sales-dashboard {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   padding: 20px;
-  min-height: 100vh; /* Ensure the container takes at least the full viewport height */
-  box-sizing: border-box; /* Include padding in the height calculation */
+  box-sizing: border-box;
+  overflow: auto;
 }
 
-.sales-container h2 {
+.sales-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sales-filters button {
+  margin: 5px;
+  padding: 10px 20px;
+  border: none;
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+
+.sales-filters button.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.table {
+  width: 100%;
   margin-top: 20px;
 }
 
-.table-wrapper {
-  max-height: 500px; /* Adjust the height as needed */
-  overflow-y: auto;  /* Enable vertical scrolling for the table content */
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-}
-
-table, th, td {
-  border: 1px solid black;
-}
-
-th, td {
+.table th, .table td {
   padding: 10px;
   text-align: left;
 }
 
-th {
-  background-color: #f2f2f2;
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #f9f9f9;
+}
+
+.total-amount {
+  margin-top: 20px;
+}
+
+.cashier-tables {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.cashier-table {
+  flex: 1;
+  margin: 0 10px;
+  max-height: 300px; /* Adjust height as needed */
+  overflow-y: auto;  /* Enables vertical scrolling */
+}
+
+.cashier-table table {
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+.cashier-table h3 {
+  text-align: center;
+}
+
+.sales-content .table-wrapper {
+  max-height: 400px;  /* Set height for scrollable content */
+  overflow-y: auto;   /* Enable vertical scrolling */
+}
+
+/* Add a scrollbar to the whole page */
+.sales-page-wrapper {
+  overflow-y: auto; /* Scroll for the entire page */
+  max-height: 100vh; /* Prevent content from overflowing outside the view */
 }
