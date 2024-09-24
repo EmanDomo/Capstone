@@ -1,176 +1,86 @@
-.inventory-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
+
+.table-fixed th, .table-fixed td {
+    padding: 8px;
+    border: 1px solid #ddd; 
 }
 
-.inventory-title {
-    text-align: center;
-    margin: 5px 0 5px 0;
-}
-
-.inventory-table-container {
-    height: 400px;
-    width: 1000px;
-    background-color: white;
-    box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
-    margin: auto;
-    border-radius: 15px;
-    padding: 0px 0 0 0px;
-    overflow-y: auto; /* Add vertical scrollbar */
-}
-
-.stock-table-container {
-    height: 400px;
-    width: 700px;
-    background-color: white;
-    box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
-    margin: auto;
-    border-radius: 15px;
-    padding: 0px 0 0 0px;
-    overflow-y: auto; /* Add vertical scrollbar */
-}
-
-.inventory-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: center;
-    align-items: center;
-    justify-content: center;
-    border: none; /* Remove border from the table */
-}
-
-.stock-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: center;
-    align-items: center;
-    justify-content: center;
-    border: none; /* Remove border from the table */
-}
-
-.stock-col1 {
-    width: 200px;
-}
-
-.stock-col2 {
-    width: 100px;
-}
-
-.stock-col3 {
-    width: 100px;
-}
-
-
-.inventory-table thead, .stock-table thead{
-    height: 40px;
-    font-size: 15px;
-    position: sticky;
-    top: 0;
-    background-color: white; /* Ensure the header remains visible */
-    border: none; /* Remove border from the thead */
-}
-
-.inventory-table th, .inventory-table td {
-    border: none; /* Remove border from table headers and data cells */
-}
-
-.inventory-col1 {
-    width: 400px;
-}
-
-.inventory-col2 {
-    width: 400px;
-}
-
-.inventory-col3 {
-    width: 200px;
-}
-
-.inventory-col4 {
-    width: 200px;
-}
-
-.inventory-col5 {
-    width: 100px;
-}
-
-.inventory-col6 {
-    width: 100px;
-}
-
-.stock-col2-td, .stock-col3-td {
-    text-align: center;
-}
-
-.add-product-btn-container, .add-stock-btn-container  {
-    margin: 40px 40px 30px 0;
-    display: flex;
-    justify-content: flex-end;
-    width: 1000px;
-}
-
-.add-product-btn, .add-stock-btn {
-    height: 50px;
-    width: 200px;
-    border-radius: 30px;
+#inventory-dropdown {
+    background-color: hotpink;
     border: none;
-    background-color: #000000;
-    cursor: pointer;
-    color: #ffffff;
+    padding: 10px;
 }
 
-.delete-btn {
-    background-color: red;
-    color: white;
+.food-save {
+    background-color: hotpink;
     border: none;
-    border-radius: 5px;
-    cursor: pointer;
 }
 
-.form-item-name,
-.form-item-quantity,
-.form-item-price,
-.form-item-category,
-.form-new-category,
-.form-item-photo {
-    margin-bottom: 15px;
+.food-save.clicked {
+  background-color: black;
+}
+body {
+    overflow-y: hidden;
+}
+/* 
+#action-inventory {
+  width: 140px;
+} */
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
 }
 
-.submit-btn,
-.add-category-btn {
-    margin-top: 10px;
-    width: 100%;
-    border-radius: 5px;
+#edit-inventory {
+  background-color: hotpink;
+  border: none;
+  margin-right: 10px;
 }
 
-.inv-btn, .inv-btn1 {
-    height: 40px;
-    width: 200px;
-    padding: 0 20px; /* Adjust padding for spacing */
-    border-radius: 30px;
+#delete-inventory {
+  background-color: black;
+  border: none;
+}
+
+.btn-add-inventory {
+  width: 200px;
+  height: 50px;
+  margin-left: 900px;
+  margin-bottom: 80px;
+}
+
+@media (max-width: 768px) {
+    .fullscreen-modal {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        margin: 0;
+    }
+
+    .fullscreen-modal .modal-content {
+        /* height: 900px; */
+        border-radius: 0;
+    }
+
+    .food-save {
+        height: 50px;
+        width: 400px;
+        justify-content: center;
+    }
+
+    .btn-add-inventory {
+      width: 300px;
+      height: 50px;
+      margin-left: 0px;
+      margin-bottom: 0px;
+    }
+}
+
+.add-ingredient {
     border: none;
-    background-color: #eccfdc;
-    cursor: pointer;
-    color: black;
-    display: inline-block; /* Ensures button size adjusts based on text */
-    margin: 10px 20px 20px 0px;
 }
 
-  .inv-btn:hover, .inv-btn1:hover {
-    background-color: #e78bb5;
-  }
-
-  .table-ingredients {
-    border: 1px solid rgba(0, 0, 0, 0.152);
-  }
-
-  .table-ingredients th {
-    text-align: center;
-  }
-
-  .ing-th {
+.ing-th {
     width: 150px;
   }
 
@@ -182,19 +92,12 @@
     text-align: center;
   }
 
-  .add-ingredient-btn {
-    height: 40px;
-    width: 200px;
-    border-radius: 30px !important;
-    border: none;
-    background-color: #000000 !important;
-    border:  none !important;
-    cursor: pointer;
-    color: rgb(255, 255, 255) !important;
-    display: inline-block; /* Ensures button size adjusts based on text */
-    align-items: center;
-    justify-content: center;
-    margin-left: 260px;
+  .table-ingredients {
+    border: 1px solid rgba(0, 0, 0, 0.152);
+  }
+
+  .table-ingredients th {
+    text-align: center;
   }
 
   .btn-remove-ingredient {
@@ -209,24 +112,4 @@
     color: red;
     cursor: pointer;
     background-color: transparent;
-  }
-
-  .btn-save-product, .btn-close-product {
-    height: 40px;
-    width: 200px;
-    border-radius: 30px !important;
-    border: none;
-    background-color: #000000 !important;
-    border:  none !important;
-    cursor: pointer;
-    color: rgb(255, 255, 255) !important;
-    display: inline-block; /* Ensures button size adjusts based on text */
-    align-items: center;
-    justify-content: center;
-    margin-right: 20px !important;
-  }
-
- .btn-close-product {
-    background-color: #a09b9b !important;
-    color: rgb(0, 0, 0) !important;
   }

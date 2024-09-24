@@ -47,28 +47,28 @@ const Login = () => {
 
   return (
     <div>
-      <div id="card">
-        <div id="logo-container">
-          <FaArrowLeft id='ad-close' onClick={() => navigate('/')} />
-          <img src={Logo} id="logo" alt="logo" />
+      <div id="card-cashier">
+        <div id="logo-container-cashier">
+          <FaArrowLeft id='ad-close-cashier' onClick={() => navigate('/')} />
+          <img src={Logo} id="logo-cashier" alt="logo" />
         </div>
-        <div className="inpt">
+        <div className="inpt-cashier">
         <form onSubmit={handleLogin}>
-          {errorMessage && <p id='errormsg'>{errorMessage}</p>}
-          <div className="input-box" id="inputbx">
-          <h6 id='lblAdminLogin'>Cashier Login</h6>
-            <FaUser className="icon"/>
-            <input type='text' name='username' id="input-admin" placeholder='Username' required />
+          {errorMessage && <p id='errormsg-cashier'>{errorMessage}</p>}
+          <div className="input-box-cashier" id="inputbx-cashier">
+          <h6 id='lblCashierLogin'>Cashier Login</h6>
+            <FaUser className="icon-cashier"/>
+            <input type='text' name='username' id="input-cashier" placeholder='Username' required />
           </div>
-          <div className="input-box">
-            <FaLock className="icon"/>
-            <input type={showPassword ? "text" : "password"} name='password' id="input-admin" placeholder='Password' required />
+          <div className="input-box-cashier">
+            <FaLock className="icon-cashier"/>
+            <input type={showPassword ? "text" : "password"} name='password' id="input-cashier" placeholder='Password' required />
 
                         
           {showPassword ? (
-                <IoMdEyeOff className="icon3" id="hidePass" onClick={togglePasswordVisibility} />
+                <IoMdEyeOff className="icon3-cashier" id="hidePass" onClick={togglePasswordVisibility} />
               ) : (
-                <IoMdEye className="icon3" id="showPass" onClick={togglePasswordVisibility} />
+                <IoMdEye className="icon3-cashier" id="showPass" onClick={togglePasswordVisibility} />
               )}
           </div>
 
@@ -80,7 +80,7 @@ const Login = () => {
             <a href='#'>Forgot password?</a>
           </div> */}
 
-          <button id="login" type='submit'>Login</button>
+          <button id="login-cashier" type='submit'>Login</button>
 
           {/* <div className='register-link'>
             <p>

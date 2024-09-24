@@ -1,96 +1,198 @@
 #card {
-    background-color: white;
-    box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
-    border-radius: 15px;
-    width: 400px;
-    height: 500px;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    margin: 50px auto;
-  }
-  
-  input {
-    color: black;
-  }
-  #input-admin {
-    border: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.392); 
-    outline: none; 
-    background-color: transparent;
-    width: 250px;
-    height: 25px;
-    font-weight: 20px;
-    font-size: 18px;
-    padding: 0 40px 10px 40px; 
-  }
-  
-  #logo-container {
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
-    background-color: #e78bb5;
-    height: 150px;
-  }
-  
-  #logo {
-    height: 100px;
-    margin: 30px auto;
-  }
-  
-  .input-box {
-    margin: 40px auto;
-  }
-  
-  #inputbx {
-    margin-top: 70px;
-  }
-  
-  .icon {
-    position: absolute;
-    font-size: larger;
-    color: rgba(0, 0, 0, 0.385);
-  }
-  
-  .icon1 {
-    position: absolute;
-    font-size: 30px;
-    color: rgba(0, 0, 0, 0.385);
-    margin-left: -30px;
-  }
-  
-  #lblAdminLogin {
-    margin: -50px 0px 50px 0px;
-    font-weight: 600;
-  }
-  
-  #login {
-    height: 50px;
-    width: 200px;
-    margin-top: 30px;
-    background-color: #e78bb5;
-    border-radius: 30px;
-    border: none;
-    cursor: pointer;
-    font-weight: 400;
-    font-size: larger;
-    transition: transform 0.2s ease;
-  }
-  
-  #login:hover {  
-    background-color: #eccfdc;
-  }
-  
-  #login:active {
-    transform: translateY(2px);
-  }
-  
-  #ad-close {
-    color: white;
-    font-size: 30px;
-    position: absolute;
-    margin: 20px 0px 0px -130px;
-  }
-  
-  #ad-close:hover {
-    color: black;
-  }
+  background-color: white;
+  box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
+  border-radius: 15px;
+  width: 400px;
+  height: 530px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin: 50px auto;
+}
+
+input {
+  color: black;
+}
+#input-admin {
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.392); 
+  outline: none; 
+  background-color: transparent;
+  width: 250px;
+  height: 25px;
+  font-weight: 20px;
+  font-size: 18px;
+  padding: 0 40px 10px 40px; 
+}
+
+#logo-container {
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+  background-color: #e78bb5;
+  height: 150px;
+}
+
+#logo {
+  height: 100px;
+  margin: 30px auto;
+}
+
+.input-box {
+  margin: 40px auto;
+}
+
+#inputbx {
+  margin-top: 70px;
+}
+
+.icon {
+  position: absolute;
+  font-size: larger;
+  color: rgba(0, 0, 0, 0.385);
+}
+
+.icon3 {
+  position: absolute;
+  font-size: 30px;
+  color: rgba(0, 0, 0, 0.385);
+  margin-left: -30px;
+}
+
+#lblSuperAdminLogin {
+  margin: -50px 0px 50px 0px;
+  /* text-align: left; */
+  font-weight: 600;
+}
+
+#ad-close {
+color: white;
+font-size: 30px;
+position: absolute;
+margin: 20px 0px 0px -130px;
+}
+
+#ad-close:hover {
+color: black;
+}
+
+#login {
+  height: 50px;
+  width: 200px;
+  margin-bottom: 30px;
+  background-color: #e78bb5;
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  font-weight: 400;
+  font-size: larger;
+  transition: transform 0.2s ease;
+}
+
+#login:hover {  
+  background-color: #eccfdc;
+}
+
+#login:active {
+  transform: translateY(2px);
+}
+
+#stud-register {
+  cursor: pointer;
+  color: blue;
+}
+
+/* Styles for mobile devices (max-width: 480px) */
+@media (max-width: 480px) {
+#card {
+  width: 100vw;
+  height: 100vh;
+  margin: 0; /* Remove margin to use full screen space */
+}
+
+#logo-container {
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  height: 150px;
+}
+
+#lblSuperAdminLogin {
+  margin-bottom: 80px;
+}
+
+#login {
+  margin-top: 50px;
+  height: 30px;
+  width: 200px;
+  margin-bottom: 40px;
+  border-radius: 30px;
+  font-size: large;
+  padding-bottom: 36px;
+}
+
+}
+
+/* Styles for tablets (min-width: 481px and max-width: 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+#card {
+  width: 100vw;
+  height: 100vh;
+  margin: 0; /* Remove margin to use full screen space */
+}
+
+#logo-container {
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  height: 250px;
+}
+
+#lblSuperAdminLogin {
+  margin-bottom: 140px;
+  font-size: 25px;
+}
+
+#login {
+  margin-top: 150px;
+  height: 46px;
+  width: 300px;
+  margin-bottom: 40px;
+  border-radius: 30px;
+  font-size: x-large;
+  padding-bottom: 40px;
+}
+
+#input-admin {
+  width: 450px;
+  height: 40px;
+  margin-top: 20px;
+  font-size: x-large;
+  padding: 0 40px 15px 40px; 
+}
+
+.icon {
+  position: absolute;
+  font-size: x-large;
+  margin-top: 20px;
+  color: rgba(0, 0, 0, 0.385);
+}
+
+.icon3 {
+  margin-top: 20px;
+}
+
+#ad-close {
+  color: white;
+  font-size: 30px;
+  position: absolute;
+  margin: 40px 0px 0px -280px;
+}
+
+#logo {
+  height: 150px;
+  margin-top: 60px;
+}
+}
+
+/* Styles for larger screens (min-width: 769px) */
+@media (min-width: 769px) {
+
+}

@@ -1,68 +1,157 @@
-/* .menu{
-    background-color: aqua;
-    overflow-y: hidden;
-} */
+.customer-main {
+  height: 100%;
+}
+
+.hero-block .carousel-item:before {
+  content: '';
+  background: rgba(0, 0, 0, 0.7);
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.hero-block .carousel-item img {
+  width: 100%;
+  height: 400px;
+}
+
+
+.hero-block .carousel-caption {
+  left: 25%;
+  right: 25%;
+  transform: translateY(50%);
+  -webkit-transform: translateY(50%);
+  bottom: 50%;
+}
+
+.hero-block p {
+  margin: 0 0 30px;
+}
+
 body {
-    overflow: hidden;
-}
-#menu-title {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.top-selling-items {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 items per row */
-  grid-gap: 1rem; /* Space between items */
-  padding: 20px 10px;
-  margin-bottom: 30px;
-}
-
-.menu-items {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 items per row */
-  grid-gap: 1rem; /* Reduced gap */
-  height: 600px;
   overflow-y: auto;
-  padding: 20px 10px 200px 10px; /* Adjusted padding */
-  margin-left: 40px;
 }
 
-.menu-itm {
-    height: 250px;
-    width: 300px;
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
+.customer-menu {
+  display: flex;
+  flex-direction: column;
 }
 
-  .menu-item {
-    height: 400px;
-    width: 300px;
-    background-color: white;
-    box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
-    text-align: left;
-    border-radius: 15px;
-    transition: transform 0.2s ease;
+.customer-main {
+  display: flex;
+  flex-direction: column;
+  /* No fixed height */
+}
+
+.customer-add-to-cart {
+  height: 40px;
+  width: 40px;
+  font-size: 15px;
+  padding: 0px;
+  background-color: white;
+  color: black;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Light shadow */
+  border: 1px solid rgba(0, 0, 0, 0.163); /* Very light border */
+}
+
+.customer-price {
+  color: hotpink;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.header-customer {
+  position: sticky; /* Make the header sticky */
+  top: 0; /* Position it at the top of the viewport */
+  z-index: 1000; /* Ensure it stays above other content */
+  background-color: white; /* Set a background color for visibility */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Optional shadow for better visibility */
+}
+
+@media (max-width: 480px) {
+  #customer-card {
+      height: 300px;
   }
 
-  .btnMenuItem {
-    background-color: #000000;
-    border-radius: 20px;
-    margin: 15px 20px 30px 50px;
-    font-size: 12px;
-    height: 35px;
-    width: 200px;
+  .customer-add-to-cart {
+      height: 30px;
+      width: 30px;
+      font-size: 15px;
+  }
+  
+  .customer-price {
+      color: hotpink;
+      font-size: 15px;
+      font-weight: bold;
   }
 
-  .btnMenuItem:hover {
-    background-color: #393939;
-    cursor: pointer;
+  .hero-block .carousel-item img {
+    width: 100%;
+    height: 200px;
   }
 
-  .menu-text {
-    margin: 10px 0px 10px 20px;
-  }
+}
 
-  .menu-text1 {
-    font-size: 15px;
+@media (min-width: 481px) and (max-width: 768px) {
+.hero-block .carousel-item img {
+  width: 100%;
+  height: 250px;
+}
+}
+
+
+.confirmation-modal-body {
+  text-align: center;
+}
+
+.checkmark-animation {
+  margin: 20px auto;
+  width: 100px;
+  height: 100px;
+}
+
+.checkmark {
+  width: 100%;
+  height: 100%;
+  stroke-width: 2;
+  stroke: #4CAF50;
+  fill: none;
+  animation: checkmark 0.5s ease-in-out;
+}
+
+@keyframes checkmark {
+  0% {
+      stroke-dasharray: 100px;
+      stroke-dashoffset: 100px;
   }
+  50% {
+      stroke-dashoffset: 50px;
+  }
+  100% {
+      stroke-dashoffset: 0;
+  }
+}
+.cross-animation svg {
+  width: 50px;
+  height: 50px;
+  stroke: red;
+  animation: cross 0.5s ease-in-out forwards;
+}
+
+@keyframes cross {
+  0% { stroke-dasharray: 0, 100; }
+  100% { stroke-dasharray: 100, 0; }
+}
+
+.alert {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+}

@@ -16,6 +16,8 @@ const Admin = () => {
     const [filteredData, setFilteredData] = useState([]);
     const [categories, setCategories] = useState([]);
     const [show, setShow] = useState(false);
+    const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+
     const [modalShow, setModalShow] = useState(false);
 
     // State variables for form inputs
@@ -31,7 +33,7 @@ const Admin = () => {
     const getUserData = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('/getdata', {
+            const res = await axios.get('/get-menu-data', {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
@@ -225,10 +227,11 @@ const Admin = () => {
                     },
                 }
             );
-
+    
             if (res.data.success) {
                 console.log('Order placed successfully');
                 setPosItems([]); // Clear POS items after successful order placement
+                setShowConfirmationModal(true); // Show confirmation modal
             } else {
                 console.error('Error placing order:', res.data.error);
             }
@@ -236,6 +239,7 @@ const Admin = () => {
             console.error('Error placing order:', error);
         }
     };
+    
 
     // Call getPosItems when component mounts or data changes
     useEffect(() => {
@@ -365,6 +369,24 @@ const Admin = () => {
 
                 </div>
             </div>
+            <Modal show={showConfirmationModal} onHide={() => setShowConfirmationModal(false)}>
+    <Modal.Header closeButton>
+        <Modal.Title>Order Complete</Modal.Title>
+    </Modal.Header>
+    <Modal.Body className="confirmation-modal-body">
+        <div className="checkmark-animation">
+            <svg xmlns="http://www.w3.org/2000/svg" className="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </div>
+        <p>Checkout completed!</p>
+    </Modal.Body>
+    <Modal.Footer>
+        <Button variant="secondary" onClick={() => setShowConfirmationModal(false)}>
+            Close
+        </Button>
+    </Modal.Footer>
+</Modal>
 
         </div>
     );

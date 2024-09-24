@@ -1,16 +1,27 @@
-.banner {
+/* .banner {
   display: flex;
   justify-content: center; 
   align-items: center; 
   flex-direction: column;
-  position: relative; /* To control absolute positioning inside */
 }
 
-.logo1 {
+.logo-home {
   margin-top: 100px;
   width: 200px; 
   height: 200px; 
+} */
+
+
+
+/* #home-admin {
+  font-size: 40px;
+  margin: 20px 0px 0px 1400px;
+  cursor: pointer;
 }
+
+#home-admin:hover {
+  color: #e78bb5;
+} */
 
 #btn {
   height: 50px;
@@ -34,21 +45,79 @@
   transform: translateY(2px);
 }
 
-/* Styling for icons container */
-.admin-icons {
-  display: flex;
+/* Styles for mobile devices (max-width: 480px) */
+@media (max-width: 480px) {
+  #btn {
+    height: 30px;
+    width: 150px;
+    border-radius: 30px;
+    font-size: medium;
+    font-weight: light;
+    padding-bottom: 35px;  
+    }
+}
+
+/* Styles for tablets (min-width: 481px and max-width: 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  #btn {
+    height: 30px;
+    width: 150px;
+    border-radius: 30px;
+    font-size: medium;
+    font-weight: light;
+    padding-bottom: 35px;
+  }
+
+  .logo-home1 {
+    margin-top: 15px;
+  } 
+  
+}
+
+/* Styles for larger screens (min-width: 769px) */
+@media (min-width: 769px) {
+  
+}
+
+#home-bg {
   position: absolute;
-  top: 20px;
-  right: 40px;
-  gap: 20px; /* Space between the icons */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover; /* Ensures the image covers the whole area */
+  z-index: -1; /* Sends the background behind the content */
+  filter: brightness(0.4);
 }
 
-.home-admin {
-  font-size: 40px;
-  cursor: pointer;
-  transition: color 0.3s ease;
+.banner {
+  position: relative; /* Ensure the banner is positioned relative to the parent */
+  z-index: -1; /* Bring the banner content above the background */
 }
 
-.home-admin:hover {
-  color: #e78bb5;
+.logo-home1 {
+  height: 60px; /* Adjust based on your design */
+  width: 60px; /* Keep the aspect ratio */
+  margin-left: 50px;
+  margin-right: 30px;
+}
+
+.navbar-brand {
+  font-size: 1.25rem; /* Adjust font size as needed */
+}
+
+#btn {
+  margin-top: 350px;
+  margin-left: 90px;
+}
+
+#dropdown-home {
+  background-color: transparent;
+  border: none;
+  width: 100px;
+  margin-left: -70px;
+}
+
+#dropdown-menu {
+  width: 120px;
 }

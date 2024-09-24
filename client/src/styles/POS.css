@@ -174,3 +174,50 @@
   height: 40px;
   width: 100px;
 }
+
+
+.confirmation-modal-body {
+  text-align: center;
+}
+
+.checkmark-animation {
+  margin: 20px auto;
+  width: 100px;
+  height: 100px;
+}
+
+.checkmark {
+  width: 100%;
+  height: 100%;
+  stroke-width: 2;
+  stroke: #4CAF50;
+  fill: none;
+  animation: checkmark 0.5s ease-in-out;
+}
+
+@keyframes checkmark {
+  0% {
+      stroke-dasharray: 100px;
+      stroke-dashoffset: 100px;
+  }
+  50% {
+      stroke-dashoffset: 50px;
+  }
+  100% {
+      stroke-dashoffset: 0;
+  }
+}
+
+.alert {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+}
+
+
+

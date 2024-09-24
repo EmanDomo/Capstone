@@ -358,32 +358,32 @@ router.post('/complete-order', authenticateToken, authorizeRoles('admin'), (req,
 
     console.log(`Received orderId: ${orderId}, userId: ${userId}, totalAmount: ${totalAmount}`);
 
-    // First, fetch the userName from tbl_orders
+    // First, fetch the userName and quantity from tbl_orders
     conn.query(
-        'SELECT userName FROM tbl_orders WHERE orderId = ?',
+        'SELECT userName, quantity FROM tbl_orders WHERE orderId = ?',
         [orderId],
         (err, result) => {
             if (err) {
-                console.error('Error fetching userName:', err);
-                return res.status(500).json({ success: false, error: 'Failed to fetch userName' });
+                console.error('Error fetching userName and quantity:', err);
+                return res.status(500).json({ success: false, error: 'Failed to fetch order details' });
             }
-
+    
             if (result.length === 0) {
                 return res.status(404).json({ success: false, error: 'Order not found' });
             }
-
-            const userName = result[0].userName;
-
-            // Now insert the sales record into tbl_sales including userName
+    
+            const { userName, quantity } = result[0];  // Ensure quantity is fetched here
+    
+            // Insert into tbl_sale with quantity
             conn.query(
-                'INSERT INTO tbl_sale (orderId, userId, totalAmount, saleDate, userName) VALUES (?, ?, ?, NOW(), ?)',
-                [orderId, userId, totalAmount, userName],
+                'INSERT INTO tbl_sale (orderId, userId, totalAmount, saleDate, userName, quantity) VALUES (?, ?, ?, NOW(), ?, ?)',
+                [orderId, userId, totalAmount, userName, quantity],  // Insert the quantity
                 (err, result) => {
                     if (err) {
                         console.error('Error inserting sales record:', err);
                         return res.status(500).json({ success: false, error: 'Failed to insert sales record' });
                     }
-
+    
                     console.log('Inserted into tbl_sales:', result);
 
                     // Now update the order status to 'completed'
@@ -409,6 +409,7 @@ router.post('/complete-order', authenticateToken, authorizeRoles('admin'), (req,
 
 
 
+
 router.delete("/:id", authenticateToken, authorizeRoles('admin'), (req, res) => {
     const { id } = req.params;
     try {
@@ -425,13 +426,28 @@ router.delete("/:id", authenticateToken, authorizeRoles('admin'), (req, res) => 
     }
 });
 
-router.get("/getdata", authenticateToken, authorizeRoles('admin', 'customer', 'cashier'), (req, res) => {
+// router.get("/getdata", authenticateToken, authorizeRoles('admin', 'customer'), (req, res) => {
+//     try {
+//         conn.query("SELECT * FROM tbl_items", (err, result) => {
+//             if (err) {
+//                 console.log("error");
+//             } else {
+//                 console.log("data get -- bakit ba nag iinfinite loop too nakakinis na ha???");
+//                 res.status(201).json({ status: 201, data: result });
+//             }
+//         });
+//     } catch (error) {
+//         res.status(422).json({ status: 422, error });
+//     }
+// });
+
+router.get("/get-menu-data", authenticateToken, authorizeRoles('admin', 'customer'), (req, res) => {
     try {
         conn.query("SELECT * FROM tbl_items", (err, result) => {
             if (err) {
                 console.log("error");
             } else {
-                console.log("data get -- bakit ba nag iinfinite loop too???");
+                console.log("data get -- pag eto nag infinite loop pa, mababaliw na ako");
                 res.status(201).json({ status: 201, data: result });
             }
         });
@@ -448,15 +464,15 @@ router.get("/top-selling", authenticateToken, authorizeRoles('customer'), (req, 
         // SQL query with user gender parameterized to avoid SQL injection
         const query = `
         SELECT i.id, i.itemname, i.img, i.price, SUM(o.quantity) AS total_quantity_sold
-FROM tbl_orders o
-JOIN tbl_items i ON o.id = i.id
-JOIN tbl_sales s ON o.orderId = s.orderId
-WHERE o.status = 'completed'
-  AND s.saleDate >= CURDATE()
-  AND s.saleDate < CURDATE() + INTERVAL 1 DAY
-GROUP BY i.id, i.itemname, i.img, i.price
-ORDER BY total_quantity_sold DESC
-LIMIT 3;
+            FROM tbl_orders o
+            JOIN tbl_items i ON o.id = i.id
+            JOIN tbl_sale s ON o.orderId = s.orderId
+            WHERE o.status = 'removed'
+            AND s.saleDate >= CURDATE()
+            AND s.saleDate < CURDATE() + INTERVAL 1 DAY
+            GROUP BY i.id, i.itemname, i.img, i.price
+            ORDER BY total_quantity_sold DESC
+            LIMIT 3;
 
         `;
 
@@ -478,13 +494,11 @@ LIMIT 3;
 router.get("/getinventorydata", authenticateToken, authorizeRoles( 'superadmin'), (req, res) => {
     try {
         const sqlQuery = `
-           SELECT 
+SELECT 
     i.itemname AS Item_Name, 
     i.category AS Category,
     i.price AS Price,
-    GROUP_CONCAT(s.stock_item_name ORDER BY s.stock_item_name SEPARATOR ', ') AS Stock_Names, 
-    GROUP_CONCAT(ii.quantity_required ORDER BY s.stock_item_name SEPARATOR ', ') AS Quantities_Required, 
-    GROUP_CONCAT(s.unit ORDER BY s.stock_item_name SEPARATOR ', ') AS Units
+    GROUP_CONCAT(CONCAT(s.stock_item_name, ' (', ii.quantity_required, ' ', s.unit, ')') ORDER BY s.stock_item_name SEPARATOR ', ') AS Stock_Details
 FROM 
     tbl_item_ingredients ii
 JOIN 
@@ -495,6 +509,7 @@ GROUP BY
     i.itemname, 
     i.category,
     i.price;
+
 
 
         `;
@@ -1420,7 +1435,8 @@ router.post('/api/cashier1Sales', authenticateToken, authorizeRoles('superadmin'
         s.userName, 
         s.totalAmount, 
         s.saleDate, 
-        i.itemname 
+        i.itemname,
+        s.quantity 
     FROM 
         tbl_sale s
     JOIN 
@@ -1440,6 +1456,69 @@ router.post('/api/cashier1Sales', authenticateToken, authorizeRoles('superadmin'
     });
 });
 
+// Monthly Sales Query for Cashier 1
+router.post('/api/cashier1SalesMonth', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    const query = `
+        SELECT 
+            s.saleId, 
+            o.orderId, 
+            s.userName, 
+            s.totalAmount, 
+            s.saleDate, 
+            i.itemname,
+            s.quantity 
+        FROM 
+            tbl_sale s
+        JOIN 
+            tbl_orders o ON s.orderId = o.orderId
+        JOIN 
+            tbl_items i ON o.id = i.id
+        WHERE 
+            MONTH(s.saleDate) = MONTH(CURDATE()) 
+            AND YEAR(s.saleDate) = YEAR(CURDATE())
+            AND s.userName = 'cashier1';
+    `;
+    conn.query(query, (err, results) => {
+        if (err) {
+            console.error(`Error fetching cashier1's monthly sales:`, err);  // Use template literals or escape quotes
+            return res.status(500).json({ success: false, error: 'Internal server error' });
+        }
+        res.status(200).json(results);
+    });
+});
+
+// Weekly Sales Query for Cashier 1
+router.post('/api/cashier1SalesWeek', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    const query = `
+        SELECT 
+            s.saleId, 
+            o.orderId, 
+            s.userName, 
+            s.totalAmount, 
+            s.saleDate, 
+            i.itemname,
+            s.quantity 
+        FROM 
+            tbl_sale s
+        JOIN 
+            tbl_orders o ON s.orderId = o.orderId
+        JOIN 
+            tbl_items i ON o.id = i.id
+        WHERE 
+            YEAR(s.saleDate) = YEAR(CURDATE()) 
+            AND WEEK(s.saleDate, 1) = WEEK(CURDATE(), 1)
+            AND s.userName = 'cashier1';
+    `;
+    conn.query(query, (err, results) => {
+        if (err) {
+            console.error(`Error fetching cashier1's weekly sales:`, err);  // Use template literals or escape quotes
+            return res.status(500).json({ success: false, error: 'Internal server error' });
+        }
+        res.status(200).json(results);
+    });
+});
+
+
 
 router.post('/api/cashier2Sales', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
     const query = `
@@ -1449,7 +1528,8 @@ router.post('/api/cashier2Sales', authenticateToken, authorizeRoles('superadmin'
         s.userName, 
         s.totalAmount, 
         s.saleDate, 
-        i.itemname 
+        i.itemname,
+        s.quantity 
     FROM 
         tbl_sale s
     JOIN 
@@ -1462,7 +1542,69 @@ router.post('/api/cashier2Sales', authenticateToken, authorizeRoles('superadmin'
     `;
     conn.query(query, (err, results) => {
         if (err) {
-            console.error('Error fetching cashier2\'s sales:', err);
+            console.error('Error fetching cashier1\'s sales:', err);
+            return res.status(500).json({ success: false, error: 'Internal server error' });
+        }
+        res.status(200).json(results);
+    });
+});
+
+// Monthly Sales Query for Cashier 1
+router.post('/api/cashier2SalesMonth', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    const query = `
+        SELECT 
+            s.saleId, 
+            o.orderId, 
+            s.userName, 
+            s.totalAmount, 
+            s.saleDate, 
+            i.itemname,
+            s.quantity 
+        FROM 
+            tbl_sale s
+        JOIN 
+            tbl_orders o ON s.orderId = o.orderId
+        JOIN 
+            tbl_items i ON o.id = i.id
+        WHERE 
+            MONTH(s.saleDate) = MONTH(CURDATE()) 
+            AND YEAR(s.saleDate) = YEAR(CURDATE())
+            AND s.userName = 'cashier2';
+    `;
+    conn.query(query, (err, results) => {
+        if (err) {
+            console.error(`Error fetching cashier1's monthly sales:`, err);  // Use template literals or escape quotes
+            return res.status(500).json({ success: false, error: 'Internal server error' });
+        }
+        res.status(200).json(results);
+    });
+});
+
+// Weekly Sales Query for Cashier 1
+router.post('/api/cashier2SalesWeek', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    const query = `
+        SELECT 
+            s.saleId, 
+            o.orderId, 
+            s.userName, 
+            s.totalAmount, 
+            s.saleDate, 
+            i.itemname,
+            s.quantity 
+        FROM 
+            tbl_sale s
+        JOIN 
+            tbl_orders o ON s.orderId = o.orderId
+        JOIN 
+            tbl_items i ON o.id = i.id
+        WHERE 
+            YEAR(s.saleDate) = YEAR(CURDATE()) 
+            AND WEEK(s.saleDate, 1) = WEEK(CURDATE(), 1)
+            AND s.userName = 'cashier2';
+    `;
+    conn.query(query, (err, results) => {
+        if (err) {
+            console.error(`Error fetching cashier1's weekly sales:`, err);  // Use template literals or escape quotes
             return res.status(500).json({ success: false, error: 'Internal server error' });
         }
         res.status(200).json(results);
@@ -1479,7 +1621,9 @@ router.get('/api/sales/today', authenticateToken, authorizeRoles('superadmin'), 
             s.userName, 
             s.totalAmount, 
             s.saleDate, 
-            i.itemname 
+            s.quantity, 
+            i.itemname,
+            s.quantity
         FROM 
             tbl_sale s
         JOIN 
@@ -1487,7 +1631,8 @@ router.get('/api/sales/today', authenticateToken, authorizeRoles('superadmin'), 
         JOIN 
             tbl_items i ON o.id = i.id 
         WHERE 
-            DATE(s.saleDate) = CURDATE();
+            DATE(s.saleDate) = CURDATE()
+        ORDER BY saleId;
     `;
     conn.query(query, (err, results) => {
         if (err) {
@@ -1498,23 +1643,26 @@ router.get('/api/sales/today', authenticateToken, authorizeRoles('superadmin'), 
     });
 });
 
+
 router.get('/api/sales/week', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
     const query = `
-        SELECT 
-            s.saleId, 
-            o.orderId, 
-            s.userName, 
-            s.totalAmount, 
-            s.saleDate, 
-            i.itemname 
-        FROM 
-            tbl_sale s
-        JOIN 
-            tbl_orders o ON s.orderId = o.orderId
-        JOIN 
-            tbl_items i ON o.id = i.id 
-        WHERE 
-            YEARWEEK(s.saleDate, 1) = YEARWEEK(CURDATE(), 1);
+SELECT 
+    s.saleId, 
+    o.orderId, 
+    s.userName, 
+    s.totalAmount, 
+    s.saleDate, 
+    s.quantity, 
+    i.itemname 
+FROM 
+    tbl_sale s
+JOIN 
+    tbl_orders o ON s.orderId = o.orderId
+JOIN 
+    tbl_items i ON o.id = i.id 
+WHERE 
+    YEARWEEK(s.saleDate, 1) = YEARWEEK(CURDATE(), 1);
+
     `;
     conn.query(query, (err, results) => {
         if (err) {
@@ -1525,6 +1673,8 @@ router.get('/api/sales/week', authenticateToken, authorizeRoles('superadmin'), (
     });
 });
 
+
+
 router.get('/api/sales/month', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
     const query = `
         SELECT 
@@ -1533,6 +1683,7 @@ router.get('/api/sales/month', authenticateToken, authorizeRoles('superadmin'), 
             s.userName, 
             s.totalAmount, 
             s.saleDate, 
+            s.quantity, 
             i.itemname 
         FROM 
             tbl_sale s
@@ -1541,7 +1692,8 @@ router.get('/api/sales/month', authenticateToken, authorizeRoles('superadmin'), 
         JOIN 
             tbl_items i ON o.id = i.id 
         WHERE 
-            MONTH(s.saleDate) = MONTH(CURDATE()) AND YEAR(s.saleDate) = YEAR(CURDATE());
+            MONTH(s.saleDate) = MONTH(CURDATE()) 
+            AND YEAR(s.saleDate) = YEAR(CURDATE());
     `;
     conn.query(query, (err, results) => {
         if (err) {
@@ -1560,7 +1712,7 @@ router.get('/my-orders', authenticateToken, authorizeRoles('customer'), (req, re
         SELECT o.orderId, i.itemname, o.quantity, o.price, o.orderNumber, o.status, o.cancelReason
         FROM tbl_orders o
         JOIN tbl_items i ON o.id = i.id
-        WHERE o.userId = ?
+        WHERE o.userId = ? AND o.status IN ('completed', 'cancelled', 'pending')
         ORDER BY o.orderId DESC
     `;
 
@@ -1574,23 +1726,25 @@ router.get('/my-orders', authenticateToken, authorizeRoles('customer'), (req, re
     });
 });
 
+
 router.delete('/delete-order/:orderId', authenticateToken, authorizeRoles('customer'), (req, res) => {
     const orderId = req.params.orderId;
-    const query = `DELETE FROM tbl_orders WHERE orderId = ? AND (status = 'completed' OR status = 'cancelled')`;
+    const query = `UPDATE tbl_orders SET status = 'removed' WHERE orderId = ?`;
 
     conn.query(query, [orderId], (err, results) => {
         if (err) {
-            console.error('Error deleting order:', err);
-            return res.status(500).json({ success: false, error: 'Failed to delete order' });
+            console.error('Error updating order status:', err);
+            return res.status(500).json({ success: false, error: 'Failed to update order status' });
         }
 
         if (results.affectedRows === 0) {
-            return res.status(404).json({ success: false, error: 'Order not found or cannot be deleted' });
+            return res.status(404).json({ success: false, error: 'Order not found or cannot be updated' });
         }
 
-        res.status(200).json({ success: true, message: 'Order deleted successfully' });
+        res.status(200).json({ success: true, message: 'Order status updated to removed successfully' });
     });
 });
+
 
 
 router.get('/warning-stocks', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
@@ -1607,6 +1761,99 @@ router.get('/warning-stocks', authenticateToken, authorizeRoles('superadmin'), (
     });
 });
 
+// Fetch all admins
+router.get('/api/admins', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    const query = `SELECT * FROM tbl_admins`;
+
+    conn.query(query, (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        if (results.length > 0) {
+            res.status(200).json({
+                message: 'Admins fetched successfully',
+                admins: results,
+            });
+        } else {
+            res.status(404).json({ message: 'No admins found' });
+        }
+    });
+});
+
+// Fetch all superadmins
+router.get('/api/superadmins', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    const query = `SELECT * FROM tbl_superadmins`;
+
+    conn.query(query, (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        if (results.length > 0) {
+            res.status(200).json({
+                message: 'Super Admins fetched successfully',
+                admins: results,
+            });
+        } else {
+            res.status(404).json({ message: 'No superadmins found' });
+        }
+    });
+});
+
+// Fetch all accounts for editing
+// Update admin or superadmin based on type (admin or superadmin)
+router.put('/edit-accounts/:type/:id', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    const { type, id } = req.params;
+    const { name, username, password, role } = req.body;
+    let query;
+
+    if (type === 'admin') {
+        query = `UPDATE tbl_admins SET name = ?, username = ?, password = ?, role = ? WHERE id = ?`;
+    } else if (type === 'superadmin') {
+        query = `UPDATE tbl_superadmins SET name = ?, username = ?, password = ?, role = ? WHERE superadminid = ?`;
+    } else {
+        return res.status(400).json({ message: 'Invalid account type' });
+    }
+
+    conn.query(query, [name, username, password, role, id], (err, result) => {
+        if (err) {
+            console.error('Error updating account:', err);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Account not found' });
+        }
+
+        res.status(200).json({ message: 'Account updated successfully' });
+    });
+});
+
+
+
+// Fetch all users
+router.get('/api/users', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    const query = `SELECT * FROM tbl_users`;
+
+    conn.query(query, (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        if (results.length > 0) {
+            res.status(200).json({
+                message: 'Users fetched successfully',
+                admins: results,
+            });
+        } else {
+            res.status(404).json({ message: 'No users found' });
+        }
+    });
+});
 
 
 

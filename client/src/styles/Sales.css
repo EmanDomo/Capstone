@@ -7,12 +7,9 @@ html, body {
 }
 
 .sales-dashboard {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+  flex-grow: 1; /* Allow the dashboard to grow and take remaining space */
   padding: 20px;
   box-sizing: border-box;
-  overflow: auto;
 }
 
 .sales-header {
@@ -20,13 +17,43 @@ html, body {
   justify-content: space-between;
   align-items: center;
 }
+.sales-filters-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+.sales-filters {
+  display: flex;
+  gap: 10px; /* Space between buttons */
+  align-items: center;
+  margin-bottom: 0; /* Remove margin to align better with dropdown */
+}
+
+.sales-filters select {
+  margin-left: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  background-color: #f5f5f5; /* Light background */
+  border-radius: 5px; /* Rounded corners */
+  font-size: 1rem; /* Increase font size */
+  color: #333; /* Darker text */
+}
 
 .sales-filters button {
-  margin: 5px;
   padding: 10px 20px;
   border: none;
-  background-color: #f0f0f0;
+  background-color: #e0e0e0;
+  color: #333;
   cursor: pointer;
+  border-radius: 5px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.sales-filters button:hover {
+  background-color: #007bff;
+  color: white;
 }
 
 .sales-filters button.active {
@@ -34,10 +61,64 @@ html, body {
   color: white;
 }
 
-.table {
+.table-wrapper {
+  max-height: 500px; 
+  overflow-y: auto;
+  border-radius: 10px; /* Soft edges */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.styled-table {
   width: 100%;
   margin-top: 20px;
+  border-collapse: collapse; /* Remove border effects */
+  background-color: #fff;
 }
+
+.styled-table thead tr {
+  background-color: #ff69b4; /* Pink header */
+  color: white;
+  text-align: left;
+  font-weight: bold;
+}
+
+.styled-table th, .styled-table td {
+  padding: 12px 15px;
+}
+
+.styled-table tbody tr {
+  transition: background-color 0.3s ease; /* Smooth transition */
+}
+
+.styled-table tbody tr:nth-of-type(odd) {
+  background-color: #f9f9f9; /* Light gray for odd rows */
+}
+
+.styled-table tbody tr:hover {
+  background-color: #f1f1f1; /* Hover effect for rows */
+}
+
+.styled-table tbody td {
+  color: #333;
+  padding: 12px;
+}
+
+.styled-table tbody tr:last-of-type {
+  border-bottom: none; /* Remove bottom border */
+}
+
+@media (max-width: 768px) {
+  .styled-table th, .styled-table td {
+    padding: 8px 10px; /* Adjust padding for smaller screens */
+  }
+}
+
+
+.table {
+  width: 100%;  /* Ensure the table takes full width */
+  margin-top: 20px;
+}
+
 
 .table th, .table td {
   padding: 10px;
@@ -47,10 +128,74 @@ html, body {
 .table-striped tbody tr:nth-of-type(odd) {
   background-color: #f9f9f9;
 }
-
 .total-amount {
   margin-top: 20px;
+  margin-left: 30px; /* Increased left margin */
+  padding: 12px; /* Padding inside the container */
+  border-radius: 12px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Gap between items */
+  min-height: 140px; /* Minimum height of the container */
+  width: 100%; /* Full width */
+  max-width: 800px; /* Maximum width */
+  padding-right: 12px; /* Adjusted right padding if needed */
 }
+
+
+.total-amount h2 {
+  font-size: 1.3rem; /* Font size for the title */
+  color: #333;
+  margin-bottom: 8px; /* Margin below the title */
+  text-align: center;
+}
+
+.total-item {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Gap between icon and text */
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 4px; /* Padding below each item */
+}
+
+.total-item:last-child {
+  border-bottom: none; /* Remove border from the last item */
+}
+
+.total-item div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.total-item h3 {
+  font-size: 0.9rem; /* Font size for item titles */
+  margin: 0;
+  color: #555;
+}
+
+.amount {
+  font-size: 0.95rem; /* Font size for amounts */
+  color: #333;
+  margin: 0;
+  font-weight: bold;
+}
+
+.total-item:nth-child(1) .amount {
+  color: #4CAF50; /* Green for All Sales */
+}
+
+.total-item:nth-child(2) .amount {
+  color: #2196F3; /* Blue for Cashier 1 Sales */
+}
+
+.total-item:nth-child(3) .amount {
+  color: #FF9800; /* Orange for Cashier 2 Sales */
+}
+
 
 .cashier-tables {
   display: flex;
@@ -61,8 +206,8 @@ html, body {
 .cashier-table {
   flex: 1;
   margin: 0 10px;
-  max-height: 300px; /* Adjust height as needed */
-  overflow-y: auto;  /* Enables vertical scrolling */
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .cashier-table table {
@@ -74,46 +219,85 @@ html, body {
   text-align: center;
 }
 
-.sales-content .table-wrapper {
-  max-height: 400px;  /* Set height for scrollable content */
-  overflow-y: auto;   /* Enable vertical scrolling */
+.sales-content {
+  flex: 1;
 }
 
-/* Add a scrollbar to the whole page */
-.sales-page-wrapper {
-  overflow-y: auto; /* Scroll for the entire page */
-  max-height: 100vh; /* Prevent content from overflowing outside the view */
+.sales-content h2 {
+  text-align: left;
+  margin: 0;
 }
+
+.sales-content {
+  margin-top: 10px;
+}
+
+.sales-page-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px; /* Adjust gap between pie chart and dashboard */
+}
+
 
 .sales-pie-chart {
   margin-top: 20px;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
+  max-width: 500px; /* Adjust size */
+  margin-left: 0; /* Remove auto centering */
 }
 
 .pie-chart-container {
-  width: 30%; /* Adjust width as needed */
-  float: right; /* Align to the right */
-  margin: 20px; /* Add some margin */
-  text-align: center; /* Center the text */
+  flex-basis: 25%; /* Allow pie chart container to take 25% of the available space */
+  min-width: 300px; /* Ensure the pie chart doesn't get smaller than 300px */
+  max-width: 400px; /* Optionally, set a max width for balance */
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.total-amount {
-  margin-top: 10px;
+.sales-header {
+  margin-bottom: 10px;
+}
+
+.sales-filter-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Space between label and dropdown */
+  margin-bottom: 0; /* Remove margin for better alignment */
+}
+
+.sales-filters {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sales-filter-dropdown label {
   font-weight: bold;
-  font-size: 1.2rem;
-  display: flex;
-  flex-direction: column; /* Stack items vertically */
-  align-items: flex-start; /* Align text to the left */
+  color: #333;
 }
 
-
-.sales-page-wrapper {
-  display: flex;
-  justify-content: space-between; /* Allow space between the sales content and pie chart */
+.sales-filter-dropdown select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f5f5f5;
+  font-size: 1rem;
+  color: #333;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
 }
 
+.sales-filter-dropdown select:hover {
+  border-color: #007bff;
+}
 
-
+.sales-filters button {
+  margin: 0 5px;
+  padding: 10px 15px;
+  border: none;
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
 

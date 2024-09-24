@@ -1,19 +1,19 @@
-#card {
+#card-cashier {
   background-color: white;
   box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
   border-radius: 15px;
   width: 400px;
-  height: 500px;
+  height: 530px;
   align-items: center;
   justify-content: center;
   text-align: center;
   margin: 50px auto;
 }
 
-input {
+input-cashier {
   color: black;
 }
-#input-admin {
+#input-cashier {
   border: none;
   border-bottom: 1px solid rgba(0, 0, 0, 0.392); 
   outline: none; 
@@ -25,48 +25,60 @@ input {
   padding: 0 40px 10px 40px; 
 }
 
-#logo-container {
+#logo-container-cashier {
   border-top-left-radius: 15px;
   border-top-right-radius: 15px;
   background-color: #e78bb5;
   height: 150px;
 }
 
-#logo {
+#logo-cashier {
   height: 100px;
   margin: 30px auto;
 }
 
-.input-box {
+.input-box-cashier {
   margin: 40px auto;
 }
 
-#inputbx {
+#inputbx-cashier {
   margin-top: 70px;
 }
 
-.icon {
+.icon-cashier {
   position: absolute;
   font-size: larger;
   color: rgba(0, 0, 0, 0.385);
 }
 
-.icon1 {
+.icon3-cashier {
   position: absolute;
   font-size: 30px;
   color: rgba(0, 0, 0, 0.385);
   margin-left: -30px;
 }
 
-#lblAdminLogin {
+#lblCashierLogin {
   margin: -50px 0px 50px 0px;
+  /* text-align: left; */
   font-weight: 600;
 }
 
-#login {
+#ad-close-cashier {
+color: white;
+font-size: 30px;
+position: absolute;
+margin: 20px 0px 0px -130px;
+}
+
+#ad-close-cashier:hover {
+color: black;
+}
+
+#login-cashier {
   height: 50px;
   width: 200px;
-  margin-top: 30px;
+  margin-bottom: 30px;
   background-color: #e78bb5;
   border-radius: 30px;
   border: none;
@@ -76,21 +88,111 @@ input {
   transition: transform 0.2s ease;
 }
 
-#login:hover {  
+#login-cashier:hover {  
   background-color: #eccfdc;
 }
 
-#login:active {
+#login-cashier:active {
   transform: translateY(2px);
 }
 
-#ad-close {
+#stud-register {
+  cursor: pointer;
+  color: blue;
+}
+
+/* Styles for mobile devices (max-width: 480px) */
+@media (max-width: 480px) {
+#card-cashier {
+  width: 100vw;
+  height: 100vh;
+  margin: 0; /* Remove margin to use full screen space */
+}
+
+#logo-container-cashier {
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  height: 150px;
+}
+
+#lblCashierLogin {
+  margin-bottom: 80px;
+}
+
+#login-cashier {
+  margin-top: 50px;
+  height: 30px;
+  width: 200px;
+  margin-bottom: 40px;
+  border-radius: 30px;
+  font-size: large;
+  padding-bottom: 36px;
+}
+
+}
+
+/* Styles for tablets (min-width: 481px and max-width: 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+#card-cashier {
+  width: 100vw;
+  height: 100vh;
+  margin: 0; /* Remove margin to use full screen space */
+}
+
+#logo-container-cashier {
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+  height: 250px;
+}
+
+#lblCashierLogin {
+  margin-bottom: 140px;
+  font-size: 25px;
+}
+
+#login-cashier {
+  margin-top: 150px;
+  height: 46px;
+  width: 300px;
+  margin-bottom: 40px;
+  border-radius: 30px;
+  font-size: x-large;
+  padding-bottom: 40px;
+}
+
+#input-cashier {
+  width: 450px;
+  height: 40px;
+  margin-top: 20px;
+  font-size: x-large;
+  padding: 0 40px 15px 40px; 
+}
+
+.icon-cashier {
+  position: absolute;
+  font-size: x-large;
+  margin-top: 20px;
+  color: rgba(0, 0, 0, 0.385);
+}
+
+.icon3-cashier {
+  margin-top: 20px;
+}
+
+#ad-close-cashier {
   color: white;
   font-size: 30px;
   position: absolute;
-  margin: 20px 0px 0px -130px;
+  margin: 40px 0px 0px -280px;
 }
 
-#ad-close:hover {
-  color: black;
+#logo-cashier {
+  height: 150px;
+  margin-top: 60px;
+}
+}
+
+/* Styles for larger screens (min-width: 769px) */
+@media (min-width: 769px) {
+
 }

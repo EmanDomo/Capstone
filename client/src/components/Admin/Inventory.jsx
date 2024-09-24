@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import '../../styles/Inventory.css';
-import Header from './HeaderAdmin';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import { IoTrashOutline } from "react-icons/io5";
+import Dropdown from 'react-bootstrap/Dropdown';
+import DropdownButton from 'react-bootstrap/DropdownButton';
+import Table from 'react-bootstrap/Table';
+import Header from './HeaderAdmin';
+import { MdEdit } from "react-icons/md";
+import { FaRegTrashAlt } from "react-icons/fa";
 
-const Inventory = () => {
+function Inventory() {
     const [data, setData] = useState([]);
     const [categories, setCategories] = useState([]);
     const [newCategory, setNewCategory] = useState('');
@@ -35,9 +40,15 @@ const Inventory = () => {
     const [stockQuantity, setStockQuantity] = useState('');
     const [stockUnit, setStockUnit] = useState('');
 
-    const [showInventory, setShowInventory] = useState(true);
+    const [showInventory, setShowInventory] = useState(true); // Food inventory shown by default
     const [showStocks, setShowStocks] = useState(false);
+    const [selectedInventory, setSelectedInventory] = useState('FOOD INVENTORY');
 
+    const handleSelect = (inventoryTitle, inventoryType) => {
+        setSelectedInventory(inventoryTitle);
+        setShowInventory(inventoryType === 'food');
+        setShowStocks(inventoryType === 'stocks');
+    };
     useEffect(() => {
         getUserData();
         getCategories();
@@ -223,6 +234,7 @@ const Inventory = () => {
         } else {
             console.log("error");
         }
+        handleClose();
     };
 
     const addCategory = async (e) => {
@@ -246,99 +258,105 @@ const Inventory = () => {
         } catch (error) {
             console.error('Error adding category:', error);
         }
-    };
+    }
 
     return (
         <div>
             <Header />
-            <div className="inventory-container">
-
-                <h1 className='inventory-title'>INVENTORY</h1>
-
-                <div className='btn-container'>
-                    <button className="inv-btn" onClick={() => { setShowInventory(true); setShowStocks(false); }}>Show Inventory</button>
-                    <button className="inv-btn1" onClick={() => { setShowStocks(true); setShowInventory(false); }}>Show Stocks</button>
+            <div className="d-flex w-100% mx-2 my-4 inventory-header">
+                <div className="col-7 d-flex justify-content-end inventory-title1">
+                    <h1>{selectedInventory}</h1>
                 </div>
-
-                {showInventory && (
-                    <>
-
-                        <div className='inventory-table-container'>
-                            <table className='inventory-table'>
-                                <thead>
-                                    <tr>
-                                        <th className='inventory-col1'>Item Name</th>
-                                        <th className='inventory-col2'>Ingredients</th>
-                                        <th className='inventory-col3'>Quantities Required</th>
-                                        <th className='inventory-col4'>Units</th>
-                                        <th className='inventory-col5'>Price</th>
-                                        <th className='inventory-col6'>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data.map((el, i) => (
-                                        <tr key={i}>
-                                            <td>{el.Item_Name}</td>
-                                            <td>{el.Stock_Names}</td>
-                                            <td>{el.Quantities_Required}</td>
-                                            <td>{el.Units}</td>
-                                            <td>{el.Price}</td>
-                                            <td>
-                                                <button className='delete-btn' onClick={() => dltUser(el.Item_Name)}>Delete</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div className='add-product-btn-container'>
-                            <button className='add-product-btn' onClick={handleShow}>Add Product</button>
-                        </div>
-                    </>
-                )}
-
-                {showStocks && (
-                    <>
-                        <div className='stock-table-container'>
-                            <table className='stock-table'>
-                                <thead>
-                                    <tr>
-                                        <th className='stock-col1'>Name</th>
-                                        <th className='stock-col2'>Quantity</th>
-                                        <th className='stock-col3'>Unit</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {stockData.map((el, i) => (
-                                        <tr key={i}>
-                                            <td>{el.stock_item_name}</td>
-                                            <td className='stock-col2-td'>{el.stock_quantity}</td>
-                                            <td className='stock-col3-td'>{el.unit}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div className='add-stock-btn-container'>
-                            <button className='add-stock-btn' onClick={handleStockShow}>Add Stocks</button>
-                        </div>
-                    </>
-                )}
-
-
-
-
+                <div className="col-5 d-flex flex-row-reverse inventory-dropdown">
+                    <DropdownButton id="inventory-dropdown" title={selectedInventory}>
+                        <Dropdown.Item onClick={() => handleSelect('FOOD INVENTORY', 'food')}>Food Inventory</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleSelect('STOCK INVENTORY', 'stocks')}>Stocks Inventory</Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleSelect('Kitchen Inventory', 'kitchen')}>Kitchen Inventory</Dropdown.Item>
+                    </DropdownButton>
+                </div>
             </div>
 
-            {/* Add Product Modal */}
-            <Modal show={modalShow} onHide={handleClose}>
+            <div className="w-75 m-auto inventory-tables">
+    {showInventory && (
+        <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
+            <Table responsive className="table-fixed">
+                <thead>
+                    <tr>
+                        <th className='text-center'>Item Name</th>
+                        <th className='text-center'>Stock Details</th> {/* Modified this to include combined stock names, quantities, and units */}
+                        <th className='text-center'>Price</th>
+                        <th className='text-center' id='action-inventory' style={{ width: '140px' }}>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {data.map((el, i) => (
+                        <tr key={i}>
+                            <td>{el.Item_Name}</td>
+                            <td>{el.Stock_Details}</td> {/* Stock_Details will include the combined stock names, quantities, and units */}
+                            <td>{el.Price}</td>
+                            <td>
+                                <div className='action-buttons'>
+                                    <Button id='edit-inventory'><MdEdit/></Button>
+                                    <Button id='delete-inventory' onClick={() => dltUser(el.Item_Name)}><FaRegTrashAlt /></Button>
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </Table>
+        </div>
+    )}
+
+    {showStocks && (
+        <div style={{ maxHeight: '350px', overflowY: 'auto'}}>
+            <Table responsive className="table-fixed">
+                <thead className='position-sticky z-3'>
+                    <tr>
+                        <th className='text-center'>Name</th>
+                        <th className='text-center'>Quantity</th>
+                        <th className='text-center'>Unit</th>
+                        <th className='text-center' style={{ width: '120px' }}>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {stockData.map((el, i) => (
+                        <tr key={i}>
+                            <td>{el.stock_item_name}</td>
+                            <td>{el.stock_quantity}</td>
+                            <td>{el.unit}</td>
+                            <td>
+                                <div className='action-buttons-stocks'>
+                                    <Button id='edit-inventory'><MdEdit/></Button>
+                                    <Button id='delete-inventory'><FaRegTrashAlt /></Button>
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </Table>
+        </div>
+    )}
+</div>
+
+
+            <div className="d-flex position-absolute bottom-0 start-50 translate-middle-x mx-2 my-3 p-2 inventory-button">
+                {showInventory &&(
+                    <Button variant="dark" className='btn-add-inventory' onClick={handleShow}>Add Product</Button>
+                )}
+                {showStocks && (
+                    <Button variant="dark" className='btn-add-inventory' onClick={handleStockShow}>Add Stock</Button>
+                )}
+            </div>
+
+                        {/* Add Product Modal */}
+                        <Modal show={modalShow} onHide={handleClose} dialogClassName="fullscreen-modal">
                 <Modal.Header closeButton>
-                    <Modal.Title>Add New Item</Modal.Title>
+                    <Modal.Title>Add New Food</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
                         <Form.Group className="mb-3" controlId="formItemName">
-                            <Form.Label>Name</Form.Label>
+                            <Form.Label>Food Name</Form.Label>
                             <Form.Control
                                 type="text"
                                 name='fname'
@@ -361,7 +379,7 @@ const Inventory = () => {
 
 
                         <Form.Group className="mb-3" controlId="formItemCategory">
-                            <Form.Label>Category</Form.Label>
+                            <Form.Label>Food Category</Form.Label>
                             <Form.Control
                                 as="select"
                                 value={category}
@@ -429,17 +447,18 @@ const Inventory = () => {
                                         className='form-ingredient-unit'
                                     />
                                 </Form.Group>
-
-                                <Button onClick={addIngredient} className='add-ingredient-btn'>
+                                <div className='d-flex justify-content-end'>
+                                <Button onClick={addIngredient} className='bg-dark add-ingredient'>
                                     Add Ingredient
                                 </Button>
+                                </div>
                             </>
                         )}
 
                         {selectedIngredients.length > 0 && (
                             <div className="ingredients-list">
                                 <h5>Added Ingredients</h5>
-                                <table className='table-ingredients'>
+                                <Table responsive className='table-ingredients'>
                                     <tr>
                                         <th>Ingredient Name</th>
                                         <th className='ing-th'>Quantity & Unit</th>
@@ -453,7 +472,7 @@ const Inventory = () => {
                                             <td><button type="button" className="btn-remove-ingredient" onClick={() => removeIngredient(index)}><IoTrashOutline /></button></td>
                                         </tr>
                                     ))}
-                                </table>
+                                </Table>
                             </div>
                         )}
 
@@ -469,17 +488,17 @@ const Inventory = () => {
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button className="btn-close-product" onClick={handleClose}>
+                    {/* <Button className="bg-black" onClick={handleClose}>
                         Close
-                    </Button>
-                    <Button className="btn-save-product" onClick={addUserData}>
+                    </Button> */}
+                    <Button className="food-save" onClick={addUserData}>
                         Save Changes
                     </Button>
                 </Modal.Footer>
             </Modal>
 
             {/* Add Stock Modal */}
-            <Modal show={stockModalShow} onHide={handleClose}>
+            <Modal show={stockModalShow} onHide={handleClose} dialogClassName="fullscreen-modal">
                 <Modal.Header closeButton>
                     <Modal.Title>Add New Stock</Modal.Title>
                 </Modal.Header>
@@ -520,16 +539,12 @@ const Inventory = () => {
                     </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={handleClose}>
-                        Close
-                    </Button>
-                    <Button variant="primary" onClick={addStockData}>
+                    <Button className="food-save" onClick={addStockData}>
                         Save Changes
                     </Button>
                 </Modal.Footer>
             </Modal>
         </div>
-
     );
 }
 

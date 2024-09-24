@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../../styles/LoginForm.css';
+import '../../styles/SuperAdmin.css';
 import { FaUser, FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import Logo from "../../Assets/logo.png";
