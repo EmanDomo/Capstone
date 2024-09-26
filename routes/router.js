@@ -467,7 +467,7 @@ router.get("/top-selling", authenticateToken, authorizeRoles('customer'), (req, 
             FROM tbl_orders o
             JOIN tbl_items i ON o.id = i.id
             JOIN tbl_sale s ON o.orderId = s.orderId
-            WHERE o.status = 'removed'
+            WHERE o.status = 'completed'
             AND s.saleDate >= CURDATE()
             AND s.saleDate < CURDATE() + INTERVAL 1 DAY
             GROUP BY i.id, i.itemname, i.img, i.price
@@ -674,6 +674,7 @@ router.get('/cart', authenticateToken, authorizeRoles('customer'), (req, res) =>
                 res.status(500).json({ status: 'error', message: 'Internal server error' });
             } else {
                 res.status(200).json({ status: 'success', data: results });
+                console.log("nag iinfinite loop ba itong getcartdata?");
             }
         }
     );
@@ -1693,7 +1694,8 @@ router.get('/api/sales/month', authenticateToken, authorizeRoles('superadmin'), 
             tbl_items i ON o.id = i.id 
         WHERE 
             MONTH(s.saleDate) = MONTH(CURDATE()) 
-            AND YEAR(s.saleDate) = YEAR(CURDATE());
+            AND YEAR(s.saleDate) = YEAR(CURDATE())
+            ORDER BY saleId;
     `;
     conn.query(query, (err, results) => {
         if (err) {

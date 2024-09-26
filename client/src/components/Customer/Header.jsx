@@ -94,7 +94,11 @@ function Header() {
       }
   };
   
-    const handleCartShow = () => setShowCart(true);
+    const handleCartShow = () => {
+      getCartData();
+      setShowCart(true);
+    }
+
     const handleCartClose = () => setShowCart(false);
   
     const handleOrdersShow = () => {
@@ -177,7 +181,7 @@ function Header() {
       setOpenLinks(!openLinks);
     };
   
-    getCartData();
+    // getCartData();
     // getUserData();
     // fetchOrders();
 

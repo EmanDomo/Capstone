@@ -1,6 +1,33 @@
-.customer-main {
-  height: 100%;
+body {
+  overflow-y: scroll; /* Ensure the body scrolls when content exceeds viewport */
 }
+
+.customer-main {
+  flex-grow: 1; /* Allow the main content to grow */
+  overflow-y: auto; /* Allow vertical scrolling within the main content */
+}
+
+section.block {
+  margin-bottom: 20px; /* Add some spacing between sections */
+}
+
+html, body {
+  height: 100%; /* Ensure the body takes the full height */
+  margin: 0;
+  padding: 0;
+  overflow-y: auto; /* Enable vertical scrolling */
+}
+
+.customer-main {
+  height: 100vh; /* Full viewport height */
+  overflow-y: auto; /* Allow scrolling */
+}
+
+.customer-menu {
+  flex-grow: 1; /* Let it grow to fill available space */
+  overflow-y: auto; /* Allow scrolling */
+}
+
 
 .hero-block .carousel-item:before {
   content: '';

@@ -30,7 +30,7 @@ function Header1() {
           />{' '}
           {/* Display the name dynamically */}
           <label id='header-admin-title'>
-            Welcome, {role === 'cashier' ? `Cashier ${userName}` : userName}!
+            Welcome, Cashier!
           </label>
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" id='toggle-nav' />
