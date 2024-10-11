@@ -11,6 +11,8 @@
     "bootstrap": "^5.2.1",
     "chart.js": "^4.4.4",
     "install": "^0.13.0",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.3",
     "jwt-decode": "^4.0.0",
     "moment": "^2.29.4",
     "npm": "^8.19.2",

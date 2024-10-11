@@ -1,7 +1,7 @@
 import './App.css';
-import POS from './components/Admin/POS';
+import POS from './components/Cashier/POS';
 import Homepage from './components/Customer/Homepage';
-import Login from './components/Admin/LoginForm';
+import Login from './components/Cashier/LoginForm';
 import Menu from './components/Customer/Menu';
 import UserLogin from './components/Customer/UserLogin';
 import Checkout from './components/Customer/Checkout';
@@ -10,7 +10,7 @@ import Register from './components/Customer/Register';
 
 import Success from './components/Customer/Success';
 import Failed from './components/Customer/Failed';
-import Orders from './components/Admin/Orders';
+import Orders from './components/Cashier/Orders';
 import MyOrders from './components/Customer/MyOrders';
 import Sales from './components/Admin/Sales';
 import SuperAdmin from './components/Admin/SuperAdmin';

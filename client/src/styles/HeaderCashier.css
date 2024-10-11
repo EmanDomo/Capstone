@@ -1,25 +1,39 @@
-.logo1 {
-    width: 50px;
-    height: 50px;
-    margin-top: -10px;
-  }
-
-.admin-nav {
-  background-color: rgba(255, 105, 180, 0.874);
+.logo3 {
+  width: 50px;
+  height: 50px;
+  /* margin-top: -10px; */
 }
 
+.cashier-nav {
+background-color: rgba(255, 105, 180, 0.874);
+}
+
+#header-cashier-title {
+margin-top: 10px
+}
+
+.navlink-cashier {
+font-weight: 400 !important;
+font-size: larger !important;
+margin-left: 20px !important;
+}
+
+.navlink-cashier:hover {
+color: white !important;
+}
 
 @media (max-width: 768px) { 
-  .logo1 {
-    margin-top: -20px;
-  }
-
-  #basic-navbar-nav {
-    background-color: white;
-    z-index: 4;
-  }
-
-  #toggle-nav:active {
-    background-color: rgb(212, 7, 7);
-  }
+.logo3 {
+  /* margin-top: -20px; */
 }
+
+#basic-navbar-nav {
+  /* background-color: white; */
+  z-index: 4;
+}
+
+#toggle-nav:active {
+  background-color: rgb(212, 7, 7);
+}
+}
+

@@ -1,223 +1,121 @@
-.items {
-  height: 600px;
-  width: 1000px;
-  position: relative;
-  left: 500px;
-  bottom: -10px;
-  overflow: auto;
-  overflow-y: hidden;
-  overflow-x: hidden;
+.pos-cart {
+  height: 85vh; 
 }
 
-.card-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); 
-  grid-gap: 1rem; 
-  max-height: 600px;
-  overflow: auto;
+.pos-content {
+  height: 70vh;
+  overflow-y: auto;
 }
 
-.pos-btnCategory {
-  display: flex;
-  flex-wrap: wrap; /* Allows buttons to wrap to the next line */
-  gap: 10px; /* Adds spacing between buttons */
-  margin-top: 10px;
+.pos-table-container {
+  height: 450px; /* Set your desired fixed height */
+  overflow-y: auto; /* Enable vertical scrolling */
 }
 
-.pos-btnCat {
-  height: 40px;
-  padding: 0 20px; /* Adjust padding for spacing */
-  border-radius: 30px;
+.order-summary-total {
+  border: 1px solid rgba(0, 0, 0, 0.297);
+  border-radius: 10px;
+}
+
+#cashier-checkout-button {
+  background-color: hotpink;
   border: none;
-  background-color: #eccfdc;
-  cursor: pointer;
-  color: black;
-  display: inline-block; /* Ensures button size adjusts based on text */
 }
 
-.pos-btnCat:hover {
-  background-color: #e78bb5;
+
+.pos-cart {
+  border: 1px solid rgba(0, 0, 0, 0.208);
+  border-radius: 10px;
 }
 
-.pos {
-  position: absolute;
-  top: 85px;
-  width: 450px;
-  height: 600px;
-  background-color: white;
-  box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
-  border-radius: 15px;
-  left: 20px;
-  padding: 10px 10px 10px 10px;
+#category-dropdown {
+  background-color: hotpink;
+  border: none;
 }
 
-.title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+#category-dropdown:hover, #cashier-checkout-button:hover {
+  background-color: rgba(255, 105, 180, 0.295) !important;
+  color: black !important;
 }
 
-.title h1 {
-  flex: 1;
-  text-align: center;
-}
-
-#customers {
-  border-collapse: collapse;
+.cashier-itm {
   width: 100%;
+  height: 250px;
+  object-fit: fill;
 }
 
-#customers td, #customers th {
-  padding: 8px;
+/* .pos-quantity {
+  padding: 2[x];
+} */
+.pos-btng {
+  border: 1px solid rgba(0, 0, 0, 0.23) !important;
 }
 
-#customers tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
-
-#customers tr:hover {
-  background-color: #ddd;
-}
-
-#customers th {
-  padding-top: 12px;
-  padding-bottom: 12px;
-  text-align: left;
-  background-color: #ffffff;
-  color: rgb(0, 0, 0);
-}
-
-.checkoutpos {
-  margin-top: 20px;
-}
-
-.checkoutpos hr {
+.pos-add {
+  background-color: hotpink;
+  color: black;
   border: none;
-  height: 1px;
-  background-color: #000000;
-  margin: 10px 0;
+  font-size: large;
 }
 
-.checkoutpos div {
-  margin: 10px 0;
+.pos-minus {
+  background-color: black;
+  color: white;
+  border: none;
+  font-size: large;
+}
+
+.pos-add:hover {
+  background-color: rgba(255, 105, 180, 0.295) !important;
+  color: black !important;
+
+}
+
+.pos-minus:hover {
+  background-color: rgba(0, 0, 0, 0.356) !important;
+  color: black;
+
 }
 
 #pos-remove {
-  font-size: 20px;
   background-color: transparent;
-  border: none;
   color: black;
+  font-size: larger;
 }
 
 #pos-remove:hover {
-  cursor: pointer;
   color: red;
 }
 
-.pos-qty {
-  color: #000000;
-  background-color: transparent;
-  border: 1px solid black;
-  height: 30px;
-  width: 30px;
-  padding: 0px;
-  border-radius: 20px;
-}
-
-.pos-qty:hover {
-  background-color: #e78bb5;
-  border: none;
-  cursor: pointer;
-}
-
-#pos-lbllQuantity {
-  padding: 10.9px 5px 5px 5px;
-  font-size: 15px;
-  height: 40px;
-}
-
-.itm {
-  height: 250px;
-  width: 300px;
-  border-top-left-radius: 15px;
-  border-top-right-radius: 15px;
-}
-
-.items1 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* Adjusted to fit 3 cards per row */
-  grid-gap: 1rem; /* Reduced gap */
-  height: 600px;
-  overflow: auto;
-  padding: 20px 10px 200px 10px; /* Adjusted padding */
-}
-
-.item {
-  height: 400px;
-  width: 300px;
-  background-color: white;
-  box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
-  text-align: left;
-  border-radius: 15px;
-  transition: transform 0.2s ease;
-}
-
-.item h3, label {
-  padding-left: 20px;
-}
-
-.btnItem {
-  background-color: #000000;
-  border-radius: 20px;
-  margin: 20px 20px 0px 25px;
-  font-size: 12px;
-  height: 40px;
-  width: 100px;
-}
-
-
-.confirmation-modal-body {
-  text-align: center;
-}
-
-.checkmark-animation {
-  margin: 20px auto;
-  width: 100px;
-  height: 100px;
-}
-
-.checkmark {
-  width: 100%;
-  height: 100%;
-  stroke-width: 2;
-  stroke: #4CAF50;
-  fill: none;
-  animation: checkmark 0.5s ease-in-out;
-}
-
-@keyframes checkmark {
-  0% {
-      stroke-dasharray: 100px;
-      stroke-dashoffset: 100px;
+@media (max-width: 480px) {
+  #cashier-card {
+      height: 300px;
   }
-  50% {
-      stroke-dashoffset: 50px;
+
+  .cashier-add-to-cart {
+      height: 30px;
+      width: 30px;
+      font-size: 15px;
   }
-  100% {
-      stroke-dashoffset: 0;
+  
+  .cashier-price {
+      color: hotpink;
+      font-size: 15px;
+      font-weight: bold;
+  }
+
+  .hero-block .carousel-item img {
+    width: 100%;
+    height: 200px;
+  }
+
+  .menu-itm {
+    width: 100%;
+    height: 130px;
+    object-fit: fill;
+  }
+
+  #cashier-card {
+    height: 260px;
   }
 }
-
-.alert {
-  animation: shake 0.5s;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  50% { transform: translateX(5px); }
-  75% { transform: translateX(-5px); }
-}
-
-
-

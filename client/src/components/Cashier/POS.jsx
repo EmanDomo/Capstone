@@ -1,3 +1,8 @@
+import "../../styles/POS.css"; 
+import Header from "./HeaderCashier";
+import Footer from "../Customer/Footer";
+import Dropdown from 'react-bootstrap/Dropdown';
+import DropdownButton from 'react-bootstrap/DropdownButton';
 import React, { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
@@ -6,11 +11,15 @@ import Form from 'react-bootstrap/Form';
 import Alert from 'react-bootstrap/Alert';
 import axios from 'axios';
 import moment from 'moment';
-import '../../styles/POS.css';
-import Header from './HeaderCashier';
-import { VscTrash } from "react-icons/vsc";
+import { VscTrash} from "react-icons/vsc";
+import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
+import { IoMdAdd } from "react-icons/io";
+import Table from 'react-bootstrap/Table';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
-const Admin = () => {
+
+const POStry = () => {
     const [data, setData] = useState([]);
     const [posItems, setPosItems] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
@@ -29,6 +38,13 @@ const Admin = () => {
 
     const handleShow = () => setModalShow(true);
     const handleClose = () => setModalShow(false);
+
+    const [selectedCategory, setSelectedCategory] = useState('Show All');
+
+    const handleCategorySelect = (categoryName) => {
+        setSelectedCategory(categoryName);
+        handleCategoryClick(categoryName); // Call your existing function
+    };
 
     const getUserData = async () => {
         try {
@@ -136,9 +152,11 @@ const Admin = () => {
 
 
     const handleCategoryClick = (category) => {
-        const filteredItems = data.filter(item => item.category === category);
+        // Compare using category_name from item and selected category, adjusting for case sensitivity.
+        const filteredItems = data.filter(item => item.category.toLowerCase() === category.toLowerCase());
         setFilteredData(filteredItems);
     };
+    
 
     const handleShowAll = () => {
         setFilteredData(data);
@@ -249,20 +267,22 @@ const Admin = () => {
     }, []);
 
 
-    return (
+    return ( 
         <div>
             <Header />
-            <div className='bg'>
-                <div className='pos'>
-                    <h1>Order Summary</h1>
-                    <div className='pos2'>
-                        <table id='customers'>
+            <div className="d-flex">
+                <div className="w-25 mx-2 my-2 pos-cart">
+                    <div className="mx-2 my-2">
+                        <h3 className="text-center">Order Summary</h3>
+                    </div>
+                    <div className="order-summary pos-table-container">
+                        <Table responsive>
                             <thead>
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Quantity</th>
+                                    <th className="text-center">Name</th>
+                                    <th className="text-center">Quantity</th>
                                     <th className="pos-remove">Remove</th>
-                                    <th>Price</th>
+                                    <th className="text-center">Price</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -270,26 +290,16 @@ const Admin = () => {
                                     posItems.map((item, index) => (
                                         <tr key={index}>
                                             <td>{item.itemname}</td>
-                                            <td id="quantity">
-                                                <button
-                                                    className="pos-qty"
-                                                    id="add"
-                                                    onClick={() => updatePos(item.itemId, 1)} // Increase quantity
-                                                >
-                                                    +
-                                                </button>
-                                                <label id="pos-lbllQuantity">{item.quantity}</label>
-                                                <button
-                                                    className="pos-qty"
-                                                    id="min"
-                                                    onClick={() => updatePos(item.itemId, -1)} // Decrease quantity
-                                                >
-                                                    -
-                                                </button>
+                                            <td id="quantity" className="text-center">
+                                                <ButtonGroup className="pos-btng">
+                                                    <Button className="pos-add" onClick={() => updatePos(item.itemId, 1)}>+</Button>
+                                                    <label id="pos-quantity" className="px-2 py-1">{item.quantity}</label>
+                                                    <Button className="pos-minus" onClick={() => updatePos(item.itemId, -1)}>-</Button>
+                                                </ButtonGroup>
                                             </td>
                                             <td>
-                                                <button id="pos-remove">
-                                                    <VscTrash onClick={() => removeFromPOS(item.itemId)} />
+                                                <button id="pos-remove" onClick={() => removeFromPOS(item.itemId)}>
+                                                    <VscTrash />
                                                 </button>
                                             </td>
                                             <td>₱{item.price}</td>
@@ -301,95 +311,96 @@ const Admin = () => {
                                     </tr>
                                 )}
                             </tbody>
-
-
-                        </table>
+                        </Table>
                     </div>
-                    <div className='checkoutpos'>
-                        <hr className='divider' />
-                        <h2>Total Amount: ₱{calculateTotal().toFixed(2)}</h2>
-                        <button className='checkout' onClick={handleCheckout}>
+                    <div className="mt-4 px-2 py-2 order-summary-total">
+                        <div className="d-flex">
+                            <h5>Total Amount:</h5>
+                            <label className="col-7 d-flex justify-content-end">₱{calculateTotal().toFixed(2)}</label>
+                        </div>
+                   
+                        <div className="mt-2 d-flex flex-row-reverse cashier-checkout">
+                        <Button variant='dark' id="cashier-checkout-button" onClick={handleCheckout}>
                             Checkout
-                        </button>
-
-                    </div>
-
-                </div>
-
-                <div className='items'>
-                    <div className="pos-category">
-                        <div className="pos-btnCategory">
-                            {categories.map((cat, i) => (
-                                <button key={i} className="pos-btnCat" onClick={() => handleCategoryClick(cat.category_name)}>
-                                    {cat.category_name}
-                                </button>
-                            ))}
-                            <button className="pos-btnCat" onClick={handleShowAll}>Show All</button>
+                        </Button>
                         </div>
                     </div>
+                </div>
 
-                    {show && (
-                        <Alert variant='danger' onClose={() => setShow(false)} dismissible>
-                            Deleted
-                        </Alert>
-                    )}
-
-                    <div className='title'>
-                        <h1 className='text-center mt-2'>MENU</h1>
+                <div className="w-75 mx-2 my-2 pos-container">
+                    <div className="d-flex w-100% mx-2 my-4 pos-header">
+                        <div className="col-7 d-flex justify-content-end">
+                            <h1>MENU</h1>
+                        </div>
+                        <div className="col-5 d-flex px-2 py-2 flex-row-reverse">
+                        <DropdownButton id="category-dropdown" title={selectedCategory}>
+                            <Dropdown.Item onClick={() => {handleCategorySelect('Show All'); handleShowAll();}}>Show All</Dropdown.Item>
+                            {categories.map((cat, i) => (
+                                <Dropdown.Item key={i} onClick={() => handleCategoryClick(cat.category_name)}>
+                                    {cat.category_name}
+                                </Dropdown.Item>
+                            ))}
+                        </DropdownButton>
+                        </div>
                     </div>
+                            <div className="mx-2 pos-content">
+                            <Row xs={2} md={3} lg={4} className="g-4 mx-2">
+                                {filteredData.length > 0 ? (
+                                    filteredData.map((el, i) => (
+                                        <Col key={i}>
+                                            <Card id="cashier-card">
+                                                <div className="cashier-img">
+                                                    <Card.Img variant="top" src={`/uploads/${el.img}`} className="cashier-itm" alt="itm" />
+                                                </div>
+                                                <Card.Body>
+                                                    <Card.Title>{el.itemname}</Card.Title>
+                                                    <div className="d-flex justify-content-between p-2">
+                                                        <Card.Text className="d-flex align-items-center">
+                                                            <label className="p-1 cashier-price">₱{el.price}</label>
+                                                        </Card.Text>
+                                                        <Button variant="dark" className="cashier-add-to-cart" onClick={() => addToPOS(el.id, 1, el.price)}>
+                                                            <IoMdAdd />
+                                                        </Button>
+                                                    </div>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                    ))
+                                ) : (
+                                    <Col>
+                                        <Card className="text-center">
+                                            <Card.Body>
+                                                <Card.Text>No items available in the menu.</Card.Text>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+                                )}
+                            </Row>
 
-                    <div className='items1'>
-                        {filteredData.length > 0 ? (
-                            filteredData.map((el, i) => (
-                                <div key={i} className='item'>
-                                    <img
-                                        variant='top'
-                                        src={`/uploads/${el.img}`}
-                                        className="itm" alt="itm"
-                                    />
-                                    <div className='text-container'>
-                                        <h3>{el.itemname}</h3>
-                                        <label>₱{el.price}</label>
-                                        <div>
-                                            <button
-                                                className="btnItem"
-                                                onClick={() => addToPOS(el.id, 1, el.price)} // Quantity is 1 for now
-                                            >
-                                                Add
-                                            </button>
-                                            <button onClick={() => dltUser(el.id)} className="btnItem">Delete</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p>No items found</p>
-                        )}
-                    </div>
-
+                            </div>
                 </div>
             </div>
             <Modal show={showConfirmationModal} onHide={() => setShowConfirmationModal(false)}>
-    <Modal.Header closeButton>
-        <Modal.Title>Order Complete</Modal.Title>
-    </Modal.Header>
-    <Modal.Body className="confirmation-modal-body">
-        <div className="checkmark-animation">
-            <svg xmlns="http://www.w3.org/2000/svg" className="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-            </svg>
-        </div>
-        <p>Checkout completed!</p>
-    </Modal.Body>
-    <Modal.Footer>
-        <Button variant="secondary" onClick={() => setShowConfirmationModal(false)}>
-            Close
-        </Button>
-    </Modal.Footer>
-</Modal>
+                <Modal.Header closeButton>
+                    <Modal.Title>Order Complete</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="confirmation-modal-body">
+                    <div className="checkmark-animation">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <p>Checkout completed!</p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowConfirmationModal(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
-        </div>
+        </div> 
     );
-};
-
-export default Admin;
+}
+ 
+export default POStry;

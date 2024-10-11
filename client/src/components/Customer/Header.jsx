@@ -17,25 +17,27 @@ import { IoMdExit } from "react-icons/io";
 function Header() {
     const [data, setData] = useState([]);
     const [userName, setUserName] = useState('');
+    const [userGender, setUserGender] = useState(''); // State for gender
     const [openLinks, setOpenLinks] = useState(false);
     const [cartItems, setCartItems] = useState([]);
     const [showCart, setShowCart] = useState(false);
-    const [showOrders, setShowOrders] = useState(false); // State for orders modal
+    const [showOrders, setShowOrders] = useState(false);
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    
     useEffect(() => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        const decodedToken = jwtDecode(token);
-        setUserName(decodedToken.name);
-      }
-      getUserData();
-      getCartData();
-      fetchOrders();
+        const token = localStorage.getItem('token');
+        if (token) {
+            const decodedToken = jwtDecode(token);
+            console.log(decodedToken); // Log the decoded token to inspect its contents
+            setUserName(decodedToken.name); // Assuming name is stored in token
+            setUserGender(decodedToken.gender); // Assuming gender is stored in token
+        }
+        getUserData();
+        getCartData();
+        fetchOrders();
     }, []);
   
     const getUserData = async () => {
@@ -196,7 +198,7 @@ function Header() {
             className="d-inline-block align-top logo1"
           />{' '}
           {/* <label id='header-customer-title'>Welcome {userName}!</label> */}
-          <label id='header-customer-title'>Welcome back, {userName}!</label>
+          <label id='header-customer-title'>Welcome back, {userName}, {userGender}!</label>
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" id='toggle-nav'/>
         <Navbar.Collapse id="basic-navbar-nav">

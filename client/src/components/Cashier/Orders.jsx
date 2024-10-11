@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Header from './HeaderCashier';
 import "../../styles/Orders.css";
-import { FaCheck, FaTimes, FaEye } from "react-icons/fa";
+import { FaEye } from "react-icons/fa";
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
@@ -12,11 +12,11 @@ import Row from 'react-bootstrap/Row';
 const Orders = () => {
     const [orders, setOrders] = useState([]);
     const [groupedOrders, setGroupedOrders] = useState({});
+    const [showOrderModal, setShowOrderModal] = useState(false);
+    const [selectedOrderGroup, setSelectedOrderGroup] = useState(null);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [selectedOrderId, setSelectedOrderId] = useState(null);
     const [cancelReason, setCancelReason] = useState('');
-    const [showImageModal, setShowImageModal] = useState(false);
-    const [selectedImage, setSelectedImage] = useState('');
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
     const token = localStorage.getItem('token');
 
@@ -28,9 +28,8 @@ const Orders = () => {
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                console.log(response.data);
                 setOrders(response.data);
-                groupOrdersById(response.data);  // Group orders by orderId
+                groupOrdersByNumber(response.data);  // Group by orderNumber
             } catch (error) {
                 console.error('Error fetching orders:', error);
             }
@@ -38,22 +37,28 @@ const Orders = () => {
         fetchOrders();
     }, [token]);
 
-    // Function to group orders by orderId
-    const groupOrdersById = (orders) => {
+    const groupOrdersByNumber = (orders) => {
         const grouped = orders.reduce((acc, order) => {
-            if (!acc[order.orderId]) {
-                acc[order.orderId] = [];
+            if (!acc[order.orderNumber]) {
+                acc[order.orderNumber] = [];
             }
-            acc[order.orderId].push(order);
+            acc[order.orderNumber].push(order);
             return acc;
         }, {});
         setGroupedOrders(grouped);
     };
 
-    const handleCompleteOrder = async (orderId, userId, totalAmount, quantity, userName) => {
+    const handleCompleteOrder = async () => {
         try {
+            // Get all orderIds for the selected order group (same orderNumber)
+            const orderIds = selectedOrderGroup.map(order => order.orderId);
+            const userId = selectedOrderGroup[0].userId;
+            const totalAmount = selectedOrderGroup.reduce((total, order) => total + order.price * order.quantity, 0);
+            const quantity = selectedOrderGroup.reduce((totalQty, order) => totalQty + order.quantity, 0);
+            const userName = selectedOrderGroup[0].userName;
+    
             const response = await axios.post('/complete-order', {
-                orderId,
+                orderIds,  // Send all orderIds
                 userId,
                 totalAmount,
                 userName,
@@ -65,43 +70,54 @@ const Orders = () => {
             });
     
             if (response.data.success) {
-                setOrders(orders.filter(order => order.orderId !== orderId));
-                groupOrdersById(orders.filter(order => order.orderId !== orderId));
+                // Remove the completed orders from the orders array
+                setOrders(orders.filter(order => !orderIds.includes(order.orderId)));
+                groupOrdersByNumber(orders.filter(order => !orderIds.includes(order.orderId)));
                 handleShowConfirmationModal();  // Show the confirmation modal
+                setShowOrderModal(false);
             } else {
-                console.error('Failed to complete order:', response.data.error);
+                console.error('Failed to complete orders:', response.data.error);
             }
         } catch (error) {
-            console.error('Error completing order:', error);
+            console.error('Error completing orders:', error);
         }
     };
-
-    const handleShowConfirmationModal = () => {
-        setShowConfirmationModal(true);
-    };
-
     const handleCancelOrder = async () => {
         try {
+            // Get all orderIds for the selected order group (same orderNumber)
+            const orderIds = selectedOrderGroup.map(order => order.orderId);
+    
             const response = await axios.post('/cancel-order', {
-                orderId: selectedOrderId,
+                orderIds,  // Send all orderIds for cancellation
                 reason: cancelReason,
             }, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-
+    
             if (response.data.success) {
-                setOrders(orders.filter(order => order.orderId !== selectedOrderId));
-                groupOrdersById(orders.filter(order => order.orderId !== selectedOrderId));
+                // Remove the canceled orders from the orders array
+                setOrders(orders.filter(order => !orderIds.includes(order.orderId)));
+                groupOrdersByNumber(orders.filter(order => !orderIds.includes(order.orderId)));
                 setShowCancelModal(false);
                 setCancelReason('');
             } else {
-                console.error('Failed to cancel order:', response.data.error);
+                console.error('Failed to cancel orders:', response.data.error);
             }
         } catch (error) {
-            console.error('Error canceling order:', error);
+            console.error('Error canceling orders:', error);
         }
+    };
+    
+    const handleShowOrderModal = (orderGroup) => {
+        setSelectedOrderGroup(orderGroup);
+        setShowOrderModal(true);
+    };
+
+    const handleCloseOrderModal = () => {
+        setShowOrderModal(false);
+        setSelectedOrderGroup(null);
     };
 
     const handleShowCancelModal = (orderId) => {
@@ -114,14 +130,8 @@ const Orders = () => {
         setCancelReason('');
     };
 
-    const handleShowImageModal = (imagePath) => {
-        setSelectedImage(`/uploads/${imagePath}`);
-        setShowImageModal(true);
-    };
-
-    const handleCloseImageModal = () => {
-        setShowImageModal(false);
-        setSelectedImage('');
+    const handleShowConfirmationModal = () => {
+        setShowConfirmationModal(true);
     };
 
     return (
@@ -130,58 +140,18 @@ const Orders = () => {
             <div className="order-container">
                 <h1 className="order-title">Orders</h1>
                 {Object.keys(groupedOrders).length > 0 ? (
-                    <div className="order-list-container"> {/* Added scrollable container */}
+                    <div className="order-list-container">
                         <Row xs={3} md={4} className="g-4">
                             {Object.entries(groupedOrders).map(([orderId, orderGroup]) => (
                                 <Col key={orderId}>
                                     <Card className="order-card">
                                         <Card.Header className="order-card-header">
                                             <strong>Order ID: {orderGroup[0].orderNumber}</strong>
+                                            <FaEye
+                                                className="order-action-icon view-icon"
+                                                onClick={() => handleShowOrderModal(orderGroup)}
+                                            />
                                         </Card.Header>
-                                        <Card.Body>
-                                            <Card.Title className="order-card-title">User: {orderGroup[0].userName}</Card.Title>
-                                            <div className="order-items-list">
-                                                {Object.values(orderGroup.reduce((acc, order) => {
-                                                    if (!acc[order.itemname]) {
-                                                        acc[order.itemname] = {
-                                                            itemname: order.itemname,
-                                                            quantity: 0,
-                                                            totalPrice: 0
-                                                        };
-                                                    }
-                                                    acc[order.itemname].quantity += order.quantity;
-                                                    acc[order.itemname].totalPrice += order.price * order.quantity;
-                                                    return acc;
-                                                }, {})).map((groupedItem, index) => (
-                                                    <div key={index} className="order-item">
-                                                        <p><strong>Item:</strong> {groupedItem.itemname} x {groupedItem.quantity}</p>
-                                                        <p><strong>Total:</strong> ₱{groupedItem.totalPrice}.00</p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <div className="order-actions">
-                                                <FaCheck
-                                                    className="order-action-icon complete-icon"
-                                                    onClick={() => handleCompleteOrder(
-                                                        orderGroup[0].orderId,
-                                                        orderGroup[0].userId,
-                                                        orderGroup.reduce((total, order) => total + order.price * order.quantity, 0),
-                                                        orderGroup.reduce((totalQty, order) => totalQty + order.quantity, 0),
-                                                        orderGroup[0].userName
-                                                    )}
-                                                />
-                                                <FaTimes
-                                                    className="order-action-icon cancel-icon"
-                                                    onClick={() => handleShowCancelModal(orderGroup[0].orderId)}
-                                                />
-                                                {orderGroup[0].qrCodeImage && (
-                                                    <FaEye
-                                                        className="order-action-icon view-icon"
-                                                        onClick={() => handleShowImageModal(orderGroup[0].qrCodeImage)}
-                                                    />
-                                                )}
-                                            </div>
-                                        </Card.Body>
                                     </Card>
                                 </Col>
                             ))}
@@ -189,6 +159,45 @@ const Orders = () => {
                     </div>
                 ) : (
                     <p>No orders available.</p>
+                )}
+
+                {/* Order Modal */}
+                {selectedOrderGroup && (
+                    <Modal show={showOrderModal} onHide={handleCloseOrderModal}>
+                        <Modal.Header closeButton>
+                            <Modal.Title>Order Summary</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <h5>User: {selectedOrderGroup[0].userName}</h5>
+                            <div className="order-items-list">
+                                {Object.values(selectedOrderGroup.reduce((acc, order) => {
+                                    if (!acc[order.itemname]) {
+                                        acc[order.itemname] = {
+                                            itemname: order.itemname,
+                                            quantity: 0,
+                                            totalPrice: 0
+                                        };
+                                    }
+                                    acc[order.itemname].quantity += order.quantity;
+                                    acc[order.itemname].totalPrice += order.price * order.quantity;
+                                    return acc;
+                                }, {})).map((groupedItem, index) => (
+                                    <div key={index} className="order-item">
+                                        <p><strong>Item:</strong> {groupedItem.itemname} x {groupedItem.quantity}</p>
+                                        <p><strong>Total:</strong> ₱{groupedItem.totalPrice}.00</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button variant="danger" onClick={() => handleShowCancelModal(selectedOrderGroup[0].orderId)}>
+                                Cancel Order
+                            </Button>
+                            <Button variant="success" onClick={handleCompleteOrder}>
+                                Complete Order
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
                 )}
 
                 {/* Cancel Order Modal */}
@@ -212,21 +221,6 @@ const Orders = () => {
                         </Button>
                         <Button variant="danger" onClick={handleCancelOrder}>
                             Cancel Order
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
-
-                {/* Image Modal */}
-                <Modal show={showImageModal} onHide={handleCloseImageModal}>
-                    <Modal.Header closeButton>
-                        <Modal.Title>Order QR Code</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                        <img src={selectedImage} alt="Order QR Code" style={{ width: '100%' }} />
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button variant="secondary" onClick={handleCloseImageModal}>
-                            Close
                         </Button>
                     </Modal.Footer>
                 </Modal>

@@ -1,7 +1,7 @@
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
-import "../../styles/HeaderAdmin.css";
+import "../../styles/HeaderCashier.css";
 import Logo1 from "../../Assets/logo.png";
 import React, { useState, useEffect } from "react";
 import { jwtDecode } from 'jwt-decode'; // Import jwt-decode directly

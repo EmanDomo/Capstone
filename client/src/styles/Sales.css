@@ -301,3 +301,25 @@ html, body {
   cursor: pointer;
 }
 
+.kpi-overview {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+}
+.kpi-item {
+  text-align: center;
+  background-color: #f7f7f7;
+  padding: 20px;
+  border-radius: 10px;
+  width: 30%;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.kpi-item h3 {
+  font-size: 18px;
+  color: #333;
+}
+.kpi-item p {
+  font-size: 24px;
+  color: #4CAF50;
+  margin: 0;
+}

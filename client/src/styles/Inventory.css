@@ -1,115 +1,65 @@
 
-.table-fixed th, .table-fixed td {
-    padding: 8px;
-    border: 1px solid #ddd; 
+.inventoryd {
+  position: absolute; /* Use absolute positioning */
+  top: 70px; /* Adjust based on your header's height */
+  left: 0;
+  right: 0;
+  bottom: 0; /* Cover the remaining height of the viewport */
+  margin: 20px; /* Margin for spacing */
+  padding: 15px; /* Padding inside the div */
+  background-color: #ffffff; /* Light gray background */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+  font-family: Arial, sans-serif; /* Font family */
+  font-size: 16px; /* Font size */
+  color: #333; /* Text color */
+  overflow-y: auto; /* Add scroll if content overflows */
 }
 
-#inventory-dropdown {
-    background-color: hotpink;
-    border: none;
-    padding: 10px;
+.tab-header {
+  align-items: center; /* Align items vertically */
+  color: #333;
 }
 
-.food-save {
-    background-color: hotpink;
-    border: none;
+.logo-label {
+  font-size: 24px; /* Adjust size as needed */
+  font-weight: bold;
+  margin-right: 30px; /* Space between label and tabs */
+  color: hotpink;
 }
 
-.food-save.clicked {
-  background-color: black;
-}
-body {
-    overflow-y: hidden;
-}
-/* 
-#action-inventory {
-  width: 140px;
-} */
-
-.action-buttons {
-  display: flex;
-  justify-content: center;
-}
-
-#edit-inventory {
-  background-color: hotpink;
-  border: none;
-  margin-right: 10px;
-}
-
-#delete-inventory {
-  background-color: black;
+.tabs {
   border: none;
 }
 
-.btn-add-inventory {
-  width: 200px;
-  height: 50px;
-  margin-left: 900px;
-  margin-bottom: 80px;
+.tab-header .nav-tabs .nav-link {
+  border: none; /* Remove default border */
+  color: #4e4d4d51; /* Default text color */
+  font-weight: bold;
 }
 
-@media (max-width: 768px) {
-    .fullscreen-modal {
-        width: 100%;
-        height: 100%;
-        max-width: none;
-        margin: 0;
-    }
-
-    .fullscreen-modal .modal-content {
-        /* height: 900px; */
-        border-radius: 0;
-    }
-
-    .food-save {
-        height: 50px;
-        width: 400px;
-        justify-content: center;
-    }
-
-    .btn-add-inventory {
-      width: 300px;
-      height: 50px;
-      margin-left: 0px;
-      margin-bottom: 0px;
-    }
+.tab-header .nav-tabs .nav-link {
+  position: relative; /* Position for the pseudo-element */
+  overflow: hidden; /* Prevent overflow of the pseudo-element */
 }
 
-.add-ingredient {
-    border: none;
+.tab-header .nav-tabs .nav-link:before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 4px; /* Height of the underline */
+  background-color: hotpink; /* Color of the underline */
+  transition: width 0.3s ease, left 0.3s ease; /* Animate width and position */
 }
 
-.ing-th {
-    width: 150px;
-  }
+.tab-header .nav-tabs .nav-link.active:before {
+  width: 100%; /* Full width when active */
+  left: 0; /* Move to the left edge */
+}
 
-  .ing-th1 {
-    width: 50px;
-  }
-
-  .ing-td {
-    text-align: center;
-  }
-
-  .table-ingredients {
-    border: 1px solid rgba(0, 0, 0, 0.152);
-  }
-
-  .table-ingredients th {
-    text-align: center;
-  }
-
-  .btn-remove-ingredient {
-    color: rgb(0, 0, 0);
-    align-items: center;
-    justify-content: center;
-    background-color: transparent;
-    font-size: 20px;
-  }
-
-  .btn-remove-ingredient:hover {
-    color: red;
-    cursor: pointer;
-    background-color: transparent;
-  }
+.tab-header .nav-tabs .nav-link.active {
+  font-weight: bold; /* Optional: make the active tab text bold */
+  color: rgb(0, 0, 0); /* Change color of the active tab */
+}

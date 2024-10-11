@@ -8,51 +8,51 @@ import { IoTrashOutline } from "react-icons/io5";
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import Table from 'react-bootstrap/Table';
-import Header from './HeaderAdmin';
+import Header1 from './HeaderAdmin';
 import { MdEdit } from "react-icons/md";
 import { FaRegTrashAlt } from "react-icons/fa";
+import Tab from 'react-bootstrap/Tab';
+import Tabs from 'react-bootstrap/Tabs';
 
-function Inventory() {
+const Inventory = () => {
     const [data, setData] = useState([]);
     const [categories, setCategories] = useState([]);
     const [newCategory, setNewCategory] = useState('');
     const [stockData, setStockData] = useState([]);
+    const [rawMaterialsData, setRawMaterials] = useState([]);
     const [isAddingCategory, setIsAddingCategory] = useState(false);
     const [ingredients, setIngredients] = useState([]);
     const [selectedIngredients, setSelectedIngredients] = useState([]);
     const [selectedIngredient, setSelectedIngredient] = useState('');
     const [selectedIngredientUnit, setSelectedIngredientUnit] = useState('');
     const [ingredientQuantity, setIngredientQuantity] = useState('');
-
+    
     const [show, setShow] = useState(false);
     const [modalShow, setModalShow] = useState(false);
     const [stockModalShow, setStockModalShow] = useState(false);
-
-    // State variables for form inputs
-    const [fname, setFName] = useState("");
-    const [file, setFile] = useState("");
-    const [quantity, setQuantity] = useState("");
-    const [price, setItemPrice] = useState("");
-    const [category, setCategoryName] = useState("");
-
-    // State variables for stock inputs
+    
+    // Form state variables
+    const [fname, setFName] = useState('');
+    const [file, setFile] = useState('');
+    const [quantity, setQuantity] = useState('');
+    const [price, setItemPrice] = useState('');
+    const [category, setCategoryName] = useState('');
+    
+    // Stock state variables
     const [stockName, setStockName] = useState('');
     const [stockQuantity, setStockQuantity] = useState('');
     const [stockUnit, setStockUnit] = useState('');
-
-    const [showInventory, setShowInventory] = useState(true); // Food inventory shown by default
+    
+    const [showInventory, setShowInventory] = useState(true);
     const [showStocks, setShowStocks] = useState(false);
-    const [selectedInventory, setSelectedInventory] = useState('FOOD INVENTORY');
+    const [selectedInventory, setSelectedInventory] = useState('Food Inventory');
 
-    const handleSelect = (inventoryTitle, inventoryType) => {
-        setSelectedInventory(inventoryTitle);
-        setShowInventory(inventoryType === 'food');
-        setShowStocks(inventoryType === 'stocks');
-    };
+    // Fetch data and categories on component mount
     useEffect(() => {
         getUserData();
         getCategories();
         getStockData();
+        getRawMaterialsData();
     }, []);
 
     const handleClose = () => {
@@ -76,24 +76,18 @@ function Inventory() {
             });
 
             if (res.data.status === 200) {
-                console.log('Data fetched successfully:', res.data.data);
                 setData(res.data.data);
-            } else {
-                console.log('Error fetching data');
             }
         } catch (error) {
             console.error('Error fetching data:', error);
         }
     };
 
-
     const getCategories = async () => {
         try {
             const res = await axios.get('/categories');
             if (res.data.status === 200) {
                 setCategories(res.data.data);
-            } else {
-                console.log('Error fetching categories');
             }
         } catch (error) {
             console.error('Error fetching categories:', error);
@@ -113,14 +107,31 @@ function Inventory() {
             if (res.data.status === 'success') {
                 setStockData(res.data.data);
                 setIngredients(res.data.data);
-                getStockData();
-            } else {
-                console.log('Error fetching stock data');
             }
         } catch (error) {
             console.error('Error fetching stock data:', error);
         }
     };
+
+    const getRawMaterialsData = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.get('/get-raw-materials', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (res.data.status === 'success') {
+                setRawMaterials(res.data.data);
+                // setIngredients(res.data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching stock data:', error);
+        }
+    };
+    
 
     const dltUser = async (id) => {
         try {
@@ -135,8 +146,6 @@ function Inventory() {
             if (res.data.status === 201) {
                 getUserData();
                 setShow(true);
-            } else {
-                console.error('Failed to delete item');
             }
         } catch (error) {
             console.error('Error deleting item:', error);
@@ -145,44 +154,39 @@ function Inventory() {
 
     const addIngredient = () => {
         const ingredient = ingredients.find(ing => ing.stock_item_name === selectedIngredient);
-
+        
         if (ingredient && ingredientQuantity && selectedIngredientUnit) {
             setSelectedIngredients(prevIngredients => [
                 ...prevIngredients,
                 {
-                    stock_id: ingredient.stockId,  // Correct the key to match your database column
+                    stock_id: ingredient.stockId,
                     name: selectedIngredient,
                     quantity: ingredientQuantity,
-                    unit: selectedIngredientUnit
+                    unit: selectedIngredientUnit,
                 }
             ]);
-
-            // Clear the input fields
+            // Clear input fields
             setSelectedIngredient('');
             setIngredientQuantity('');
             setSelectedIngredientUnit('');
-        } else {
-            console.error('Failed to add ingredient. Ingredient or quantity/unit is missing.');
         }
     };
-
 
     const removeIngredient = (index) => {
         setSelectedIngredients(prevIngredients => prevIngredients.filter((_, i) => i !== index));
     };
 
-
     const handleIngredientSelection = (e) => {
         const selected = e.target.value;
         const ingredient = ingredients.find(ing => ing.stock_item_name === selected);
-
+        
         setSelectedIngredient(selected);
         setSelectedIngredientUnit(ingredient ? ingredient.unit : '');
     };
 
     const addUserData = async (e) => {
         e.preventDefault();
-
+        
         const formData = new FormData();
         formData.append("photo", file);
         formData.append("fname", fname);
@@ -190,8 +194,6 @@ function Inventory() {
         formData.append("price", price);
         formData.append("category", category);
         formData.append("ingredients", JSON.stringify(selectedIngredients));
-
-        console.log('Form Data:', formData.get("fname"), formData.get("price"), formData.get("category"), formData.get("ingredients"));
 
         try {
             const res = await axios.post("/addItem", formData, {
@@ -203,19 +205,16 @@ function Inventory() {
             if (res.data.status === 201) {
                 handleClose();
                 getUserData(); // Refresh data
-            } else {
-                console.log("Error:", res.data.message);
             }
         } catch (error) {
             console.error("Error submitting data:", error);
         }
     };
 
-
     const addStockData = async (e) => {
         e.preventDefault();
         const token = localStorage.getItem('token');
-
+        
         const stock = { stockName, stockQuantity, stockUnit };
 
         const config = {
@@ -223,7 +222,7 @@ function Inventory() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             }
-        }
+        };
 
         const res = await axios.post("/addStock", stock, config);
 
@@ -231,10 +230,7 @@ function Inventory() {
             handleClose();
             getStockData();
             setStockModalShow(false);
-        } else {
-            console.log("error");
         }
-        handleClose();
     };
 
     const addCategory = async (e) => {
@@ -252,104 +248,141 @@ function Inventory() {
                 setCategoryName(newCategory);
                 setNewCategory('');
                 setIsAddingCategory(false);
-            } else {
-                console.log('Error adding category');
             }
         } catch (error) {
             console.error('Error adding category:', error);
         }
-    }
+    };
 
-    return (
+    const handleTabSelect = (key) => {
+        setSelectedInventory(key);
+        setShowInventory(key === "Food Inventory");
+        setShowStocks(key === "Stocks Inventory");
+    };
+
+    return ( 
         <div>
-            <Header />
-            <div className="d-flex w-100% mx-2 my-4 inventory-header">
-                <div className="col-7 d-flex justify-content-end inventory-title1">
-                    <h1>{selectedInventory}</h1>
+            <Header1 />
+            <div className="inventoryd">
+                <div className="d-flex">
+                    <h1 className="display-6 logo-label">Inventory</h1>
+                    <div className="tab-header">
+                        <Tabs
+                            activeKey={selectedInventory}
+                            onSelect={handleTabSelect}
+                            id="fill-tab-example"
+                            className="tabs mb-3"
+                            fill
+                        >
+                            <Tab eventKey="Food Inventory" title="Food" />
+                            <Tab eventKey="Stocks Inventory" title="Stocks" />
+                            <Tab eventKey="Kitchen Inventory" title="Kitchen" />
+                        </Tabs>
+                    </div>
                 </div>
-                <div className="col-5 d-flex flex-row-reverse inventory-dropdown">
-                    <DropdownButton id="inventory-dropdown" title={selectedInventory}>
-                        <Dropdown.Item onClick={() => handleSelect('FOOD INVENTORY', 'food')}>Food Inventory</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleSelect('STOCK INVENTORY', 'stocks')}>Stocks Inventory</Dropdown.Item>
-                        <Dropdown.Item onClick={() => handleSelect('Kitchen Inventory', 'kitchen')}>Kitchen Inventory</Dropdown.Item>
-                    </DropdownButton>
+                
+                <div className="">
+                    {selectedInventory === 'Food Inventory' && (
+                        <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                            <Table responsive className="table-fixed">
+                                <thead>
+                                    <tr>
+                                        <th className='text-center'>Item Name</th>
+                                        <th className='text-center'>Stock Details</th>
+                                        <th className='text-center'>Price</th>
+                                        <th className='text-center' id='action-inventory' style={{ width: '140px' }}>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.map((el, i) => (
+                                        <tr key={i}>
+                                            <td>{el.Item_Name}</td>
+                                            <td>{el.Stock_Details}</td>
+                                            <td>{el.Price}</td>
+                                            <td>
+                                                <div className='action-buttons'>
+                                                    <Button id='edit-inventory'><MdEdit/></Button>
+                                                    <Button id='delete-inventory' onClick={() => dltUser(el.Item_Name)}><FaRegTrashAlt /></Button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        </div>
+                    )}
+                    {selectedInventory === 'Stocks Inventory' && (
+                        <div style={{ maxHeight: '350px', overflowY: 'auto'}}>
+                            <Table responsive className="table-fixed">
+                                <thead className='position-sticky z-3'>
+                                    <tr>
+                                        <th className='text-center'>Name</th>
+                                        <th className='text-center'>Quantity</th>
+                                        <th className='text-center'>Unit</th>
+                                        <th className='text-center' style={{ width: '120px' }}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {stockData.map((el, i) => (
+                                        <tr key={i}>
+                                            <td>{el.stock_item_name}</td>
+                                            <td>{el.stock_quantity}</td>
+                                            <td>{el.unit}</td>
+                                            <td className='text-center'>
+                                                <div className='action-buttons-stocks'>
+                                                    <Button id='edit-inventory'><MdEdit/></Button>
+                                                    <Button id='delete-inventory'><FaRegTrashAlt /></Button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        </div>
+                    )}
+                    {selectedInventory === 'Kitchen Inventory' && (
+                        <div style={{ maxHeight: '350px', overflowY: 'auto'}}>
+                        <Table responsive className="table-fixed">
+                            <thead className='position-sticky z-3'>
+                                <tr>
+                                    <th className='text-center'>Name</th>
+                                    <th className='text-center'>Quantity</th>
+                                    <th className='text-center'>Unit</th>
+                                    <th className='text-center'>Date Added</th>
+                                    <th className='text-center' style={{ width: '120px' }}>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {rawMaterialsData.map((el, i) => (
+                                    <tr key={i}>
+                                        <td>{el.raw_material_name}</td>
+                                        <td>{el.raw_material_quantity}</td>
+                                        <td>{el.raw_material_unit}</td>
+                                        <td>{el.date_added}</td>
+                                        <td className='text-center'>
+                                            <div className='action-buttons-stocks'>
+                                                <Button id='edit-inventory'><MdEdit/></Button>
+                                                <Button id='delete-inventory'><FaRegTrashAlt /></Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                    </div>
+                    )}
                 </div>
-            </div>
-
-            <div className="w-75 m-auto inventory-tables">
-    {showInventory && (
-        <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
-            <Table responsive className="table-fixed">
-                <thead>
-                    <tr>
-                        <th className='text-center'>Item Name</th>
-                        <th className='text-center'>Stock Details</th> {/* Modified this to include combined stock names, quantities, and units */}
-                        <th className='text-center'>Price</th>
-                        <th className='text-center' id='action-inventory' style={{ width: '140px' }}>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {data.map((el, i) => (
-                        <tr key={i}>
-                            <td>{el.Item_Name}</td>
-                            <td>{el.Stock_Details}</td> {/* Stock_Details will include the combined stock names, quantities, and units */}
-                            <td>{el.Price}</td>
-                            <td>
-                                <div className='action-buttons'>
-                                    <Button id='edit-inventory'><MdEdit/></Button>
-                                    <Button id='delete-inventory' onClick={() => dltUser(el.Item_Name)}><FaRegTrashAlt /></Button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </Table>
-        </div>
-    )}
-
-    {showStocks && (
-        <div style={{ maxHeight: '350px', overflowY: 'auto'}}>
-            <Table responsive className="table-fixed">
-                <thead className='position-sticky z-3'>
-                    <tr>
-                        <th className='text-center'>Name</th>
-                        <th className='text-center'>Quantity</th>
-                        <th className='text-center'>Unit</th>
-                        <th className='text-center' style={{ width: '120px' }}>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {stockData.map((el, i) => (
-                        <tr key={i}>
-                            <td>{el.stock_item_name}</td>
-                            <td>{el.stock_quantity}</td>
-                            <td>{el.unit}</td>
-                            <td>
-                                <div className='action-buttons-stocks'>
-                                    <Button id='edit-inventory'><MdEdit/></Button>
-                                    <Button id='delete-inventory'><FaRegTrashAlt /></Button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </Table>
-        </div>
-    )}
-</div>
-
-
-            <div className="d-flex position-absolute bottom-0 start-50 translate-middle-x mx-2 my-3 p-2 inventory-button">
-                {showInventory &&(
+                <div className="inventory-button">
+                {showInventory && (
                     <Button variant="dark" className='btn-add-inventory' onClick={handleShow}>Add Product</Button>
                 )}
                 {showStocks && (
                     <Button variant="dark" className='btn-add-inventory' onClick={handleStockShow}>Add Stock</Button>
                 )}
             </div>
-
-                        {/* Add Product Modal */}
-                        <Modal show={modalShow} onHide={handleClose} dialogClassName="fullscreen-modal">
+            </div>
+            {/* Add Product Modal */}
+                                 <Modal show={modalShow} onHide={handleClose} dialogClassName="fullscreen-modal">
                 <Modal.Header closeButton>
                     <Modal.Title>Add New Food</Modal.Title>
                 </Modal.Header>
