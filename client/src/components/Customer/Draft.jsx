@@ -1,15 +1,16 @@
+import '../../styles/Draft.css';
 import { useNavigate } from "react-router-dom";
 import Logo from "../../Assets/logo.png";
 import Bg from "../../Assets/bg.jpg";
-import '../../styles/Homepage.css';
 import Dropdown from 'react-bootstrap/Dropdown';
+import homepage from "../../Assets/homepage.jpg";
+import Button from 'react-bootstrap/Button';
 
 
-const Homepage = () => {
+const Draft = () => {
     const navigate = useNavigate();
-
-    return (
-        <div>
+    return ( 
+        <div className='drafthome'>
             <nav className="navbar navbar-light bg-transparent justify-content-between">
                 <div className="d-flex align-items-center">
                     <img src={Logo} className="logo-home1" alt="logo" />
@@ -24,10 +25,21 @@ const Homepage = () => {
                 </Dropdown>
             </nav>
 
-            <img src={Bg} id="home-bg" alt="" />
-            <button onClick={() => navigate('/userlogin')}  id="btn">ORDER NOW!</button>
+            <div className='container homemain'>
+                <div className='row'>
+                    <div className='col-12 col-lg-6 col-sm-12'>
+                        <h1 class="display-1 title-home">We invite you to our restaurant</h1>
+                        <p class="card-text">With supporting text below as a natural lead-in to additional content. With supporting text below as a natural lead-in to additional content.</p>
+                        <Button variant="dark" id='home-orderbtn' onClick={() => navigate('/userlogin')}>ORDER NOW</Button>
+                    </div>
+                    <div className='col-12 col-lg-6 col-sm-12 m-auto d-flex justify-content-center align-items-center'>
+                        <img src={homepage} className='home-image' />          
+                    </div>
+                </div>
+               
+            </div>
         </div>
-    );
+     );
 }
-
-export default Homepage;
+ 
+export default Draft;

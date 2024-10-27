@@ -17,7 +17,7 @@ import Row from 'react-bootstrap/Row';
 import { IoMdAdd } from "react-icons/io";
 import Table from 'react-bootstrap/Table';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
-
+import { Toast} from 'react-bootstrap';
 
 const POStry = () => {
     const [data, setData] = useState([]);
@@ -28,6 +28,12 @@ const POStry = () => {
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
     const [modalShow, setModalShow] = useState(false);
+ 
+
+    const [isToastVisible, setIsToastVisible] = useState(false);
+
+    // Toggle the toast visibility
+    const toggleToast = () => setIsToastVisible(prev => !prev);
 
     // State variables for form inputs
     const [fname, setFName] = useState("");
@@ -249,7 +255,7 @@ const POStry = () => {
             if (res.data.success) {
                 console.log('Order placed successfully');
                 setPosItems([]); // Clear POS items after successful order placement
-                setShowConfirmationModal(true); // Show confirmation modal
+                setIsToastVisible(true); // Show confirmation modal
             } else {
                 console.error('Error placing order:', res.data.error);
             }
@@ -380,7 +386,7 @@ const POStry = () => {
                             </div>
                 </div>
             </div>
-            <Modal show={showConfirmationModal} onHide={() => setShowConfirmationModal(false)}>
+            {/* <Modal show={showConfirmationModal} onHide={() => setShowConfirmationModal(false)}>
                 <Modal.Header closeButton>
                     <Modal.Title>Order Complete</Modal.Title>
                 </Modal.Header>
@@ -397,8 +403,23 @@ const POStry = () => {
                         Close
                     </Button>
                 </Modal.Footer>
-            </Modal>
+            </Modal> */}
 
+        <div className="position-fixed bottom-0 end-0 p-3">
+            <Row>
+                <Col xs={12}>
+                <Toast onClose={toggleToast} show={isToastVisible} delay={3000} autohide>
+                    <Toast.Header>
+                    <strong className="me-auto">Order Added to Cart</strong>
+                    <small>Just now</small>
+                    </Toast.Header>
+                    <Toast.Body className="confirmation-toast-body">
+                    <p>Item/s added to cart successfully!</p>
+                    </Toast.Body>
+                </Toast>
+                </Col>
+            </Row>
+            </div>
         </div> 
     );
 }

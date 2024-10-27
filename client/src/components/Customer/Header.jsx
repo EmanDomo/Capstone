@@ -192,15 +192,21 @@ function Header() {
     <Navbar expand="lg" className="bg-body-tertiary admin-nav">
       <Container>
         <Navbar.Brand href="/">
+        <div className='d-flex'>
           <img
             alt="Logo"
             src={Logo1}
             className="d-inline-block align-top logo1"
           />{' '}
           {/* <label id='header-customer-title'>Welcome {userName}!</label> */}
-          <label id='header-customer-title'>Welcome back, {userName}, {userGender}!</label>
+          {/* <label id='header-customer-title'>Welcome back, {userName}, {userGender}!</label> */}
+          
+            <label id='header-customer-title'>Welcome Back</label>
+            <label id='header-customer-title' className='name'>, {userName}</label>
+          </div>
+          {/* <label id='header-customer-title'>Welcome {userName}</label> */}
         </Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" id='toggle-nav'/>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" id='toggle-nav-customer'/>
         <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto mt-1">
                 <Nav.Link href="#customer-home"> Home </Nav.Link>
@@ -208,6 +214,7 @@ function Header() {
                 <Nav.Link href="#customer-menu"> Menu </Nav.Link>
                 <Nav.Link onClick={handleCartShow}>My Cart</Nav.Link>
                 <Nav.Link onClick={handleOrdersShow}> My Orders </Nav.Link>
+                <Nav.Link href="/Draft"> Draft </Nav.Link>
             </Nav>
         </Navbar.Collapse>
       </Container>

@@ -1,325 +1,223 @@
-/* Ensure the entire page is scrollable */
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: auto;
+.salesd {
+  top: 70px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 20px;
+  padding: 15px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  color: #333;
+  overflow-y: hidden;
+  height: 84vh;
 }
 
-.sales-dashboard {
-  flex-grow: 1; /* Allow the dashboard to grow and take remaining space */
-  padding: 20px;
-  box-sizing: border-box;
+#edit-sale {
+  background-color: hotpink;
+  border: none;
+}
+
+#delete-sale, #sales-report {
+  background-color: black;
+  border: none;
+}
+
+#sales-report {
+  border-radius: 20px;
+}
+
+#filter-dropdown, #cashier-filter-dropdown {
+  background-color: hotpink !important;
+  border: none;
+}
+
+.dropdown-item.active {
+  background-color: hotpink !important;
+  color: white;
+}
+
+.sales-label {
+  font-size: 24px !important; /* Adjust size as needed */
+  font-weight: bold !important;
+  margin-right: 30px !important; /* Space between label and tabs */
+  color: hotpink;
+}
+
+.tabs-sales {
+  border: none !important;
+}
+
+.tab-sales-header .nav-tabs .nav-link {
+  border: none;
+  color: #4e4d4d51;
+  font-weight: bold;
+}
+
+.tab-sales-header .nav-tabs .nav-link {
+  position: relative;
+  overflow: hidden;
+}
+
+.tab-sales-header .nav-tabs .nav-link:before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 4px;
+  background-color: hotpink;
+  transition: width 0.3s ease, left 0.3s ease;
+}
+
+.tab-sales-header .nav-tabs .nav-link.active:before {
+  width: 100%;
+  left: 0;
+}
+
+.tab-sales-header .nav-tabs .nav-link.active {
+  font-weight: bold;
+  color: rgb(0, 0, 0);
+}
+
+.sales-tables {
+  height: 470px;
+  overflow-y: auto;
 }
 
 .sales-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.sales-filters-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap; /* Allow wrapping on smaller screens */
 }
 
-.sales-filters {
-  display: flex;
-  gap: 10px; /* Space between buttons */
-  align-items: center;
-  margin-bottom: 0; /* Remove margin to align better with dropdown */
+.table-fixed-sales thead {
+  border-bottom: 1px solid #00000031;
 }
 
-.sales-filters select {
-  margin-left: 10px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  background-color: #f5f5f5; /* Light background */
-  border-radius: 5px; /* Rounded corners */
-  font-size: 1rem; /* Increase font size */
-  color: #333; /* Darker text */
+
+
+@media (max-width: 376px) {
+  .sales-header {
+      display: block;
+  }
+
+  .sales-label {
+      margin-bottom: 10px;
+  }
+
+  .tab-sales-header {
+      margin-top: 1rem;
+      width: 100%;
+  }
+
+  .salesd {
+      height: calc(95vh - 60px);
+      margin: 0;
+      padding: 10px;
+      overflow: auto;
+      border: none;
+      box-shadow: none;
+  }
+
+  .sales-tables {
+      height: 450px;
+  }
+
+  .cashier-sales-label, .date-sales-label, .label-sales-report {
+      display: none;
+  }
+
+  .sales-filters-container {
+      display: flex;
+      justify-content: space-between;
+  }
+  .pie-container1 {
+      width: 300px !important;
+      height: 300px;
+    } 
 }
 
-.sales-filters button {
-  padding: 10px 20px;
-  border: none;
-  background-color: #e0e0e0;
-  color: #333;
-  cursor: pointer;
-  border-radius: 5px;
-  font-weight: 500;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-.sales-filters button:hover {
-  background-color: #007bff;
-  color: white;
-}
+@media (min-width: 377px) and (max-width: 768px) {
+  .sales-header {
+      flex-direction: column;
+      align-items: flex-start;
+  }
 
-.sales-filters button.active {
-  background-color: #007bff;
-  color: white;
-}
+  .sales-label {
+      margin-bottom: 15px;
+  }
 
-.table-wrapper {
-  max-height: 500px; 
-  overflow-y: auto;
-  border-radius: 10px; /* Soft edges */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-}
+  .tab-sales-header {
+      width: 100%;
+  }
 
-.styled-table {
-  width: 100%;
-  margin-top: 20px;
-  border-collapse: collapse; /* Remove border effects */
-  background-color: #fff;
-}
+  .salesd {
+      height: calc(98vh - 80px);
+      margin: 0;
+      padding: 15px;
+      overflow-y: auto;
+      border: none;
+      box-shadow: none;
+  }
 
-.styled-table thead tr {
-  background-color: #ff69b4; /* Pink header */
-  color: white;
-  text-align: left;
-  font-weight: bold;
-}
-
-.styled-table th, .styled-table td {
-  padding: 12px 15px;
-}
-
-.styled-table tbody tr {
-  transition: background-color 0.3s ease; /* Smooth transition */
-}
-
-.styled-table tbody tr:nth-of-type(odd) {
-  background-color: #f9f9f9; /* Light gray for odd rows */
-}
-
-.styled-table tbody tr:hover {
-  background-color: #f1f1f1; /* Hover effect for rows */
-}
-
-.styled-table tbody td {
-  color: #333;
-  padding: 12px;
-}
-
-.styled-table tbody tr:last-of-type {
-  border-bottom: none; /* Remove bottom border */
-}
-
-@media (max-width: 768px) {
-  .styled-table th, .styled-table td {
-    padding: 8px 10px; /* Adjust padding for smaller screens */
+  .sales-tables {
+      height: 780px;
   }
 }
 
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sales-header {
+      flex-direction: column;
+      align-items: flex-start;
+  }
 
-.table {
-  width: 100%;  /* Ensure the table takes full width */
-  margin-top: 20px;
+  .sales-label {
+      margin-bottom: 15px;
+  }
+
+  .tab-sales-header {
+      width: 100%;
+  }
+
+  .salesd {
+      height: calc(100vh - 80px);
+      margin: 0;
+      padding: 15px;
+      overflow-y: auto;
+  }
+
+  .sales-tables {
+      height: 1200px;
+  }
+
+  .table-fixed-sales {
+      height: 600px;
+  }
 }
 
+@media (min-width: 1025px) and (max-width: 1280px) {
+  .salesd {
+      height: calc(100vh - 80px);
+      margin: 20px;
+      padding: 15px;
+  }
 
-.table th, .table td {
-  padding: 10px;
-  text-align: left;
+  .sales-tables {
+      height: 500px;
+  }
 }
 
-.table-striped tbody tr:nth-of-type(odd) {
-  background-color: #f9f9f9;
-}
-.total-amount {
-  margin-top: 20px;
-  margin-left: 30px; /* Increased left margin */
-  padding: 12px; /* Padding inside the container */
-  border-radius: 12px;
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.pie-container1 {
   display: flex;
-  flex-direction: column;
-  gap: 8px; /* Gap between items */
-  min-height: 140px; /* Minimum height of the container */
-  width: 100%; /* Full width */
-  max-width: 800px; /* Maximum width */
-  padding-right: 12px; /* Adjusted right padding if needed */
+  justify-content: center; /* Centers horizontally */
+  align-items: center; /* Centers vertically */
+  height: 300px; 
+  width: 700px; 
 }
 
-
-.total-amount h2 {
-  font-size: 1.3rem; /* Font size for the title */
-  color: #333;
-  margin-bottom: 8px; /* Margin below the title */
-  text-align: center;
-}
-
-.total-item {
-  display: flex;
-  align-items: center;
-  gap: 8px; /* Gap between icon and text */
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 4px; /* Padding below each item */
-}
-
-.total-item:last-child {
-  border-bottom: none; /* Remove border from the last item */
-}
-
-.total-item div {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.total-item h3 {
-  font-size: 0.9rem; /* Font size for item titles */
-  margin: 0;
-  color: #555;
-}
-
-.amount {
-  font-size: 0.95rem; /* Font size for amounts */
-  color: #333;
-  margin: 0;
-  font-weight: bold;
-}
-
-.total-item:nth-child(1) .amount {
-  color: #4CAF50; /* Green for All Sales */
-}
-
-.total-item:nth-child(2) .amount {
-  color: #2196F3; /* Blue for Cashier 1 Sales */
-}
-
-.total-item:nth-child(3) .amount {
-  color: #FF9800; /* Orange for Cashier 2 Sales */
-}
-
-
-.cashier-tables {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-.cashier-table {
-  flex: 1;
-  margin: 0 10px;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.cashier-table table {
+.sales-itm {
   width: 100%;
-  font-size: 0.9rem;
-}
-
-.cashier-table h3 {
-  text-align: center;
-}
-
-.sales-content {
-  flex: 1;
-}
-
-.sales-content h2 {
-  text-align: left;
-  margin: 0;
-}
-
-.sales-content {
-  margin-top: 10px;
-}
-
-.sales-page-wrapper {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px; /* Adjust gap between pie chart and dashboard */
-}
-
-
-.sales-pie-chart {
-  margin-top: 20px;
-  max-width: 500px; /* Adjust size */
-  margin-left: 0; /* Remove auto centering */
-}
-
-.pie-chart-container {
-  flex-basis: 25%; /* Allow pie chart container to take 25% of the available space */
-  min-width: 300px; /* Ensure the pie chart doesn't get smaller than 300px */
-  max-width: 400px; /* Optionally, set a max width for balance */
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.sales-header {
-  margin-bottom: 10px;
-}
-
-.sales-filter-dropdown {
-  display: flex;
-  align-items: center;
-  gap: 10px; /* Space between label and dropdown */
-  margin-bottom: 0; /* Remove margin for better alignment */
-}
-
-.sales-filters {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.sales-filter-dropdown label {
-  font-weight: bold;
-  color: #333;
-}
-
-.sales-filter-dropdown select {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background-color: #f5f5f5;
-  font-size: 1rem;
-  color: #333;
-  cursor: pointer;
-  transition: border-color 0.3s ease;
-}
-
-.sales-filter-dropdown select:hover {
-  border-color: #007bff;
-}
-
-.sales-filters button {
-  margin: 0 5px;
-  padding: 10px 15px;
-  border: none;
-  background-color: #f0f0f0;
-  cursor: pointer;
-}
-
-.kpi-overview {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 20px;
-}
-.kpi-item {
-  text-align: center;
-  background-color: #f7f7f7;
-  padding: 20px;
-  border-radius: 10px;
-  width: 30%;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-.kpi-item h3 {
-  font-size: 18px;
-  color: #333;
-}
-.kpi-item p {
-  font-size: 24px;
-  color: #4CAF50;
-  margin: 0;
-}
+  height: 200px;
+  object-fit: fill;
+  }

@@ -23,6 +23,7 @@ input {
   font-weight: 20px;
   font-size: 18px;
   padding: 0 40px 10px 40px; 
+  border-radius: 0px;
 }
 
 #logo-container {
@@ -196,3 +197,4 @@ color: black;
 @media (min-width: 769px) {
 
 }
+

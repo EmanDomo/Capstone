@@ -8,6 +8,8 @@ import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
+import { OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Toast} from 'react-bootstrap';
 
 const Orders = () => {
     const [orders, setOrders] = useState([]);
@@ -19,6 +21,17 @@ const Orders = () => {
     const [cancelReason, setCancelReason] = useState('');
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
     const token = localStorage.getItem('token');
+
+    const [isToastVisible, setIsToastVisible] = useState(false);
+
+    // Toggle the toast visibility
+    const toggleToast = () => setIsToastVisible(prev => !prev);
+
+    const renderTooltip = (props) => (
+        <Tooltip id="button-tooltip" {...props}>
+          View order
+        </Tooltip>
+      );
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -75,6 +88,7 @@ const Orders = () => {
                 groupOrdersByNumber(orders.filter(order => !orderIds.includes(order.orderId)));
                 handleShowConfirmationModal();  // Show the confirmation modal
                 setShowOrderModal(false);
+                setIsToastVisible(true); // Show confirmation modal
             } else {
                 console.error('Failed to complete orders:', response.data.error);
             }
@@ -137,20 +151,28 @@ const Orders = () => {
     return (
         <div>
             <Header />
-            <div className="order-container">
-                <h1 className="order-title">Orders</h1>
+            <div className="ordersd">
+            <h1 className="display-6 order-cashier-label">Orders</h1>
                 {Object.keys(groupedOrders).length > 0 ? (
                     <div className="order-list-container">
-                        <Row xs={3} md={4} className="g-4">
+                        <Row xs={3} md={4} lg={6} className="g-4">
                             {Object.entries(groupedOrders).map(([orderId, orderGroup]) => (
                                 <Col key={orderId}>
                                     <Card className="order-card">
-                                        <Card.Header className="order-card-header">
+                                        <Card.Header className="order-card-header d-flex justify-content-between">
                                             <strong>Order ID: {orderGroup[0].orderNumber}</strong>
-                                            <FaEye
+                                            <OverlayTrigger
+                                            placement="bottom"
+                                            delay={{ show: 200, hide: 200 }}
+                                            overlay={renderTooltip}
+                                            >
+                                            <div>
+                                                <FaEye
                                                 className="order-action-icon view-icon"
                                                 onClick={() => handleShowOrderModal(orderGroup)}
-                                            />
+                                                />
+                                            </div>
+                                            </OverlayTrigger>
                                         </Card.Header>
                                     </Card>
                                 </Col>
@@ -189,11 +211,11 @@ const Orders = () => {
                                 ))}
                             </div>
                         </Modal.Body>
-                        <Modal.Footer>
-                            <Button variant="danger" onClick={() => handleShowCancelModal(selectedOrderGroup[0].orderId)}>
+                        <Modal.Footer className='d-flex justify-content-between'>
+                            <Button variant="dark" onClick={() => handleShowCancelModal(selectedOrderGroup[0].orderId)}>
                                 Cancel Order
                             </Button>
-                            <Button variant="success" onClick={handleCompleteOrder}>
+                            <Button variant="dark" className='cashier-complete-order' onClick={handleCompleteOrder}>
                                 Complete Order
                             </Button>
                         </Modal.Footer>
@@ -226,7 +248,7 @@ const Orders = () => {
                 </Modal>
 
                 {/* Confirmation Modal */}
-                <Modal show={showConfirmationModal} onHide={() => setShowConfirmationModal(false)}>
+                {/* <Modal show={showConfirmationModal} onHide={() => setShowConfirmationModal(false)}>
                     <Modal.Header closeButton>
                         <Modal.Title>Order Complete</Modal.Title>
                     </Modal.Header>
@@ -243,7 +265,22 @@ const Orders = () => {
                             Close
                         </Button>
                     </Modal.Footer>
-                </Modal>
+                </Modal> */}
+                        <div className="position-fixed bottom-0 end-0 p-3">
+            <Row>
+                <Col xs={12}>
+                <Toast onClose={toggleToast} show={isToastVisible} delay={3000} autohide>
+                    <Toast.Header>
+                    <strong className="me-auto">Order Complete</strong>
+                    <small>Just now</small>
+                    </Toast.Header>
+                    <Toast.Body className="confirmation-toast-body">
+                    <p>Checkout completed!</p>
+                    </Toast.Body>
+                </Toast>
+                </Col>
+            </Row>
+            </div>
             </div>
         </div>
     );

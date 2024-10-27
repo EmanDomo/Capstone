@@ -52,17 +52,17 @@
 }
 
 .pos-add {
-  background-color: hotpink;
+  background-color: hotpink !important;
   color: black;
-  border: none;
-  font-size: large;
+  border: none !important;
+  font-size: large !important;
 }
 
 .pos-minus {
-  background-color: black;
+  background-color: black !important;
   color: white;
-  border: none;
-  font-size: large;
+  border: none !important;
+  font-size: large !important;
 }
 
 .pos-add:hover {

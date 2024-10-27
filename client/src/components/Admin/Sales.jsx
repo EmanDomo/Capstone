@@ -8,10 +8,20 @@ import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { jsPDF } from 'jspdf';  // Import jsPDF
 import 'jspdf-autotable';       // Import jsPDF AutoTable plugin
+import { Tab, Tabs } from 'react-bootstrap'; // Make sure you have this import
+import Dropdown from 'react-bootstrap/Dropdown';
+import DropdownButton from 'react-bootstrap/DropdownButton';
+import { Table, Button } from 'react-bootstrap';
+import { MdEdit } from 'react-icons/md';
+import { FaRegTrashAlt } from 'react-icons/fa';
+import { FaRegFilePdf } from "react-icons/fa6";
+import ListGroup from 'react-bootstrap/ListGroup';
+import { Row, Col, Card } from 'react-bootstrap';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Sales = () => {
+
     const [salesData, setSalesData] = useState([]);
     const [cashier1Sales, setCashier1Sales] = useState([]);  // Cashier 1 sales
     const [cashier2Sales, setCashier2Sales] = useState([]);  // Cashier 2 sales
@@ -27,6 +37,44 @@ const Sales = () => {
 
     const token = localStorage.getItem('token');
 
+    
+    const options = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                align: 'start',
+                labels: {
+                    boxWidth: 20,
+                    padding: 20,
+                    font: {
+                        size: 14, // Font size
+                        family: 'Arial', // Font family
+                        // weight: 'bold', 
+                        // style: 'italic', 
+                    },
+                    color: '#333' // Change the text color
+                },
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(tooltipItem) {
+                        return `${tooltipItem.label}: ${tooltipItem.raw}`;
+                    }
+                }
+            },
+            datalabels: {
+                color: '#fff',
+                formatter: (value, context) => {
+                    const label = context.chart.data.labels[context.dataIndex];
+                    return `${label}: ${value}`;
+                },
+                anchor: 'end',
+                align: 'end',
+            }
+        }
+    };
+    
     useEffect(() => {
         const fetchSalesData = async () => {
             setLoading(true);
@@ -352,133 +400,253 @@ useEffect(() => {
         }
 
         return (
-            <div className="table-wrapper">
-            <table className="styled-table">
-                <thead>
-                <tr>
-                    <th>Sale ID</th>
-                    <th>Order Number</th>
-                    <th>Username</th>
-                    <th>Total Amount</th>
-                    <th>Sale Date</th>
-                    <th>Item Name</th>
-                    <th>Quantity</th>
-                </tr>
+            <div className='sales-tables mt-2'>
+            <Table responsive className="table-fixed-sales">
+                <thead className='position-sticky z-3'>
+                    <tr>
+                        <th className='text-center'>Sale ID</th>
+                        <th className='text-center'>Order Number</th>
+                        <th className='text-center'>Username</th>
+                        <th className='text-center'>Total Amount</th>
+                        <th className='text-center'>Sale Date</th>
+                        <th className='text-center'>Item Name</th>
+                        <th className='text-center'>Quantity</th>
+                        <th className='text-center' style={{ width: '120px' }}>Actions</th>
+                    </tr>
                 </thead>
                 <tbody>
-                {filteredData.map(sale => (
-                    <tr key={sale.saleId}>
-                    <td>{sale.saleId}</td>
-                    <td>{sale.orderNumber}</td>
-                    <td>{sale.userName}</td>
-                    <td>₱{sale.totalAmount}</td>
-                    <td>{new Date(sale.saleDate).toLocaleDateString()}</td>
-                    <td>{sale.itemname}</td>
-                    <td>{sale.quantity}</td>
-                    </tr>
-                ))}
+                    {filteredData.map(sale => (
+                        <tr key={sale.saleId}>
+                            <td className='text-center'>{sale.saleId}</td>
+                            <td className='text-center'>{sale.orderNumber}</td>
+                            <td className='text-center'>{sale.userName}</td>
+                            <td className='text-center'>₱ {sale.totalAmount}</td>
+                            <td className='text-center'>{new Date(sale.saleDate).toLocaleDateString()}</td>
+                            <td className='text-center'>{sale.itemname}</td>
+                            <td className='text-center'>{sale.quantity}</td>
+                            <td className='text-center'>
+                                <div className='d-flex justify-content-between sales-action-buttons'>
+                                    <Button id='edit-sale'><MdEdit /></Button>
+                                    <Button id='delete-sale'><FaRegTrashAlt /></Button>
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
                 </tbody>
-            </table>
-            </div>
-
-
+            </Table>
+        </div>
 
         );
     };
 
-    return (
+    const [selectedSales, setSelectedSales] = useState('dashboard');
+
+    const handleTabSelect = (key) => {
+        setSelectedSales(key);
+    };
+
+    const [error, setError] = useState(null);
+    const [top, setTop] = useState([]);
+    useEffect(() => {
+
+        getTop();
+    
+      }, []);
+      const getTop = async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.get('/top-selling-sales', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+    
+            if (res.status === 200) {
+                setTop(res.data.data);
+            } else {
+                throw new Error('Failed to fetch data');
+            }
+        } catch (error) {
+            setError(error.response ? error.response.data : error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+      
+      // In your component:
+      <div style={{ width: '100%', height: '300px' }}>
+        <Pie data={pieData} options={options} />
+      </div>
+    return ( 
         <div>
             <Header />
-            <div className="sales-filters-container">
-                    <button onClick={generatePDF} className="btn btn-primary">Download PDF</button>
-                </div>
-
-            <div className="kpi-overview">
-                <div className="kpi-item">
-                    <h3>Total Orders</h3>
-                    <p>{salesData.length}</p> {/* Total number of orders */}
-                </div>
-                <div className="kpi-item">
-                    <h3>Average Order Value</h3>
-                    <p>₱{(totalAmount / salesData.length).toFixed(2)}</p> {/* Average order value */}
-                </div>
-                <div className="kpi-item">
-                    <h3>Highest Order Value</h3>
-                    <p>₱{Math.max(...salesData.map(sale => sale.totalAmount)).toFixed(2)}</p> {/* Highest order value */}
-                </div>
-            </div>
-    
-            {/* Top 3 Best Selling Items Section */}
-            <div className="top-selling-container">
-                <h2>Top 3 Best-Selling Items</h2>
-                <ul className="top-selling-list">
-                    {topSellingItems.map((item, index) => (
-                        <li key={index}>
-                            <strong>{index + 1}. {item.itemname}</strong>: {item.quantity} sold
-                        </li>
-                    ))}
-                </ul>
-            </div>
-    
-            <div className="sales-page-wrapper">
-                {/* Pie Chart and Total Revenue */}
-                <div className="pie-chart-container">
-                    {pieData && <Pie data={pieData} height={200} width={200} />} {/* Smaller size */}
-                    <div className="total-amount">
-                        <h2>Revenue Summary</h2>
-                        <div className="total-item">
-                            <BsCashCoin size={24} color="#4CAF50" />
-                            <div>
-                                <h3>All Sales</h3>
-                                <p className="amount">₱{Number(totalAmount).toFixed(2)}</p>
-                            </div>
-                        </div>
-                        <div className="total-item">
-                            <BsCashCoin size={24} color="#2196F3" />
-                            <div>
-                                <h3>Cashier 1 Sales</h3>
-                                <p className="amount">₱{Number(cashier1Total).toFixed(2)}</p>
-                            </div>
-                        </div>
-                        <div className="total-item">
-                            <BsCashCoin size={24} color="#FF9800" />
-                            <div>
-                                <h3>Cashier 2 Sales</h3>
-                                <p className="amount">₱{Number(cashier2Total).toFixed(2)}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-    
-                <div className="sales-dashboard">
+            <div className="salesd">
+                <div className='d-flex justify-content-between'>
                     <div className="sales-header">
-                        <h1>Sales Dashboard</h1>
-                    </div>
-    
-                    {/* Sales Filter Dropdown */}
-                    <div className="sales-filters-container">
-                        <div className="sales-filters">
-                            <button onClick={() => setFilter('today')} className={filter === 'today' ? 'active' : ''}>Today</button>
-                            <button onClick={() => setFilter('week')} className={filter === 'week' ? 'active' : ''}>This Week</button>
-                            <button onClick={() => setFilter('month')} className={filter === 'month' ? 'active' : ''}>This Month</button>
-                        </div>
-    
-                        <div className="sales-filter-dropdown">
-                            <label htmlFor="cashierFilter">Filter by:</label>
-                            <select id="cashierFilter" value={selectedCashier} onChange={(e) => setSelectedCashier(e.target.value)}>
-                                <option value="all">All Sales</option>
-                                <option value="cashier1">Cashier 1</option>
-                                <option value="cashier2">Cashier 2</option>
-                            </select>
+                        <h1 className="display-6 sales-label">Sales</h1>
+                        <div className="tab-sales-header">
+                            <Tabs
+                                activeKey={selectedSales}
+                                onSelect={handleTabSelect}
+                                id="sales-tab-example"
+                                className="tabs-sales mb-3"
+                                fill
+                            >
+                                <Tab eventKey="dashboard" title="Dashboard" />
+                                <Tab eventKey="overview" title="Overview" />
+                            </Tabs>
                         </div>
                     </div>
-    
-                    {/* Sales Table */}
-                    {renderSalesTable(salesData)}
+                    <div className="sales-pdf-container">
+                        {/* <label htmlFor="sales-report" className='label-sales-report pe-2'>Generate Report:</label> */}
+                        <button onClick={generatePDF} className="btn btn-primary" id='sales-report'>Print <FaRegFilePdf /></button>
+                    </div>
                 </div>
+                {/* Render content based on selectedSales */}
+                {selectedSales === 'dashboard' && 
+                    <div>
+                        <div className="sales-filters-container d-flex flex-row-reverse">
+                            <div className="sales-filter-dropdown d-flex">
+                                <label htmlFor="cashier-filter-dropdown" className='cashier-sales-label me-3'>Filter by: </label>
+                                <DropdownButton 
+                                    id="cashier-filter-dropdown" 
+                                    title={selectedCashier === 'all' ? 'All Sales' : selectedCashier === 'cashier1' ? 'Cashier 1' : 'Cashier 2'} 
+                                    className="me-2"
+                                >
+                                    <Dropdown.Item as="button" onClick={() => setSelectedCashier('all')} active={selectedCashier === 'all'}>
+                                        All Sales
+                                    </Dropdown.Item>
+                                    <Dropdown.Item as="button" onClick={() => setSelectedCashier('cashier1')} active={selectedCashier === 'cashier1'}>
+                                        Cashier 1
+                                    </Dropdown.Item>
+                                    <Dropdown.Item as="button" onClick={() => setSelectedCashier('cashier2')} active={selectedCashier === 'cashier2'}>
+                                        Cashier 2
+                                    </Dropdown.Item>
+                                </DropdownButton>
+                            </div>
+                            <div className="sales-filters d-flex">
+                                <label htmlFor="filter-dropdown" className='date-sales-label me-3'>Date: </label>
+                                <DropdownButton 
+                                    id="filter-dropdown" 
+                                    title={filter === 'today' ? 'Today' : filter === 'week' ? 'This Week' : 'This Month'} 
+                                    className="me-5"
+                                >
+                                    <Dropdown.Item as="button" onClick={() => setFilter('today')} active={filter === 'today'}>
+                                        Today
+                                    </Dropdown.Item>
+                                    <Dropdown.Item as="button" onClick={() => setFilter('week')} active={filter === 'week'}>
+                                        This Week
+                                    </Dropdown.Item>
+                                    <Dropdown.Item as="button" onClick={() => setFilter('month')} active={filter === 'month'}>
+                                        This Month
+                                    </Dropdown.Item>
+                                </DropdownButton>
+                            </div>
+                        </div>
+                        {/* Sales Table */}
+                        {renderSalesTable(salesData)}
+                    </div>
+                }
+                {selectedSales === 'overview' && 
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-12 col-lg-6">
+                                    <div className='pie-container1 mb-4'>                       
+                                        <Pie data={pieData} options={options} />
+                                    </div>
+                                <div>
+                                <Card className="m-auto">
+                                <Card.Body>
+                                    <Card.Title>Revenue Summary</Card.Title>
+                                    <ListGroup variant="flush">
+                                        <ListGroup.Item>         
+                                            <div className='d-flex justify-content-between'>
+                                                <label htmlFor=""> <BsCashCoin size={24} color="#ff69b4" /> All Sales: </label>
+                                                <span className="amount-allsales fw-bold"> ₱{Number(totalAmount).toFixed(2)}</span>
+                                            </div>
+                                            
+                                        </ListGroup.Item>
+                                        <ListGroup.Item>
+                                            <div className='d-flex justify-content-between'>
+                                                <label htmlFor=""><BsCashCoin size={24} color="#000000" /> Cashier 1 Sales: </label>
+                                                <span className="amount"> ₱{Number(cashier1Total).toFixed(2)}</span>
+                                            </div>                                         
+                                        </ListGroup.Item>
+                                        <ListGroup.Item>
+                                            <div className='d-flex justify-content-between'>
+                                                <label htmlFor=""><BsCashCoin size={24} color="#000000" /> Cashier 2 Sales</label>
+                                                <span className="amount"> ₱{Number(cashier2Total).toFixed(2)}</span>
+                                            </div>
+                                        </ListGroup.Item>
+                                    </ListGroup>
+                                </Card.Body>
+                            </Card>
+                                </div>
+                            </div>
+                            <div className="col-12 col-lg-6">
+                                <div className='container-fluid m-auto best-selling-sales mb-4'>
+                                    <h4 className='text-center'>Top 3 Best Selling</h4>
+                                    <Row xs={1} md={3} lg={3} className="g-4">
+                                        {top.length > 0 ? (
+                                        top.map((item, index) => (
+                                        <Col key={index}>
+                                            <Card id="sales-card">
+                                                    <Card.Img variant="top" src={`/uploads/${item.img}`} className="sales-itm"/>
+                                                <Card.Body>
+                                                <Card.Title>{item.itemname}</Card.Title>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                        ))
+                                        ) : (
+                                        <Col>
+                                            <Card>
+                                                <Card.Body>
+                                                    <Card.Text>No top-selling items available.</Card.Text>
+                                                </Card.Body>
+                                            </Card>
+                                        </Col>
+                                        )}
+                                    </Row>
+                                </div>
+                                <div className='order-summary-sales'>
+                                    <Card className="m-auto">
+                                        <Card.Body>
+                                            <Card.Title>Order Summary</Card.Title>
+                                            <ListGroup variant="flush">
+                                                <ListGroup.Item>
+                                                    <div className='d-flex justify-content-between'>
+                                                        <label htmlFor="">Total Orders: </label>
+                                                        <span className="amount-allsales fw-bold">{salesData.length}</span>
+                                                    </div>
+                                                </ListGroup.Item>
+                                                <ListGroup.Item>
+                                                    <div className='d-flex justify-content-between'>
+                                                        <label htmlFor="">Average Order Value: </label>
+                                                        <span className="amount">₱{(totalAmount / salesData.length).toFixed(2)}</span>
+                                                    </div>
+                                                </ListGroup.Item>
+                                                <ListGroup.Item>
+                                                    <div className='d-flex justify-content-between'>
+                                                        <label htmlFor="">Highest Order Value: </label>
+                                                        <span className="amount">₱{Math.max(...salesData.map(sale => sale.totalAmount)).toFixed(2)}</span>
+                                                    </div>
+                                                </ListGroup.Item>
+                                            </ListGroup>
+                                        </Card.Body>
+                                    </Card>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+         
+                }
             </div>
         </div>
-    );
-};
-
+     );
+}
+ 
 export default Sales;

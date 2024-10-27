@@ -1,6 +1,4 @@
-
 .inventoryd {
-  position: absolute; /* Use absolute positioning */
   top: 70px; /* Adjust based on your header's height */
   left: 0;
   right: 0;
@@ -13,7 +11,13 @@
   font-family: Arial, sans-serif; /* Font family */
   font-size: 16px; /* Font size */
   color: #333; /* Text color */
-  overflow-y: auto; /* Add scroll if content overflows */
+  overflow-y: hidden; /* Add scroll if content overflows */
+  height: 84vh;
+}
+
+.inventory-tables {
+  height: 430px;
+  overflow-y: auto;
 }
 
 .tab-header {
@@ -63,3 +67,199 @@
   font-weight: bold; /* Optional: make the active tab text bold */
   color: rgb(0, 0, 0); /* Change color of the active tab */
 }
+
+.btn-add-inventory {
+  width: 300px;
+}
+
+#edit-inventory {
+  background-color: hotpink;
+  border: none;
+}
+
+#delete-inventory {
+  background-color: black;
+  border: none;
+}
+
+.btn-remove-ingredient {
+  color: red;
+  font-size: larger;
+}
+
+.add-ingredient {
+  border: none;
+}
+
+.table-ingredients th{
+  border-bottom: 1px solid rgba(0, 0, 0, 0.147);
+}
+
+.food-save {
+  background-color: hotpink;
+  border: none;
+}
+
+.ingredients-list {
+  background-color: #ffffff; /* Light gray background */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  margin: 5px;
+}
+
+.table-fixed thead {
+  border-bottom: 1px solid #00000031; /* Adjust thickness and color as needed */
+}
+
+.invheader {
+  display: flex;
+}
+@media (max-width: 376px) { /* Small phones */
+  .invcontainer {
+    flex-direction: column;
+    align-items: flex-start;
+    
+  }
+  .invheader {
+    display: block;
+  }
+
+  .logo-label {
+    margin-bottom: 10px;
+  }
+
+  .tab-header {
+    margin-top: 1rem; /* Add margin to the top for spacing */
+}
+  .tab-header {
+    width: 100%;
+  }
+
+  .inventoryd {
+    height: calc(95vh - 60px); /* Adjust based on header */
+    margin: 0;
+    padding: 10px; /* Reduced padding */
+    overflow-y: hidden !important;
+    border: none;
+    box-shadow: none; /* Subtle shadow */
+  }
+
+  .inventory-tables {
+    height: 400px; /* Adjust height for smaller screens */
+  }
+
+  .btn-add-inventory {
+    width: 100%; /* Full width on small screens */
+    margin-top: -20px;
+  }
+  .fullscreen-modal {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    margin: 0;
+}
+
+.fullscreen-modal .modal-content {
+    /* height: 900px; */
+    border-radius: 0;
+}
+}
+
+@media (min-width: 377px) and (max-width: 768px) { /* Medium phones */
+  .invcontainer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .logo-label {
+    margin-bottom: 15px;
+  }
+
+  .tab-header {
+    width: 100%;
+  }
+
+  .inventoryd {
+    height: calc(98vh - 80px);
+    margin: 0;
+    padding: 15px;
+    overflow-y: hidden;
+    border: none;
+    box-shadow: none; /* Subtle shadow */
+  }
+
+  .inventory-tables {
+    height: 720px;
+  }
+  .btn-add-inventory {
+    width: 50%; /* Full width on small screens */
+  }
+  .fullscreen-modal {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    margin: 0;
+}
+
+.fullscreen-modal .modal-content {
+    /* height: 900px; */
+    border-radius: 0;
+}
+}
+
+@media (min-width: 769px) and (max-width: 1024px) { /* Tablets */
+  .fullscreen-modal {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    margin: 0;
+}
+
+.fullscreen-modal .modal-content {
+    /* height: 900px; */
+    border-radius: 0;
+}
+
+  .invcontainer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .logo-label {
+    margin-bottom: 15px;
+  }
+
+  .tab-header {
+    width: 100%;
+  }
+
+  .inventoryd {
+    height: calc(100vh - 80px);
+    margin: 0;
+    padding: 15px;
+    overflow-y: hidden !important;
+  }
+
+  .inventory-tables {
+    height: 800px;
+  }
+
+  .table-fixed {
+    height: 600px;
+  
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1280px) { /* Larger tablets and small laptops */
+  .inventoryd {
+    height: calc(100vh - 80px);
+    margin: 20px;
+    padding: 15px;
+  }
+
+  .inventory-tables {
+    height: 500px; /* Adjust height as needed */
+  }
+}
+
+

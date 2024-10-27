@@ -4,6 +4,7 @@ import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
 import "../../styles/HeaderAdmin.css";
 import Logo1 from "../../Assets/logo.png";
+import React from 'react';
 
 function Header1() {
   return (
@@ -20,8 +21,8 @@ function Header1() {
         <Navbar.Toggle aria-controls="basic-navbar-nav" id='toggle-nav'/>
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto mt-1">
-            <Nav.Link href="/Inventory">Inventory</Nav.Link>
-            <Nav.Link href="/Sales">Sales</Nav.Link>
+            <Nav.Link className="navlink-admin" href="/Inventory">Inventory</Nav.Link>
+            <Nav.Link className="navlink-admin" href="/Sales">Sales</Nav.Link>
           </Nav>
         </Navbar.Collapse>
       </Container>

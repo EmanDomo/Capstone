@@ -88,5 +88,17 @@
     #order-table {
         height: 50px !important;
     }
+
+
 }
+
+@media (max-width: 376px) {
+  .name {
+    display: none;
+  }
+  #toggle-nav-customer{
+    margin-right: 20px !important;
+  }
+}
+
 

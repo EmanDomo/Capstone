@@ -114,10 +114,10 @@
 #dropdown-home {
   background-color: transparent;
   border: none;
-  width: 100px;
   margin-left: -70px;
 }
 
-#dropdown-menu {
-  width: 120px;
+#dropdown-menu:hover {
+  background-color: hotpink !important;
+  color: white;
 }

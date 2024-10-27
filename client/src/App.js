@@ -1,4 +1,5 @@
 import './App.css';
+import React from 'react';
 import POS from './components/Cashier/POS';
 import Homepage from './components/Customer/Homepage';
 import Login from './components/Cashier/LoginForm';
@@ -23,6 +24,7 @@ import Inventory from './components/Admin/Inventory';
 // import Header2 from './components/Customer/Header2';
 // import Menuu from './components/Customer/Menu1';
 import Footer from './components/Customer/Footer';
+import Draft from './components/Customer/Draft';
 
 function App() {
   return (
@@ -35,7 +37,7 @@ function App() {
         <Route path='/userlogin' element={<UserLogin />} />
         <Route path='/checkout' element={<Checkout />} />
         <Route path='/register' element={<Register />} />
-
+        <Route path='/Draft' element={<Draft />} />
         {/* <Route path="/complete-order" element={<CompleteOrder />} /> */}
         <Route path='/success' element={<Success />} />
         <Route path='/failed' element={<Failed />} />
@@ -50,8 +52,7 @@ function App() {
         <Route path='/Inventory' element={<Inventory />} />
         {/* <Route path='/Menuu' element={<Menuu />} /> */}
         <Route path='/Footer' element={<Footer />} />
-      </Routes>
-      
+      </Routes>    
     </>
   );
 }

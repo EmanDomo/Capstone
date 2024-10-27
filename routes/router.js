@@ -514,22 +514,48 @@ GROUP BY
     }
 });
 
-router.post('/addStock', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
-    const { stockName, stockQuantity, stockUnit } = req.body;
+router.post('/addStock', authenticateToken, authorizeRoles('superadmin'), async (req, res) => {
+    const { stockName, stockUnit, requiresRawMaterial, raw_material_id, quantity_required, conversion_ratio, raw_material_usage_quantity } = req.body;
 
-    if (!stockName || !stockQuantity || !stockUnit) {
+    if (!stockName || !stockUnit) {
         return res.status(400).json({ error: 'Please provide all required fields.' });
     }
 
-    const query = 'INSERT INTO tbl_stocks (stock_item_name, stock_quantity, unit) VALUES (?, ?, ?)';
-    conn.query(query, [stockName, stockQuantity, stockUnit], (err, results) => {
-        if (err) {
-            console.error('Error adding stock item:', err);
-            return res.status(500).json({ error: 'Internal server error.' });
+    try {
+        let calculatedStockQuantity = null;
+
+        // If raw materials are required
+        if (requiresRawMaterial) {
+            // Fetch the current quantity of the raw material
+            const [rawMaterial] = await conn.promise().query('SELECT raw_material_quantity FROM tbl_raw_materials WHERE raw_material_id = ?', [raw_material_id]);
+
+            if (rawMaterial[0].raw_material_quantity < raw_material_usage_quantity) {
+                return res.status(400).json({ error: 'Insufficient raw material quantity.' });
+            }
+
+            // Calculate stock quantity based on the usage quantity and conversion ratio
+            calculatedStockQuantity = raw_material_usage_quantity * conversion_ratio;
+
+            // Update the raw material quantity in `tbl_raw_materials`
+            const newRawMaterialQuantity = rawMaterial[0].raw_material_quantity - raw_material_usage_quantity;
+            await conn.promise().query('UPDATE tbl_raw_materials SET raw_material_quantity = ? WHERE raw_material_id = ?', [newRawMaterialQuantity, raw_material_id]);
         }
-        res.status(201).json({ status: 'success', message: 'Stock item added successfully.' });
-    });
+
+        // Insert the new stock into `tbl_stocks` with the calculated stock quantity
+        const stockQuantity = calculatedStockQuantity || req.body.stockQuantity;
+        const query = 'INSERT INTO tbl_stocks (stock_item_name, stock_quantity, unit, requires_raw_material, raw_material_id, quantity_required, conversion_ratio) VALUES (?, ?, ?, ?, ?, ?, ?)';
+        const values = [stockName, stockQuantity, stockUnit, requiresRawMaterial, raw_material_id, quantity_required, conversion_ratio];
+
+        await conn.promise().query(query, values);
+
+        res.status(201).json({ message: 'Stock added successfully', status: 201 });
+    } catch (err) {
+        console.error('Error adding stock item:', err);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
 });
+
+
 
 // Route to get stock items
 router.get('/getstock', authenticateToken, authorizeRoles('superadmin', 'superadmin'), (req, res) => {
@@ -1871,6 +1897,57 @@ router.get('/get-raw-materials', authenticateToken, authorizeRoles('superadmin',
         }
         res.status(200).json({ status: 'success', data: results });
     });
+});
+
+
+router.post('/add-raw-material', authenticateToken, authorizeRoles('superadmin', 'admin'), (req, res) => {
+    const { rawMaterialName, rawMaterialQuantity, rawMaterialUnit } = req.body;
+
+    // Validate inputs
+    if (!rawMaterialName || isNaN(rawMaterialQuantity) || !rawMaterialUnit) {
+        return res.status(400).json({ message: 'Invalid input data' });
+    }
+
+    const query = 'INSERT INTO tbl_raw_materials (raw_material_name, raw_material_quantity, raw_material_unit, date_added) VALUES (?, ?, ?, NOW())';
+    
+    conn.query(query, [rawMaterialName, rawMaterialQuantity, rawMaterialUnit], (error, results) => {
+        if (error) {
+            console.error('Error adding raw material:', error);
+            return res.status(500).json({ message: 'Failed to add raw material', error });
+        }
+        res.status(201).json({ message: 'Raw material added successfully', status: 201 });
+    });
+});
+
+
+router.get("/top-selling-sales", authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    try {
+        const query = `
+        SELECT i.id, i.itemname, i.img, i.price, SUM(o.quantity) AS total_quantity_sold
+        FROM tbl_orders o
+        JOIN tbl_items i ON o.id = i.id
+        JOIN tbl_sale s ON o.orderId = s.orderId
+        WHERE o.status = 'completed'
+        AND s.saleDate >= CURDATE()
+        AND s.saleDate < CURDATE() + INTERVAL 1 DAY
+        GROUP BY i.id, i.itemname, i.img, i.price
+        ORDER BY total_quantity_sold DESC
+        LIMIT 3;
+        `;
+
+        // Execute query without userGender parameter
+        conn.query(query, (err, result) => {
+            if (err) {
+                console.error("Database query error:", err);
+                res.status(500).json({ status: 500, error: "Database query failed" });
+            } else {
+                res.status(200).json({ status: 200, data: result });
+            }
+        });
+    } catch (error) {
+        console.error("Server error:", error);
+        res.status(422).json({ status: 422, error: "Server error" });
+    }
 });
 
 

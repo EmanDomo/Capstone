@@ -26,10 +26,12 @@ const Inventory = () => {
     const [selectedIngredient, setSelectedIngredient] = useState('');
     const [selectedIngredientUnit, setSelectedIngredientUnit] = useState('');
     const [ingredientQuantity, setIngredientQuantity] = useState('');
+    const [showConfirmationModal, setShowConfirmationModal] = useState(false);
     
     const [show, setShow] = useState(false);
     const [modalShow, setModalShow] = useState(false);
     const [stockModalShow, setStockModalShow] = useState(false);
+    const [rawMaterialModalShow, setRawMaterialModalShow] = useState(false);
     
     // Form state variables
     const [fname, setFName] = useState('');
@@ -42,10 +44,25 @@ const Inventory = () => {
     const [stockName, setStockName] = useState('');
     const [stockQuantity, setStockQuantity] = useState('');
     const [stockUnit, setStockUnit] = useState('');
+
+        // Stock state variables
+        const [rawMaterialName, setRawMaterialName] = useState('');
+        const [rawMaterialQuantity, setRawMaterialQuantity] = useState('');
+        const [rawMaterialUnit, setRawMaterialUnit] = useState('');
     
     const [showInventory, setShowInventory] = useState(true);
     const [showStocks, setShowStocks] = useState(false);
+    const [showRawMaterials, setShowRawMaterial] = useState(false);
+    
     const [selectedInventory, setSelectedInventory] = useState('Food Inventory');
+
+    const [requiresRawMaterial, setRequiresRawMaterial] = useState(false);
+    const [selectedRawMaterialId, setSelectedRawMaterialId] = useState('');
+    const [quantityRequired, setQuantityRequired] = useState('');
+    const [conversionRatio, setConversionRatio] = useState('');
+    const [rawMaterialUsageQuantity, setRawMaterialUsageQuantity] = useState(''); // Quantity of raw material to use
+
+
 
     // Fetch data and categories on component mount
     useEffect(() => {
@@ -58,12 +75,16 @@ const Inventory = () => {
     const handleClose = () => {
         setModalShow(false);
         setStockModalShow(false);
+        setRawMaterialModalShow(false);
         setIsAddingCategory(false);
         setNewCategory('');
     };
-
+    
+    
     const handleShow = () => setModalShow(true);
     const handleStockShow = () => setStockModalShow(true);
+    const handleRawMaterialShow = () => setRawMaterialModalShow(true);
+
 
     const getUserData = async () => {
         try {
@@ -205,6 +226,7 @@ const Inventory = () => {
             if (res.data.status === 201) {
                 handleClose();
                 getUserData(); // Refresh data
+                setShowConfirmationModal(true);
             }
         } catch (error) {
             console.error("Error submitting data:", error);
@@ -214,24 +236,82 @@ const Inventory = () => {
     const addStockData = async (e) => {
         e.preventDefault();
         const token = localStorage.getItem('token');
-        
-        const stock = { stockName, stockQuantity, stockUnit };
-
+    
+        let calculatedQuantity = stockQuantity;
+    
+        // If raw materials are required, calculate the stock quantity from the conversion ratio
+        if (requiresRawMaterial && rawMaterialUsageQuantity && conversionRatio) {
+            calculatedQuantity = rawMaterialUsageQuantity * conversionRatio; // Calculate based on raw material usage
+        }
+    
+        const stock = {
+            stockName,
+            stockQuantity: calculatedQuantity,
+            stockUnit,
+            requiresRawMaterial,
+            raw_material_id: requiresRawMaterial ? selectedRawMaterialId : null,
+            quantity_required: requiresRawMaterial ? quantityRequired : null,
+            conversion_ratio: requiresRawMaterial ? conversionRatio : null,
+            raw_material_usage_quantity: requiresRawMaterial ? rawMaterialUsageQuantity : null // Pass the usage quantity
+        };
+    
         const config = {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             }
         };
-
-        const res = await axios.post("/addStock", stock, config);
-
-        if (res.data.status === 201) {
-            handleClose();
-            getStockData();
-            setStockModalShow(false);
+    
+        try {
+            const res = await axios.post("/addStock", stock, config);
+            if (res.data.status === 201) {
+                handleClose();
+                await getStockData(); // Ensure data refreshes before closing modal
+                getRawMaterialsData();
+                setShowConfirmationModal(true); // Show confirmation modal
+            }
+        } catch (error) {
+            console.error('Error adding stock:', error);
         }
     };
+    
+    
+    const addRawMaterial = async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('token');
+    
+        const rawMaterial = {
+            rawMaterialName: stockName,
+            rawMaterialQuantity: stockQuantity,
+            rawMaterialUnit: stockUnit,
+        };
+    
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        };
+    
+        try {
+            const res = await axios.post("/add-raw-material", rawMaterial, config);
+    
+            if (res.data.status === 201) {
+                handleClose();  // Close the modal
+                await getRawMaterialsData();  // Refresh data to reflect new material
+                // Reset form fields
+                setStockName('');
+                setStockQuantity('');
+                setStockUnit('');
+                setShowConfirmationModal(true);
+            }
+            
+            
+        } catch (error) {
+            console.error('Error adding raw material:', error);
+        }
+    };
+    
 
     const addCategory = async (e) => {
         e.preventDefault();
@@ -258,13 +338,14 @@ const Inventory = () => {
         setSelectedInventory(key);
         setShowInventory(key === "Food Inventory");
         setShowStocks(key === "Stocks Inventory");
+        setShowRawMaterial(key === "Kitchen Inventory")
     };
 
     return ( 
         <div>
             <Header1 />
             <div className="inventoryd">
-                <div className="d-flex">
+                <div className="invheader">
                     <h1 className="display-6 logo-label">Inventory</h1>
                     <div className="tab-header">
                         <Tabs
@@ -283,7 +364,7 @@ const Inventory = () => {
                 
                 <div className="">
                     {selectedInventory === 'Food Inventory' && (
-                        <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                        <div className='inventory-tables'>
                             <Table responsive className="table-fixed">
                                 <thead>
                                     <tr>
@@ -297,10 +378,10 @@ const Inventory = () => {
                                     {data.map((el, i) => (
                                         <tr key={i}>
                                             <td>{el.Item_Name}</td>
-                                            <td>{el.Stock_Details}</td>
-                                            <td>{el.Price}</td>
+                                            <td className='text-center'>{el.Stock_Details}</td>
+                                            <td className='text-center'>₱ {el.Price}</td>
                                             <td>
-                                                <div className='action-buttons'>
+                                                <div className='d-flex justify-content-between action-buttons'>
                                                     <Button id='edit-inventory'><MdEdit/></Button>
                                                     <Button id='delete-inventory' onClick={() => dltUser(el.Item_Name)}><FaRegTrashAlt /></Button>
                                                 </div>
@@ -312,7 +393,7 @@ const Inventory = () => {
                         </div>
                     )}
                     {selectedInventory === 'Stocks Inventory' && (
-                        <div style={{ maxHeight: '350px', overflowY: 'auto'}}>
+                        <div className='inventory-tables'>
                             <Table responsive className="table-fixed">
                                 <thead className='position-sticky z-3'>
                                     <tr>
@@ -326,10 +407,10 @@ const Inventory = () => {
                                     {stockData.map((el, i) => (
                                         <tr key={i}>
                                             <td>{el.stock_item_name}</td>
-                                            <td>{el.stock_quantity}</td>
-                                            <td>{el.unit}</td>
+                                            <td className='text-center'>{el.stock_quantity}</td>
+                                            <td className='text-center'>{el.unit}</td>
                                             <td className='text-center'>
-                                                <div className='action-buttons-stocks'>
+                                                <div className='d-flex justify-content-between action-buttons-stocks'>
                                                     <Button id='edit-inventory'><MdEdit/></Button>
                                                     <Button id='delete-inventory'><FaRegTrashAlt /></Button>
                                                 </div>
@@ -341,7 +422,7 @@ const Inventory = () => {
                         </div>
                     )}
                     {selectedInventory === 'Kitchen Inventory' && (
-                        <div style={{ maxHeight: '350px', overflowY: 'auto'}}>
+                        <div className='inventory-tables'>
                         <Table responsive className="table-fixed">
                             <thead className='position-sticky z-3'>
                                 <tr>
@@ -356,11 +437,11 @@ const Inventory = () => {
                                 {rawMaterialsData.map((el, i) => (
                                     <tr key={i}>
                                         <td>{el.raw_material_name}</td>
-                                        <td>{el.raw_material_quantity}</td>
-                                        <td>{el.raw_material_unit}</td>
-                                        <td>{el.date_added}</td>
+                                        <td className='text-center'>{el.raw_material_quantity}</td>
+                                        <td className='text-center'>{el.raw_material_unit}</td>
+                                        <td className='text-center'>{el.date_added}</td>
                                         <td className='text-center'>
-                                            <div className='action-buttons-stocks'>
+                                            <div className='d-flex justify-content-between action-buttons-kitchen'>
                                                 <Button id='edit-inventory'><MdEdit/></Button>
                                                 <Button id='delete-inventory'><FaRegTrashAlt /></Button>
                                             </div>
@@ -372,17 +453,19 @@ const Inventory = () => {
                     </div>
                     )}
                 </div>
-                <div className="inventory-button">
+                <div className="mt-5 inventory-button d-flex justify-content-center inventory-button">
                 {showInventory && (
                     <Button variant="dark" className='btn-add-inventory' onClick={handleShow}>Add Product</Button>
                 )}
                 {showStocks && (
                     <Button variant="dark" className='btn-add-inventory' onClick={handleStockShow}>Add Stock</Button>
                 )}
+                {showRawMaterials && (
+                    <Button variant="dark" className='btn-add-inventory' onClick={handleRawMaterialShow}>Add Raw Ingredient</Button>
+                )}
             </div>
             </div>
-            {/* Add Product Modal */}
-                                 <Modal show={modalShow} onHide={handleClose} dialogClassName="fullscreen-modal">
+            <Modal show={modalShow} onHide={handleClose} dialogClassName="fullscreen-modal">
                 <Modal.Header closeButton>
                     <Modal.Title>Add New Food</Modal.Title>
                 </Modal.Header>
@@ -532,53 +615,194 @@ const Inventory = () => {
 
             {/* Add Stock Modal */}
             <Modal show={stockModalShow} onHide={handleClose} dialogClassName="fullscreen-modal">
-                <Modal.Header closeButton>
-                    <Modal.Title>Add New Stock</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form>
-                        <Form.Group className="mb-3" controlId="formStockName">
-                            <Form.Label>Stock Name</Form.Label>
-                            <Form.Control
-                                type="text"
-                                name='stockName'
-                                value={stockName}
-                                onChange={(e) => setStockName(e.target.value)}
-                                className='form-stock-name'
-                            />
-                        </Form.Group>
+    <Modal.Header closeButton>
+        <Modal.Title>Add New Stock</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+        <Form>
+            {/* Stock Name */}
+            <Form.Group className="mb-3" controlId="formStockName">
+                <Form.Label>Stock Name</Form.Label>
+                <Form.Control
+                    type="text"
+                    name='stockName'
+                    value={stockName}
+                    onChange={(e) => setStockName(e.target.value)}
+                    className='form-stock-name'
+                />
+            </Form.Group>
 
-                        <Form.Group className="mb-3" controlId="formStockQuantity">
-                            <Form.Label>Quantity</Form.Label>
-                            <Form.Control
-                                type="number"
-                                name='stockQuantity'
-                                value={stockQuantity}
-                                onChange={(e) => setStockQuantity(e.target.value)}
-                                className='form-stock-quantity'
-                            />
-                        </Form.Group>
+            {/* Only show Quantity input if the stock does NOT require raw materials */}
+            {!requiresRawMaterial && (
+                <Form.Group className="mb-3" controlId="formStockQuantity">
+                    <Form.Label>Quantity</Form.Label>
+                    <Form.Control
+                        type="number"
+                        name='stockQuantity'
+                        value={stockQuantity}
+                        onChange={(e) => setStockQuantity(e.target.value)}
+                        className='form-stock-quantity'
+                    />
+                </Form.Group>
+            )}
 
-                        <Form.Group className="mb-3" controlId="formStockUnit">
-                            <Form.Label>Unit</Form.Label>
-                            <Form.Control
-                                type="text"
-                                name='stockUnit'
-                                value={stockUnit}
-                                onChange={(e) => setStockUnit(e.target.value)}
-                                className='form-stock-unit'
-                            />
-                        </Form.Group>
-                    </Form>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button className="food-save" onClick={addStockData}>
-                        Save Changes
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+            <Form.Group className="mb-3" controlId="formStockUnit">
+                <Form.Label>Unit</Form.Label>
+                <Form.Control
+                    type="text"
+                    name='stockUnit'
+                    value={stockUnit}
+                    onChange={(e) => setStockUnit(e.target.value)}
+                    className='form-stock-unit'
+                />
+            </Form.Group>
+
+            {/* Checkbox for Raw Material Requirement */}
+            <Form.Group controlId="requiresRawMaterial">
+                <Form.Check
+                    type="checkbox"
+                    label="Does this stock require raw materials?"
+                    checked={requiresRawMaterial}
+                    onChange={(e) => setRequiresRawMaterial(e.target.checked)}
+                />
+            </Form.Group>
+
+            {/* Conditional Fields for Raw Material Details */}
+            {requiresRawMaterial && (
+                <>
+                    <Form.Group className="mb-3" controlId="formRawMaterialId">
+                        <Form.Label>Raw Material</Form.Label>
+                        <Form.Control
+                            as="select"
+                            value={selectedRawMaterialId}
+                            onChange={(e) => setSelectedRawMaterialId(e.target.value)}
+                        >
+                            <option value="">Select Raw Material</option>
+                            {rawMaterialsData.map((material) => (
+                                <option key={material.raw_material_id} value={material.raw_material_id}>
+                                    {material.raw_material_name}
+                                </option>
+                            ))}
+                        </Form.Control>
+                    </Form.Group>
+
+                    {/* Input for Quantity of Raw Material to Use */}
+                    <Form.Group className="mb-3" controlId="formRawMaterialUsageQuantity">
+                        <Form.Label>Quantity of Raw Material to Use</Form.Label>
+                        <Form.Control
+                            type="number"
+                            value={rawMaterialUsageQuantity}
+                            onChange={(e) => setRawMaterialUsageQuantity(e.target.value)}
+                            placeholder="Enter quantity of raw material to use"
+                        />
+                    </Form.Group>
+
+                    <Form.Group className="mb-3" controlId="formQuantityRequired">
+                        <Form.Label>Quantity Required</Form.Label>
+                        <Form.Control
+                            type="number"
+                            value={quantityRequired}
+                            onChange={(e) => setQuantityRequired(e.target.value)}
+                        />
+                    </Form.Group>
+
+                    <Form.Group className="mb-3" controlId="formConversionRatio">
+                        <Form.Label>Conversion Ratio</Form.Label>
+                        <Form.Control
+                            type="number"
+                            value={conversionRatio}
+                            onChange={(e) => setConversionRatio(e.target.value)}
+                        />
+                    </Form.Group>
+                </>
+            )}
+        </Form>
+    </Modal.Body>
+    <Modal.Footer>
+        <Button className="food-save" onClick={addStockData}>
+            Save Changes
+        </Button>
+    </Modal.Footer>
+</Modal>
+
+
+
+
+            <Modal show={rawMaterialModalShow} onHide={handleClose} dialogClassName="fullscreen-modal">
+    <Modal.Header closeButton>
+        <Modal.Title>Add New Material</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+        <Form>
+            {/* Raw Material Name */}
+            <Form.Group className="mb-3" controlId="formRawMaterialName">
+                <Form.Label>Raw Material Name</Form.Label>
+                <Form.Control
+                    type="text"
+                    name='rawMaterialName'
+                    value={stockName} // Use stockName as it aligns with raw_material_name
+                    onChange={(e) => setStockName(e.target.value)} // Update name as stockName
+                    className='form-raw-material-name'
+                />
+            </Form.Group>
+
+            {/* Raw Material Quantity */}
+            <Form.Group className="mb-3" controlId="formRawMaterialQuantity">
+                <Form.Label>Quantity</Form.Label>
+                <Form.Control
+                    type="number"
+                    name='rawMaterialQuantity'
+                    value={stockQuantity} // Use stockQuantity for raw_material_quantity
+                    onChange={(e) => setStockQuantity(e.target.value)} 
+                    className='form-raw-material-quantity'
+                />
+            </Form.Group>
+
+            {/* Unit */}
+            <Form.Group className="mb-3" controlId="formRawMaterialUnit">
+                <Form.Label>Unit</Form.Label>
+                <Form.Control
+                    type="text"
+                    name='rawMaterialUnit'
+                    value={stockUnit} // Use stockUnit for unit
+                    onChange={(e) => setStockUnit(e.target.value)} 
+                    className='form-raw-material-unit'
+                />
+            </Form.Group>
+        </Form>
+    </Modal.Body>
+    <Modal.Footer>
+    <Button className="food-save" onClick={addRawMaterial}>
+    Save Changes
+</Button>
+
+    </Modal.Footer>
+</Modal>
+
+<Modal show={showConfirmationModal} onHide={() => setShowConfirmationModal(false)}>
+                  <Modal.Header closeButton>
+                      <Modal.Title>Order Complete</Modal.Title>
+                  </Modal.Header>
+                  <Modal.Body className="confirmation-modal-body">
+                      <div className="checkmark-animation">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                      </div>
+                      <p>Item Added to Cart!</p>
+                  </Modal.Body>
+                  <Modal.Footer>
+                      <Button variant="secondary" onClick={() => setShowConfirmationModal(false)}>
+                          Close
+                      </Button>
+                  </Modal.Footer>
+              </Modal>
+
         </div>
     );
 }
 
 export default Inventory;
+
+
+
