@@ -102,7 +102,7 @@ color: black;
 }
 
 /* Styles for mobile devices (max-width: 480px) */
-@media (max-width: 480px) {
+@media (min-width: 344px) and (max-width: 767px) {
 #card2 {
   width: 100vw;
   height: 100vh;
@@ -120,7 +120,7 @@ color: black;
 }
 
 #login2 {
-  margin-top: 50px;
+  margin-top: 100px;
   height: 30px;
   width: 200px;
   margin-bottom: 40px;
@@ -129,10 +129,13 @@ color: black;
   padding-bottom: 36px;
 }
 
+#login-close {
+  margin-left: -120px;
+}
 }
 
 /* Styles for tablets (min-width: 481px and max-width: 768px) */
-@media (min-width: 481px) and (max-width: 768px) {
+@media (min-width: 768px) and (max-width: 1024px) {
 #card2 {
   width: 100vw;
   height: 100vh;

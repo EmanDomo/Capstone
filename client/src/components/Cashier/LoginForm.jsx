@@ -80,7 +80,7 @@ const Login = () => {
             <a href='#'>Forgot password?</a>
           </div> */}
 
-          <button id="login-cashier" type='submit'>Login</button>
+          <button id="login-cashier" className='text-white' type='submit'>Login</button>
 
           {/* <div className='register-link'>
             <p>

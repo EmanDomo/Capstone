@@ -18,9 +18,11 @@ import { IoMdAdd } from "react-icons/io";
 import Table from 'react-bootstrap/Table';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import { Toast} from 'react-bootstrap';
+import ToastContainer from 'react-bootstrap/ToastContainer';
 
-const POStry = () => {
+const POS = () => {
     const [data, setData] = useState([]);
+    const [toasts, setToasts] = useState([]);
     const [posItems, setPosItems] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -132,7 +134,7 @@ const POStry = () => {
         }
     }
 
-    const addToPOS = async (itemId, quantity, price) => {
+    const addToPOS = async (itemId, quantity, price, itemName) => {
         try {
             const token = localStorage.getItem('token');
             const res = await axios.post(
@@ -144,17 +146,20 @@ const POStry = () => {
                     }
                 }
             );
-
+    
             if (res.data.status === 'success') {
-                console.log('Item added to POS');
+                addToast(`${itemName} Added Successfully!`, 'success'); // Ensure itemName is passed here
                 getPosItems();
-            } else {
-                console.error('Error adding item to POS:', res.data.message);
             }
         } catch (error) {
-            console.error('Error adding item to POS:', error);
+            if (error.response && error.response.status === 400) {
+                addToast(`${itemName} is already in the cart!`, 'error'); // Use itemName here too
+            } else {
+                console.error('Error adding item to cart:', error);
+            }
         }
     };
+    
 
 
     const handleCategoryClick = (category) => {
@@ -272,71 +277,80 @@ const POStry = () => {
         getPosItems();
     }, []);
 
+    getPosItems();
+
+    const addToast = (message, type) => {
+        setToasts((prev) => [...prev, { message, type, id: Date.now() }]);
+      };
+    
+      const removeToast = (id) => {
+        setToasts((prev) => prev.filter(toast => toast.id !== id));
+      };
 
     return ( 
         <div>
             <Header />
-            <div className="d-flex">
-                <div className="w-25 mx-2 my-2 pos-cart">
-                    <div className="mx-2 my-2">
-                        <h3 className="text-center">Order Summary</h3>
-                    </div>
-                    <div className="order-summary pos-table-container">
-                        <Table responsive>
-                            <thead>
-                                <tr>
-                                    <th className="text-center">Name</th>
-                                    <th className="text-center">Quantity</th>
-                                    <th className="pos-remove">Remove</th>
-                                    <th className="text-center">Price</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {posItems.length > 0 ? (
-                                    posItems.map((item, index) => (
-                                        <tr key={index}>
-                                            <td>{item.itemname}</td>
-                                            <td id="quantity" className="text-center">
-                                                <ButtonGroup className="pos-btng">
-                                                    <Button className="pos-add" onClick={() => updatePos(item.itemId, 1)}>+</Button>
-                                                    <label id="pos-quantity" className="px-2 py-1">{item.quantity}</label>
-                                                    <Button className="pos-minus" onClick={() => updatePos(item.itemId, -1)}>-</Button>
-                                                </ButtonGroup>
-                                            </td>
-                                            <td>
-                                                <button id="pos-remove" onClick={() => removeFromPOS(item.itemId)}>
-                                                    <VscTrash />
-                                                </button>
-                                            </td>
-                                            <td>₱{item.price}</td>
-                                        </tr>
-                                    ))
-                                ) : (
+            <div className="container-fluid posd">
+                <div className="row">
+                    <div className='col-12 col-lg-4 col-md-3 d-lg-block orders-sum-pos d-sm-none '>
+                        <div className="mx-2 my-2">
+                            <h3 className="text-center">Order Summary</h3>
+                        </div>
+                        <div className="order-summary pos-table-container">
+                            <Table responsive>
+                                <thead>
                                     <tr>
-                                        <td colSpan="4">No items in POS</td>
+                                        <th className="text-center">Name</th>
+                                        <th className="text-center">Quantity</th>
+                                        <th className="pos-remove">Remove</th>
+                                        <th className="text-center">Price</th>
                                     </tr>
-                                )}
-                            </tbody>
-                        </Table>
-                    </div>
-                    <div className="mt-4 px-2 py-2 order-summary-total">
-                        <div className="d-flex">
-                            <h5>Total Amount:</h5>
-                            <label className="col-7 d-flex justify-content-end">₱{calculateTotal().toFixed(2)}</label>
+                                </thead>
+                                <tbody>
+                                    {posItems.length > 0 ? (
+                                        posItems.map((item, index) => (
+                                            <tr key={index}>
+                                                <td>{item.itemname}</td>
+                                                <td id="quantity" className="text-center">
+                                                    <ButtonGroup className="pos-btng">
+                                                        <Button className="pos-add" onClick={() => updatePos(item.itemId, 1)}>+</Button>
+                                                        <label id="pos-quantity" className="px-2 py-1">{item.quantity}</label>
+                                                        <Button className="pos-minus" onClick={() => updatePos(item.itemId, -1)}>-</Button>
+                                                    </ButtonGroup>
+                                                </td>
+                                                <td>
+                                                    <button id="pos-remove" onClick={() => removeFromPOS(item.itemId)}>
+                                                        <VscTrash />
+                                                    </button>
+                                                </td>
+                                                <td>₱{item.price}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="4">No items in POS</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </Table>
                         </div>
-                   
-                        <div className="mt-2 d-flex flex-row-reverse cashier-checkout">
-                        <Button variant='dark' id="cashier-checkout-button" onClick={handleCheckout}>
-                            Checkout
-                        </Button>
+                        <div className="mt-4 px-2 py-2 order-summary-total">
+                            <div className="d-flex">
+                                <h5>Total Amount:</h5>
+                                <label className="col-7 d-flex justify-content-end">₱{calculateTotal().toFixed(2)}</label>
+                            </div>
+                    
+                            <div className="mt-2 d-flex flex-row-reverse cashier-checkout">
+                            <Button variant='dark' id="cashier-checkout-button" onClick={handleCheckout}>
+                                Checkout
+                            </Button>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div className="w-75 mx-2 my-2 pos-container">
+                    <div className='col-12 col-lg-8 col-md-12 col-sm-12 pos-main'>
                     <div className="d-flex w-100% mx-2 my-4 pos-header">
                         <div className="col-7 d-flex justify-content-end">
-                            <h1>MENU</h1>
+                            <h1 className="pos-menu-title ">MENU</h1>
                         </div>
                         <div className="col-5 d-flex px-2 py-2 flex-row-reverse">
                         <DropdownButton id="category-dropdown" title={selectedCategory}>
@@ -348,9 +362,10 @@ const POStry = () => {
                             ))}
                         </DropdownButton>
                         </div>
+                          
                     </div>
-                            <div className="mx-2 pos-content">
-                            <Row xs={2} md={3} lg={4} className="g-4 mx-2">
+                            <div className="pos-content">
+                            <Row xs={2} md={4} lg={4} className="g-2">
                                 {filteredData.length > 0 ? (
                                     filteredData.map((el, i) => (
                                         <Col key={i}>
@@ -364,9 +379,10 @@ const POStry = () => {
                                                         <Card.Text className="d-flex align-items-center">
                                                             <label className="p-1 cashier-price">₱{el.price}</label>
                                                         </Card.Text>
-                                                        <Button variant="dark" className="cashier-add-to-cart" onClick={() => addToPOS(el.id, 1, el.price)}>
+                                                        <Button variant="dark" className="cashier-add-to-cart" onClick={() => addToPOS(el.id, 1, el.price, el.itemname)}>
                                                             <IoMdAdd />
                                                         </Button>
+
                                                     </div>
                                                 </Card.Body>
                                             </Card>
@@ -384,44 +400,42 @@ const POStry = () => {
                             </Row>
 
                             </div>
-                </div>
-            </div>
-            {/* <Modal show={showConfirmationModal} onHide={() => setShowConfirmationModal(false)}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Order Complete</Modal.Title>
-                </Modal.Header>
-                <Modal.Body className="confirmation-modal-body">
-                    <div className="checkmark-animation">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
+                
                     </div>
-                    <p>Checkout completed!</p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowConfirmationModal(false)}>
-                        Close
-                    </Button>
-                </Modal.Footer>
-            </Modal> */}
-
-        <div className="position-fixed bottom-0 end-0 p-3">
+                </div>
+                
+            </div>
+            <div className="position-fixed bottom-0 end-0 p-3">
             <Row>
                 <Col xs={12}>
                 <Toast onClose={toggleToast} show={isToastVisible} delay={3000} autohide>
                     <Toast.Header>
-                    <strong className="me-auto">Order Added to Cart</strong>
+                    <strong className="me-auto order-add">Order Added!</strong>
                     <small>Just now</small>
                     </Toast.Header>
                     <Toast.Body className="confirmation-toast-body">
-                    <p>Item/s added to cart successfully!</p>
+                    <p>Proceed to My Orders to complete your order/s!</p>
                     </Toast.Body>
                 </Toast>
                 </Col>
             </Row>
             </div>
-        </div> 
-    );
+            {/* Toast for the added item and already in the cart item */}
+            <ToastContainer className="position-fixed bottom-0 end-0 p-3 toast-menu" style={{ zIndex: 1 }}>
+          {toasts.map((toast) => (
+            <Toast key={toast.id} onClose={() => removeToast(toast.id)} delay={3000} autohide>
+              <Toast.Header>
+              <strong className={`me-auto ${toast.type === 'success' ? 'text-success' : 'text-danger'}`}>
+                {toast.type === 'success' ? 'Added in the Cart' : 'Already in the Cart'}
+                </strong>
+                <small>just now</small>
+              </Toast.Header>
+              <Toast.Body>{toast.message}</Toast.Body>
+            </Toast>
+          ))}
+        </ToastContainer>
+        </div>
+     );
 }
  
-export default POStry;
+export default POS;

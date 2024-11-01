@@ -120,19 +120,18 @@ color: black;
 }
 
 #login-cashier {
-  margin-top: 50px;
-  height: 30px;
+  margin-top: 100px;
+  height: 50px;
   width: 200px;
   margin-bottom: 40px;
   border-radius: 30px;
   font-size: large;
-  padding-bottom: 36px;
 }
 
 }
 
 /* Styles for tablets (min-width: 481px and max-width: 768px) */
-@media (min-width: 481px) and (max-width: 768px) {
+@media (min-width: 768px) and (max-width: 1024px) {
 #card-cashier {
   width: 100vw;
   height: 100vh;
@@ -152,12 +151,12 @@ color: black;
 
 #login-cashier {
   margin-top: 150px;
-  height: 46px;
+  height: 60px;
   width: 300px;
   margin-bottom: 40px;
   border-radius: 30px;
   font-size: x-large;
-  padding-bottom: 40px;
+  
 }
 
 #input-cashier {
@@ -190,9 +189,4 @@ color: black;
   height: 150px;
   margin-top: 60px;
 }
-}
-
-/* Styles for larger screens (min-width: 769px) */
-@media (min-width: 769px) {
-
 }

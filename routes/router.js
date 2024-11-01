@@ -1950,5 +1950,36 @@ router.get("/top-selling-sales", authenticateToken, authorizeRoles('superadmin')
     }
 });
 
+router.post('/Register', (req, res) => {
+    const { fullName, gender, username, password } = req.body;
+  
+    if (!fullName || !gender || !username || !password) {
+      return res.status(400).json({ message: 'Invalid input data' });
+    }
+  
+    const checkQuery = 'SELECT * FROM tbl_users WHERE username = ?';
+    conn.query(checkQuery, [username], (checkError, checkResults) => {
+      if (checkError) {
+        console.error('Error checking username:', checkError);
+        return res.status(500).json({ message: 'Server error' });
+      }
+  
+      if (checkResults.length > 0) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+  
+      const query = 'INSERT INTO tbl_users (name, gender, username, password) VALUES (?, ?, ?, ?)';
+      
+      conn.query(query, [fullName, gender, username, password], (error) => {
+        if (error) {
+          console.error('Error adding user:', error);
+          return res.status(500).json({ message: 'Failed to add user' });
+        }
+        res.status(201).json({ message: 'Customer added successfully' });
+      });
+    });
+  });
+  
+
 
 module.exports = router;

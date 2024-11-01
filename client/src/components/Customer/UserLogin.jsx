@@ -74,7 +74,7 @@ const Login = () => {
               )}
           </div>
 
-          <button id="login2" type='submit'>Login</button>
+          <button id="login2" className="text-white" type='submit'>Login</button>
 
           <div className='register-link'>
             <p>

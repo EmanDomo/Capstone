@@ -1,11 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'; 
 import '../../styles/Register.css';
 import { useNavigate } from 'react-router-dom';
+import { Toast, ToastContainer } from 'react-bootstrap';
+import Button from 'react-bootstrap/Button';
+import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 
 const Register = () => {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -21,19 +34,23 @@ const Register = () => {
       return;
     }
 
+    const token = localStorage.getItem('token');
+
     try {
       const response = await fetch('http://localhost:3000/Register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: fullName, gender, username, password }),
+        body: JSON.stringify({ fullName, gender, username, password }),
       });
 
       if (response.ok) {
-        setSuccessMessage('Registration successful! Redirecting to login...');
+        setShowSuccess(true);
         setTimeout(() => {
-          navigate('/login');
+          navigate('/userlogin');
+          e.target.reset();
         }, 2000);
       } else {
         const errorData = await response.json();
@@ -41,6 +58,7 @@ const Register = () => {
       }
     } catch (error) {
       console.error(error);
+      setErrorMessage('An error occurred. Please try again.');
     }
   };
 
@@ -48,31 +66,62 @@ const Register = () => {
     <div className='Reg'>
       <div className='wrapper'>
         <form onSubmit={handleRegister}>
-          <h1>Register</h1>
+          <h1 id='register-title'>Register</h1>
           {errorMessage && <p id='errormsg'>{errorMessage}</p>}
-          {successMessage && <p id='successmsg'>{successMessage}</p>}
           <div className='input-box'>
             <input type='text' name='fullName' placeholder='Full Name' required />
           </div>
           <div className='input-box'>
-            <select name='gender' required>
+            <select className="option" name='gender' required>
               <option value=''>Select Gender</option>
-              <option value='Male'>Male</option>
-              <option value='Female'>Female</option>
+              <option className="optionr" value='Male'>Male</option>
+              <option className="optionr" value='Female'>Female</option>
             </select>
           </div>
           <div className='input-box'>
             <input type='text' name='username' placeholder='Username' required />
           </div>
           <div className='input-box'>
-            <input type='password' name='password' placeholder='Password' required />
+            <input 
+              type={showPassword ? 'text' : 'password'} 
+              name='password' 
+              placeholder='Password' 
+              required 
+            />
+            {showPassword ? (
+              <IoMdEyeOff className="iconr" onClick={togglePasswordVisibility} />
+            ) : (
+              <IoMdEye className="iconr" onClick={togglePasswordVisibility} />
+            )}
           </div>
           <div className='input-box'>
-            <input type='password' name='confirmPassword' placeholder='Confirm Password' required />
+            <input 
+              type={showConfirmPassword ? 'text' : 'password'} 
+              name='confirmPassword' 
+              placeholder='Confirm Password' 
+              required 
+            />
+            {showConfirmPassword ? (
+              <IoMdEyeOff className="iconr" onClick={toggleConfirmPasswordVisibility} />
+            ) : (
+              <IoMdEye className="iconr" onClick={toggleConfirmPasswordVisibility} />
+            )}
           </div>
-
-          <button type='submit'>Register</button>
+          <div className='btnscont d-flex justify-content-between'>
+            <Button type='submit' variant="dark" className='btnRegister'>Register</Button>
+            <Button variant="dark" onClick={() => navigate('/')}>Cancel</Button>
+          </div>  
         </form>
+
+        <ToastContainer className="p-3" position="middle-center">
+          <Toast show={showSuccess} onClose={() => setShowSuccess(false)} delay={3000} autohide>
+            <Toast.Header>
+              <strong className="me-auto">Success</strong>
+              <small>Just now</small>
+            </Toast.Header>
+            <Toast.Body>Registration successful! Redirecting to login...</Toast.Body>
+          </Toast>
+        </ToastContainer>
       </div>
     </div>
   );

@@ -12,6 +12,10 @@ background-color: rgba(255, 105, 180, 0.874);
 margin-top: 10px
 }
 
+.logout-cashier {
+  margin-top: -7px;
+}
+
 .navlink-cashier {
 font-weight: 400 !important;
 font-size: larger !important;

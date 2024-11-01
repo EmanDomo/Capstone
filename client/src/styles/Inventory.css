@@ -45,6 +45,7 @@
 .tab-header .nav-tabs .nav-link {
   position: relative; /* Position for the pseudo-element */
   overflow: hidden; /* Prevent overflow of the pseudo-element */
+  border-radius: 0px;
 }
 
 .tab-header .nav-tabs .nav-link:before {

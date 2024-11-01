@@ -143,7 +143,7 @@ const Checkout = () => {
 
                     </div>
                         <div className="d-flex justify-content-between mx-2 mt-4 mb-3 checkout-buttons">
-                            <Button variant="dark">Cancel</Button>
+                            <Button variant="dark" onClick={() => navigate('/menu')}>Cancel</Button>
                             <Button variant="dark" id='customer-checkout-button' onClick={handleCheckout} disabled={paymentMethod === 'Select Payment Method'}>
                                 Checkout
                             </Button>
