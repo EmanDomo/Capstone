@@ -11,6 +11,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { FaPlus, FaMinus, FaTrash } from 'react-icons/fa';
 import { MdOutlineLogin } from "react-icons/md";
+import { host } from '../../apiRoutes';
 
 function Header() {
     const [data, setData] = useState([]);
@@ -41,7 +42,7 @@ function Header() {
     const getUserData = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('/get-menu-data', {
+            const res = await axios.get(`${host}/get-menu-data`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
@@ -60,7 +61,7 @@ function Header() {
     const getCartData = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('/cart', {
+            const res = await axios.get(`${host}/cart`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
@@ -79,7 +80,7 @@ function Header() {
     const fetchOrders = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('/my-orders', {
+            const response = await axios.get(`${host}/my-orders`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -124,7 +125,7 @@ function Header() {
         try {
             const token = localStorage.getItem('token');
             await axios.post(
-                '/update-cart',
+                `${host}/update-cart`,
                 { itemId, change },
                 {
                     headers: {
@@ -143,7 +144,7 @@ function Header() {
         try {
             const token = localStorage.getItem('token');
             await axios.post(
-                '/remove-cart-item',
+                `${host}/remove-cart-item`,
                 { itemId },
                 {
                     headers: {
@@ -165,7 +166,7 @@ function Header() {
     const deleteOrder = async (orderId) => {
         try {
             const token = localStorage.getItem('token');
-            await axios.delete(`/delete-order/${orderId}`, {
+            await axios.delete(`${host}/delete-order/${orderId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -215,7 +216,7 @@ function Header() {
                                 <Nav.Link onClick={handleLogoutShow} className='text-white ms-0 d-lg-block d-sm-block fs-4 logout-customer'> <MdOutlineLogin /> </Nav.Link>
                                 <Nav.Link onClick={handleLogoutShow} className='text-white ms-2 d-lg-none d-sm-block'> Logout </Nav.Link>
                             </div>
-                        </Nav>  
+                        </Nav>
                     </Navbar.Collapse>
                 </Container>
             </Navbar>
@@ -239,7 +240,7 @@ function Header() {
                                 <tr key={item.itemId}>
                                     <td>{item.itemname}</td>
                                     <td className='text-center'>
-                                        <div className='d-flex justify-content-between checkOut-container'>                                         
+                                        <div className='d-flex justify-content-between checkOut-container'>
                                             <Button variant='outline-primary' className='quantity-buttonmin' size='sm' onClick={() => handleDecreaseQuantity(item.itemId)}>-</Button>
                                             <label className='px-1 py-1'>{item.quantity}</label>
                                             <Button variant='outline-primary' className='quantity-buttonadd' size='sm' onClick={() => handleIncreaseQuantity(item.itemId)}>+</Button>

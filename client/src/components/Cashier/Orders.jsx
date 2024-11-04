@@ -9,8 +9,9 @@ import Card from 'react-bootstrap/Card';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { Toast} from 'react-bootstrap';
+import { Toast } from 'react-bootstrap';
 import Table from 'react-bootstrap/Table';
+import { host } from '../../apiRoutes';
 
 const Orders = () => {
     const [orders, setOrders] = useState([]);
@@ -30,14 +31,14 @@ const Orders = () => {
 
     const renderTooltip = (props) => (
         <Tooltip id="button-tooltip" {...props}>
-          View order
+            View order
         </Tooltip>
-      );
+    );
 
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const response = await axios.get('/orders', {
+                const response = await axios.get(`${host}/orders`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -70,8 +71,8 @@ const Orders = () => {
             const totalAmount = selectedOrderGroup.reduce((total, order) => total + order.price * order.quantity, 0);
             const quantity = selectedOrderGroup.reduce((totalQty, order) => totalQty + order.quantity, 0);
             const userName = selectedOrderGroup[0].userName;
-    
-            const response = await axios.post('/complete-order', {
+
+            const response = await axios.post(`${host}/complete-order`, {
                 orderIds,  // Send all orderIds
                 userId,
                 totalAmount,
@@ -82,7 +83,7 @@ const Orders = () => {
                     'Authorization': `Bearer ${token}`
                 }
             });
-    
+
             if (response.data.success) {
                 // Remove the completed orders from the orders array
                 setOrders(orders.filter(order => !orderIds.includes(order.orderId)));
@@ -101,7 +102,7 @@ const Orders = () => {
         try {
             // Get all orderIds for the selected order group (same orderNumber)
             const orderIds = selectedOrderGroup.map(order => order.orderId);
-    
+
             const response = await axios.post('/cancel-order', {
                 orderIds,  // Send all orderIds for cancellation
                 reason: cancelReason,
@@ -110,7 +111,7 @@ const Orders = () => {
                     'Authorization': `Bearer ${token}`
                 }
             });
-    
+
             if (response.data.success) {
                 // Remove the canceled orders from the orders array
                 setOrders(orders.filter(order => !orderIds.includes(order.orderId)));
@@ -124,7 +125,7 @@ const Orders = () => {
             console.error('Error canceling orders:', error);
         }
     };
-    
+
     const handleShowOrderModal = (orderGroup) => {
         setSelectedOrderGroup(orderGroup);
         setShowOrderModal(true);
@@ -152,13 +153,13 @@ const Orders = () => {
 
     const calculateTotal = () => {
         return selectedOrderGroup.reduce((total, order) => total + order.price * order.quantity, 0);
-    };    
+    };
 
     return (
         <div>
             <Header />
             <div className="ordersd">
-            <h1 className="display-6 order-cashier-label">Orders</h1>
+                <h1 className="display-6 order-cashier-label">Orders</h1>
                 {Object.keys(groupedOrders).length > 0 ? (
                     <div className="order-list-container">
                         <Row xs={2} md={4} lg={6} className="g-4 mb-5 pb-5 px-2">
@@ -166,22 +167,22 @@ const Orders = () => {
                                 <Col key={orderId}>
                                     <Card className="order-card" onClick={() => handleShowOrderModal(orderGroup)}>
                                         <Card.Header className="order-card-header d-flex justify-content-between text-black">
-                                            <strong htmlFor="">Order #</strong>        
+                                            <strong htmlFor="">Order #</strong>
                                             <OverlayTrigger
-                                            placement="bottom"
-                                            delay={{ show: 200, hide: 200 }}
-                                            overlay={renderTooltip}
+                                                placement="bottom"
+                                                delay={{ show: 200, hide: 200 }}
+                                                overlay={renderTooltip}
                                             >
-                                            <div>
-                                                <FaEye
-                                                className="order-action-icon view-icon"
-                                                onClick={() => handleShowOrderModal(orderGroup)}
-                                                />
-                                            </div>
+                                                <div>
+                                                    <FaEye
+                                                        className="order-action-icon view-icon"
+                                                        onClick={() => handleShowOrderModal(orderGroup)}
+                                                    />
+                                                </div>
                                             </OverlayTrigger>
-                                            
-                                        </Card.Header>   
-                                        <strong className='text-center p-2 fs-2'> {orderGroup[0].orderNumber}</strong>                     
+
+                                        </Card.Header>
+                                        <strong className='text-center p-2 fs-2'> {orderGroup[0].orderNumber}</strong>
                                     </Card>
                                 </Col>
                             ))}
@@ -193,61 +194,61 @@ const Orders = () => {
 
                 {/* Order Modal */}
                 {selectedOrderGroup && (
-                   <Modal show={showOrderModal} onHide={handleCloseOrderModal} dialogClassName="fullscreen-modal">
-                   <Modal.Header closeButton>
-                       <Modal.Title className='modalorder'>Order #: {selectedOrderGroup[0].orderNumber}</Modal.Title>
-                   </Modal.Header>
-                   <Modal.Body>          
-                        <div className='d-flex justify-content-between'>
-                            <div><h5>User:</h5></div>
-                            <div><label className='text-secondary'>{selectedOrderGroup[0].userName}</label></div>
-                        </div>
-                        <div className="order-items-list">
-                            <Table>
-                                <thead>
-                                    <tr>
-                                        <th className='text-center'>Name</th>
-                                        <th className='text-center'>Quantity</th>
-                                        <th className='text-center'>Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {Object.values(selectedOrderGroup.reduce((acc, order) => {
-                                        if (!acc[order.itemname]) {
-                                            acc[order.itemname] = {
-                                                itemname: order.itemname,
-                                                quantity: 0,
-                                                totalPrice: 0
-                                            };
-                                        }
-                                        acc[order.itemname].quantity += order.quantity;
-                                        acc[order.itemname].totalPrice += order.price * order.quantity;
-                                        return acc;
-                                    }, {})).map((groupedItem, index) => (
-                                        <tr key={index}>
-                                            <td>{groupedItem.itemname}</td>
-                                            <td className='text-center'>{groupedItem.quantity}</td>
-                                            <td className='text-center'>₱{groupedItem.totalPrice.toFixed(2)}</td>
+                    <Modal show={showOrderModal} onHide={handleCloseOrderModal} dialogClassName="fullscreen-modal">
+                        <Modal.Header closeButton>
+                            <Modal.Title className='modalorder'>Order #: {selectedOrderGroup[0].orderNumber}</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <div className='d-flex justify-content-between'>
+                                <div><h5>User:</h5></div>
+                                <div><label className='text-secondary'>{selectedOrderGroup[0].userName}</label></div>
+                            </div>
+                            <div className="order-items-list">
+                                <Table>
+                                    <thead>
+                                        <tr>
+                                            <th className='text-center'>Name</th>
+                                            <th className='text-center'>Quantity</th>
+                                            <th className='text-center'>Amount</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </Table>
-                        </div>
-                        <div className="d-flex justify-content-between">
-                            <h6>Total Amount:</h6>
-                            <strong className="col-7 d-flex justify-content-end">₱{calculateTotal().toFixed(2)}</strong>
-                        </div>
-                    </Modal.Body>
+                                    </thead>
+                                    <tbody>
+                                        {Object.values(selectedOrderGroup.reduce((acc, order) => {
+                                            if (!acc[order.itemname]) {
+                                                acc[order.itemname] = {
+                                                    itemname: order.itemname,
+                                                    quantity: 0,
+                                                    totalPrice: 0
+                                                };
+                                            }
+                                            acc[order.itemname].quantity += order.quantity;
+                                            acc[order.itemname].totalPrice += order.price * order.quantity;
+                                            return acc;
+                                        }, {})).map((groupedItem, index) => (
+                                            <tr key={index}>
+                                                <td>{groupedItem.itemname}</td>
+                                                <td className='text-center'>{groupedItem.quantity}</td>
+                                                <td className='text-center'>₱{groupedItem.totalPrice.toFixed(2)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </Table>
+                            </div>
+                            <div className="d-flex justify-content-between">
+                                <h6>Total Amount:</h6>
+                                <strong className="col-7 d-flex justify-content-end">₱{calculateTotal().toFixed(2)}</strong>
+                            </div>
+                        </Modal.Body>
 
-                   <Modal.Footer className='d-flex justify-content-between'>
-                       <Button variant="dark" onClick={() => handleShowCancelModal(selectedOrderGroup[0].orderId)}>
-                           Cancel Order
-                       </Button>
-                       <Button variant="dark" className='cashier-complete-order' onClick={handleCompleteOrder}>
-                           Complete Order
-                       </Button>
-                   </Modal.Footer>
-               </Modal>               
+                        <Modal.Footer className='d-flex justify-content-between'>
+                            <Button variant="dark" onClick={() => handleShowCancelModal(selectedOrderGroup[0].orderId)}>
+                                Cancel Order
+                            </Button>
+                            <Button variant="dark" className='cashier-complete-order' onClick={handleCompleteOrder}>
+                                Complete Order
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
                 )}
 
                 {/* Cancel Order Modal */}
@@ -277,20 +278,20 @@ const Orders = () => {
                 <div className="position-fixed bottom-0 end-0 p-3">
                     <Row>
                         <Col xs={12}>
-                        <Toast onClose={toggleToast} show={isToastVisible} delay={3000} autohide>
-                            <Toast.Header>
-                            <strong className="me-auto text-success">Order Complete</strong>
-                            <small>Just now</small>
-                            </Toast.Header>
-                            <Toast.Body className="confirmation-toast-body">
-                            <p>Checkout completed!</p>
-                            </Toast.Body>
-                        </Toast>
+                            <Toast onClose={toggleToast} show={isToastVisible} delay={3000} autohide>
+                                <Toast.Header>
+                                    <strong className="me-auto text-success">Order Complete</strong>
+                                    <small>Just now</small>
+                                </Toast.Header>
+                                <Toast.Body className="confirmation-toast-body">
+                                    <p>Checkout completed!</p>
+                                </Toast.Body>
+                            </Toast>
                         </Col>
                     </Row>
-                    </div>
-                    </div>
                 </div>
+            </div>
+        </div>
     );
 };
 

@@ -6,20 +6,21 @@ import Button from 'react-bootstrap/Button';
 import '../../styles/Checkout.css';
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
+import { host } from '../../apiRoutes';
 
 const Checkout = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { cartItems } = location.state || { cartItems: [] };
     const overallTotal = cartItems.reduce((total, item) => total + item.quantity * item.price, 0);
-  
+
     const [showQRModal, setShowQRModal] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState('Select Payment Method');
 
     const handlePayGcash = async () => {
         try {
-            const response = await fetch('/pay-gcash', {
+            const response = await fetch(`${host}/pay-gcash`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -39,7 +40,7 @@ const Checkout = () => {
 
     const handleOtherPayment = async () => {
         try {
-            const response = await fetch('/pay-others', {
+            const response = await fetch(`${host}/pay-others`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -91,7 +92,7 @@ const Checkout = () => {
         }
     };
 
-    return ( 
+    return (
         <div>
             <div className="mx-1 text-center position-absolute top-50 start-50 translate-middle checkout-container">
                 <div className="text-center checkout-header">
@@ -127,30 +128,30 @@ const Checkout = () => {
                         <label className='p-2'>₱{overallTotal}.00</label>
                     </div>
 
-                        <div className="d-flex justify-content-between mx-2 my-2 payment-option">
-                            <div className="p-1 text-wrap paymentopt-label">
-                                <label className='text-wrap'>Payment Option:</label>
-                            </div>
-                            <div className="paymentopt-drop">
-                                <DropdownButton id="payment-option-button" title={paymentMethod}>
-                                    <Dropdown.Item onClick={() => handleSelectPaymentMethod('G-Cash')} className="gcash-button">G-Cash</Dropdown.Item>
-                                    <Dropdown.Item onClick={() => handleSelectPaymentMethod('Paypal')} className="paypal-button">Paypal</Dropdown.Item>
-                                    <Dropdown.Item onClick={() => handleSelectPaymentMethod('QR Code')} className="qr-button">QR Code</Dropdown.Item>
-                                    <Dropdown.Item onClick={() => handleSelectPaymentMethod('Other payment method')} className="other-payment-button">Other payment method</Dropdown.Item>
-                                </DropdownButton>
-                            </div>
+                    <div className="d-flex justify-content-between mx-2 my-2 payment-option">
+                        <div className="p-1 text-wrap paymentopt-label">
+                            <label className='text-wrap'>Payment Option:</label>
                         </div>
+                        <div className="paymentopt-drop">
+                            <DropdownButton id="payment-option-button" title={paymentMethod}>
+                                <Dropdown.Item onClick={() => handleSelectPaymentMethod('G-Cash')} className="gcash-button">G-Cash</Dropdown.Item>
+                                <Dropdown.Item onClick={() => handleSelectPaymentMethod('Paypal')} className="paypal-button">Paypal</Dropdown.Item>
+                                <Dropdown.Item onClick={() => handleSelectPaymentMethod('QR Code')} className="qr-button">QR Code</Dropdown.Item>
+                                <Dropdown.Item onClick={() => handleSelectPaymentMethod('Other payment method')} className="other-payment-button">Other payment method</Dropdown.Item>
+                            </DropdownButton>
+                        </div>
+                    </div>
 
-                    </div>
-                        <div className="d-flex justify-content-between mx-2 mt-4 mb-3 checkout-buttons">
-                            <Button variant="dark" onClick={() => navigate('/menu')}>Cancel</Button>
-                            <Button variant="dark" id='customer-checkout-button' onClick={handleCheckout} disabled={paymentMethod === 'Select Payment Method'}>
-                                Checkout
-                            </Button>
-                        </div>
-                    </div>
-                   
-                    
+                </div>
+                <div className="d-flex justify-content-between mx-2 mt-4 mb-3 checkout-buttons">
+                    <Button variant="dark" onClick={() => navigate('/menu')}>Cancel</Button>
+                    <Button variant="dark" id='customer-checkout-button' onClick={handleCheckout} disabled={paymentMethod === 'Select Payment Method'}>
+                        Checkout
+                    </Button>
+                </div>
+            </div>
+
+
             <Modal show={showQRModal} onHide={handleCancel} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Scan QR Code to Pay</Modal.Title>
@@ -170,7 +171,7 @@ const Checkout = () => {
                     </Button>
                 </Modal.Footer>
             </Modal>
-        </div> 
+        </div>
     );
 }
 

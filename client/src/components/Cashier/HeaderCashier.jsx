@@ -4,10 +4,11 @@ import { MdOutlineLogin } from "react-icons/md";
 import { FaTrash } from 'react-icons/fa';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode'; 
+import { jwtDecode } from 'jwt-decode';
 import Logo1 from "../../Assets/logo.png";
 import "../../styles/HeaderCashier.css";
 import { IoCartOutline } from "react-icons/io5";
+import { host } from '../../apiRoutes';
 
 function Header1() {
   const [data, setData] = useState([]);
@@ -20,10 +21,10 @@ function Header1() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isToastVisible, setIsToastVisible] = useState(false);
-  
+
   // State for logout confirmation modal
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,7 +42,7 @@ function Header1() {
   const getUserData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('/get-menu-data', {
+      const res = await axios.get(`${host}/get-menu-data`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -60,7 +61,7 @@ function Header1() {
   const getCartData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('/getpos', {
+      const res = await axios.get(`${host}/getpos`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -81,7 +82,7 @@ function Header1() {
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('/my-orders', {
+      const response = await axios.get(`${host}/my-orders`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -113,7 +114,7 @@ function Header1() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        '/update-pos',
+        `${host}/update-pos`,
         { itemId, change },
         {
           headers: {
@@ -140,7 +141,7 @@ function Header1() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        '/remove-pos-item',
+        `${host}/remove-pos-item`,
         { itemId },
         {
           headers: {
@@ -159,7 +160,7 @@ function Header1() {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(
-        '/pos-place-order',
+        `${host}/pos-place-order`,
         { posItems: cartItems },
         {
           headers: {
@@ -247,7 +248,7 @@ function Header1() {
                 <tr key={item.itemId}>
                   <td>{item.itemname}</td>
                   <td className='text-center'>
-                    <div className='d-flex justify-content-between checkOut-container'>                                         
+                    <div className='d-flex justify-content-between checkOut-container'>
 
                       <Button variant='outline-primary' className='quantity-buttonmin' size='sm' onClick={() => handleDecreaseQuantity(item.itemId)}>-</Button>
                       <label className='px-1 py-1'>{item.quantity}</label>

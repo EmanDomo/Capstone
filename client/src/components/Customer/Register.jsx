@@ -1,9 +1,10 @@
-import React, { useState } from 'react'; 
+import React, { useState } from 'react';
 import '../../styles/Register.css';
 import { useNavigate } from 'react-router-dom';
 import { Toast, ToastContainer } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
+import { host } from '../../apiRoutes';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ const Register = () => {
     const token = localStorage.getItem('token');
 
     try {
-      const response = await fetch('http://localhost:3000/Register', {
+      const response = await fetch(`${host}/Register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,11 +83,11 @@ const Register = () => {
             <input type='text' name='username' placeholder='Username' required />
           </div>
           <div className='input-box'>
-            <input 
-              type={showPassword ? 'text' : 'password'} 
-              name='password' 
-              placeholder='Password' 
-              required 
+            <input
+              type={showPassword ? 'text' : 'password'}
+              name='password'
+              placeholder='Password'
+              required
             />
             {showPassword ? (
               <IoMdEyeOff className="iconr" onClick={togglePasswordVisibility} />
@@ -95,11 +96,11 @@ const Register = () => {
             )}
           </div>
           <div className='input-box'>
-            <input 
-              type={showConfirmPassword ? 'text' : 'password'} 
-              name='confirmPassword' 
-              placeholder='Confirm Password' 
-              required 
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              name='confirmPassword'
+              placeholder='Confirm Password'
+              required
             />
             {showConfirmPassword ? (
               <IoMdEyeOff className="iconr" onClick={toggleConfirmPasswordVisibility} />
@@ -110,7 +111,7 @@ const Register = () => {
           <div className='btnscont d-flex justify-content-between'>
             <Button type='submit' variant="dark" className='btnRegister'>Register</Button>
             <Button variant="dark" onClick={() => navigate('/')}>Cancel</Button>
-          </div>  
+          </div>
         </form>
 
         <ToastContainer className="p-3" position="middle-center">

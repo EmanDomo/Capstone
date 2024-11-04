@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Table, Container, Alert } from 'react-bootstrap';
+import { host } from '../../apiRoutes';
 
 const MyOrders = () => {
     const [orders, setOrders] = useState([]);
@@ -11,7 +12,7 @@ const MyOrders = () => {
         const fetchOrders = async () => {
             try {
                 const token = localStorage.getItem('token'); // Assumes token is stored in localStorage
-                const response = await axios.get('/api/my-orders', {
+                const response = await axios.get(`${host}/api/my-orders`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }

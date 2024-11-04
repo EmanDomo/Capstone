@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Logo from "../../Assets/logo.png";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { FaArrowLeft } from "react-icons/fa6";
+import { host } from '../../apiRoutes';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -19,19 +20,19 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-  
+
     const username = e.target.elements.username.value;
     const password = e.target.elements.password.value;
-  
+
     try {
-      const response = await fetch('http://localhost:3000/UserLogin', {
+      const response = await fetch(`${host}/UserLogin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username, password }),
       });
-  
+
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('token', data.token); // Store the token in local storage
@@ -39,7 +40,7 @@ const Login = () => {
       } else {
         const errorData = await response.json();
         setErrorMessage(errorData.message);
-  
+
         // Only display remaining attempts if they are included in the response
         if (errorData.remainingAttempts !== undefined) {
           setRemainingAttempts(errorData.remainingAttempts);
@@ -51,7 +52,7 @@ const Login = () => {
       console.error(error);
     }
   };
-  
+
 
   const handleRegister = () => {
     navigate('/register');
@@ -62,40 +63,40 @@ const Login = () => {
       <div id="card2">
         <div id="logo-container2">
           <FaArrowLeft id='login-close' onClick={() => navigate('/')} />
-            <img src={Logo} id="logo" alt="logo" />
-          </div>
+          <img src={Logo} id="logo" alt="logo" />
+        </div>
         <div className="inpt">
-        <form onSubmit={handleLogin}>
-          {errorMessage && <p id='errormsg'>{errorMessage}</p>}
-          <div className="input-box2" id="inputbx2">
-            <h6 id='lblCustomerLogin'>Customer Login</h6>
-            <FaUser className="icon2"/>
-            <input type='text' name='username' id="input-admin2" placeholder='Username' required />
-          </div>
-          <div className="input-box2">
-            <FaLock className="icon2"/>
-            <input type={showPassword ? "text" : "password"} name='password' id="input-admin2" placeholder='Password' required />
-            
-          {showPassword ? (
+          <form onSubmit={handleLogin}>
+            {errorMessage && <p id='errormsg'>{errorMessage}</p>}
+            <div className="input-box2" id="inputbx2">
+              <h6 id='lblCustomerLogin'>Customer Login</h6>
+              <FaUser className="icon2" />
+              <input type='text' name='username' id="input-admin2" placeholder='Username' required />
+            </div>
+            <div className="input-box2">
+              <FaLock className="icon2" />
+              <input type={showPassword ? "text" : "password"} name='password' id="input-admin2" placeholder='Password' required />
+
+              {showPassword ? (
                 <IoMdEyeOff className="icon3" id="hidePass" onClick={togglePasswordVisibility} />
               ) : (
                 <IoMdEye className="icon3" id="showPass" onClick={togglePasswordVisibility} />
               )}
-          </div>
+            </div>
 
-          <button id="login2" className="text-white" type='submit'>Login</button>
+            <button id="login2" className="text-white" type='submit'>Login</button>
 
-          <div className='register-link'>
-          {remainingAttempts !== null && (
-            <p className="attempts-message text-secondary">Attempts remaining: {remainingAttempts}</p>
-          )}
+            <div className='register-link'>
+              {remainingAttempts !== null && (
+                <p className="attempts-message text-secondary">Attempts remaining: {remainingAttempts}</p>
+              )}
 
-            <p>
-              Don't have an account? <a id="stud-register" onClick={handleRegister}>Register</a>
-            </p>
-            
-          </div>
-        </form>
+              <p>
+                Don't have an account? <a id="stud-register" onClick={handleRegister}>Register</a>
+              </p>
+
+            </div>
+          </form>
         </div>
       </div>
     </div>

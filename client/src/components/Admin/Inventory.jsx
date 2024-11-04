@@ -13,6 +13,7 @@ import { MdEdit } from "react-icons/md";
 import { FaRegTrashAlt } from "react-icons/fa";
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
+import { host } from '../../apiRoutes';
 
 const Inventory = () => {
     const [data, setData] = useState([]);
@@ -27,33 +28,33 @@ const Inventory = () => {
     const [selectedIngredientUnit, setSelectedIngredientUnit] = useState('');
     const [ingredientQuantity, setIngredientQuantity] = useState('');
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
-    
+
     const [show, setShow] = useState(false);
     const [modalShow, setModalShow] = useState(false);
     const [stockModalShow, setStockModalShow] = useState(false);
     const [rawMaterialModalShow, setRawMaterialModalShow] = useState(false);
-    
+
     // Form state variables
     const [fname, setFName] = useState('');
     const [file, setFile] = useState('');
     const [quantity, setQuantity] = useState('');
     const [price, setItemPrice] = useState('');
     const [category, setCategoryName] = useState('');
-    
+
     // Stock state variables
     const [stockName, setStockName] = useState('');
     const [stockQuantity, setStockQuantity] = useState('');
     const [stockUnit, setStockUnit] = useState('');
 
-        // Stock state variables
-        const [rawMaterialName, setRawMaterialName] = useState('');
-        const [rawMaterialQuantity, setRawMaterialQuantity] = useState('');
-        const [rawMaterialUnit, setRawMaterialUnit] = useState('');
-    
+    // Stock state variables
+    const [rawMaterialName, setRawMaterialName] = useState('');
+    const [rawMaterialQuantity, setRawMaterialQuantity] = useState('');
+    const [rawMaterialUnit, setRawMaterialUnit] = useState('');
+
     const [showInventory, setShowInventory] = useState(true);
     const [showStocks, setShowStocks] = useState(false);
     const [showRawMaterials, setShowRawMaterial] = useState(false);
-    
+
     const [selectedInventory, setSelectedInventory] = useState('Food Inventory');
 
     const [requiresRawMaterial, setRequiresRawMaterial] = useState(false);
@@ -79,8 +80,8 @@ const Inventory = () => {
         setIsAddingCategory(false);
         setNewCategory('');
     };
-    
-    
+
+
     const handleShow = () => setModalShow(true);
     const handleStockShow = () => setStockModalShow(true);
     const handleRawMaterialShow = () => setRawMaterialModalShow(true);
@@ -89,7 +90,7 @@ const Inventory = () => {
     const getUserData = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('/getinventorydata', {
+            const res = await axios.get(`${host}/getinventorydata`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
@@ -106,7 +107,7 @@ const Inventory = () => {
 
     const getCategories = async () => {
         try {
-            const res = await axios.get('/categories');
+            const res = await axios.get(`${host}/categories`);
             if (res.data.status === 200) {
                 setCategories(res.data.data);
             }
@@ -118,7 +119,7 @@ const Inventory = () => {
     const getStockData = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('/getstock', {
+            const res = await axios.get(`${host}/getstock`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
@@ -137,7 +138,7 @@ const Inventory = () => {
     const getRawMaterialsData = async () => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.get('/get-raw-materials', {
+            const res = await axios.get(`${host}/get-raw-materials`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
@@ -152,12 +153,12 @@ const Inventory = () => {
             console.error('Error fetching stock data:', error);
         }
     };
-    
+
 
     const dltUser = async (id) => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.delete(`/delete/${id}`, {
+            const res = await axios.delete(`${host}/delete/${id}`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
@@ -175,7 +176,7 @@ const Inventory = () => {
 
     const addIngredient = () => {
         const ingredient = ingredients.find(ing => ing.stock_item_name === selectedIngredient);
-        
+
         if (ingredient && ingredientQuantity && selectedIngredientUnit) {
             setSelectedIngredients(prevIngredients => [
                 ...prevIngredients,
@@ -200,14 +201,14 @@ const Inventory = () => {
     const handleIngredientSelection = (e) => {
         const selected = e.target.value;
         const ingredient = ingredients.find(ing => ing.stock_item_name === selected);
-        
+
         setSelectedIngredient(selected);
         setSelectedIngredientUnit(ingredient ? ingredient.unit : '');
     };
 
     const addUserData = async (e) => {
         e.preventDefault();
-        
+
         const formData = new FormData();
         formData.append("photo", file);
         formData.append("fname", fname);
@@ -217,7 +218,7 @@ const Inventory = () => {
         formData.append("ingredients", JSON.stringify(selectedIngredients));
 
         try {
-            const res = await axios.post("/addItem", formData, {
+            const res = await axios.post(`${host}/addItem`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
                 }
@@ -236,14 +237,14 @@ const Inventory = () => {
     const addStockData = async (e) => {
         e.preventDefault();
         const token = localStorage.getItem('token');
-    
+
         let calculatedQuantity = stockQuantity;
-    
+
         // If raw materials are required, calculate the stock quantity from the conversion ratio
         if (requiresRawMaterial && rawMaterialUsageQuantity && conversionRatio) {
             calculatedQuantity = rawMaterialUsageQuantity * conversionRatio; // Calculate based on raw material usage
         }
-    
+
         const stock = {
             stockName,
             stockQuantity: calculatedQuantity,
@@ -254,16 +255,16 @@ const Inventory = () => {
             conversion_ratio: requiresRawMaterial ? conversionRatio : null,
             raw_material_usage_quantity: requiresRawMaterial ? rawMaterialUsageQuantity : null // Pass the usage quantity
         };
-    
+
         const config = {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             }
         };
-    
+
         try {
-            const res = await axios.post("/addStock", stock, config);
+            const res = await axios.post('${host}/addStock', stock, config);
             if (res.data.status === 201) {
                 handleClose();
                 await getStockData(); // Ensure data refreshes before closing modal
@@ -274,28 +275,28 @@ const Inventory = () => {
             console.error('Error adding stock:', error);
         }
     };
-    
-    
+
+
     const addRawMaterial = async (e) => {
         e.preventDefault();
         const token = localStorage.getItem('token');
-    
+
         const rawMaterial = {
             rawMaterialName: stockName,
             rawMaterialQuantity: stockQuantity,
             rawMaterialUnit: stockUnit,
         };
-    
+
         const config = {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             }
         };
-    
+
         try {
-            const res = await axios.post("/add-raw-material", rawMaterial, config);
-    
+            const res = await axios.post(`${host}/add-raw-material`, rawMaterial, config);
+
             if (res.data.status === 201) {
                 handleClose();  // Close the modal
                 await getRawMaterialsData();  // Refresh data to reflect new material
@@ -305,19 +306,19 @@ const Inventory = () => {
                 setStockUnit('');
                 setShowConfirmationModal(true);
             }
-            
-            
+
+
         } catch (error) {
             console.error('Error adding raw material:', error);
         }
     };
-    
+
 
     const addCategory = async (e) => {
         e.preventDefault();
 
         try {
-            const res = await axios.post('/category', { category: newCategory }, {
+            const res = await axios.post(`${host}/category`, { category: newCategory }, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -341,7 +342,7 @@ const Inventory = () => {
         setShowRawMaterial(key === "Kitchen Inventory")
     };
 
-    return ( 
+    return (
         <div>
             <Header1 />
             <div className="inventoryd">
@@ -361,7 +362,7 @@ const Inventory = () => {
                         </Tabs>
                     </div>
                 </div>
-                
+
                 <div className="">
                     {selectedInventory === 'Food Inventory' && (
                         <div className='inventory-tables'>
@@ -382,7 +383,7 @@ const Inventory = () => {
                                             <td className='text-center'>₱ {el.Price}</td>
                                             <td>
                                                 <div className='d-flex justify-content-between action-buttons'>
-                                                    <Button id='edit-inventory'><MdEdit/></Button>
+                                                    <Button id='edit-inventory'><MdEdit /></Button>
                                                     <Button id='delete-inventory' onClick={() => dltUser(el.Item_Name)}><FaRegTrashAlt /></Button>
                                                 </div>
                                             </td>
@@ -411,7 +412,7 @@ const Inventory = () => {
                                             <td className='text-center'>{el.unit}</td>
                                             <td className='text-center'>
                                                 <div className='d-flex justify-content-between action-buttons-stocks'>
-                                                    <Button id='edit-inventory'><MdEdit/></Button>
+                                                    <Button id='edit-inventory'><MdEdit /></Button>
                                                     <Button id='delete-inventory'><FaRegTrashAlt /></Button>
                                                 </div>
                                             </td>
@@ -423,47 +424,47 @@ const Inventory = () => {
                     )}
                     {selectedInventory === 'Kitchen Inventory' && (
                         <div className='inventory-tables'>
-                        <Table responsive className="table-fixed">
-                            <thead className='position-sticky z-3'>
-                                <tr>
-                                    <th className='text-center'>Name</th>
-                                    <th className='text-center'>Quantity</th>
-                                    <th className='text-center'>Unit</th>
-                                    <th className='text-center'>Date Added</th>
-                                    <th className='text-center' style={{ width: '120px' }}>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {rawMaterialsData.map((el, i) => (
-                                    <tr key={i}>
-                                        <td>{el.raw_material_name}</td>
-                                        <td className='text-center'>{el.raw_material_quantity}</td>
-                                        <td className='text-center'>{el.raw_material_unit}</td>
-                                        <td className='text-center'>{el.date_added}</td>
-                                        <td className='text-center'>
-                                            <div className='d-flex justify-content-between action-buttons-kitchen'>
-                                                <Button id='edit-inventory'><MdEdit/></Button>
-                                                <Button id='delete-inventory'><FaRegTrashAlt /></Button>
-                                            </div>
-                                        </td>
+                            <Table responsive className="table-fixed">
+                                <thead className='position-sticky z-3'>
+                                    <tr>
+                                        <th className='text-center'>Name</th>
+                                        <th className='text-center'>Quantity</th>
+                                        <th className='text-center'>Unit</th>
+                                        <th className='text-center'>Date Added</th>
+                                        <th className='text-center' style={{ width: '120px' }}>Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </Table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    {rawMaterialsData.map((el, i) => (
+                                        <tr key={i}>
+                                            <td>{el.raw_material_name}</td>
+                                            <td className='text-center'>{el.raw_material_quantity}</td>
+                                            <td className='text-center'>{el.raw_material_unit}</td>
+                                            <td className='text-center'>{el.date_added}</td>
+                                            <td className='text-center'>
+                                                <div className='d-flex justify-content-between action-buttons-kitchen'>
+                                                    <Button id='edit-inventory'><MdEdit /></Button>
+                                                    <Button id='delete-inventory'><FaRegTrashAlt /></Button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        </div>
                     )}
                 </div>
                 <div className="mt-5 inventory-button d-flex justify-content-center inventory-button">
-                {showInventory && (
-                    <Button variant="dark" className='btn-add-inventory' onClick={handleShow}>Add Product</Button>
-                )}
-                {showStocks && (
-                    <Button variant="dark" className='btn-add-inventory' onClick={handleStockShow}>Add Stock</Button>
-                )}
-                {showRawMaterials && (
-                    <Button variant="dark" className='btn-add-inventory' onClick={handleRawMaterialShow}>Add Raw Ingredient</Button>
-                )}
-            </div>
+                    {showInventory && (
+                        <Button variant="dark" className='btn-add-inventory' onClick={handleShow}>Add Product</Button>
+                    )}
+                    {showStocks && (
+                        <Button variant="dark" className='btn-add-inventory' onClick={handleStockShow}>Add Stock</Button>
+                    )}
+                    {showRawMaterials && (
+                        <Button variant="dark" className='btn-add-inventory' onClick={handleRawMaterialShow}>Add Raw Ingredient</Button>
+                    )}
+                </div>
             </div>
             <Modal show={modalShow} onHide={handleClose} dialogClassName="fullscreen-modal">
                 <Modal.Header closeButton>
@@ -479,7 +480,7 @@ const Inventory = () => {
                                 value={fname}
                                 onChange={(e) => setFName(e.target.value)}
                                 className='form-item-name'
-                            required/>
+                                required />
                         </Form.Group>
 
                         <Form.Group className="mb-3" controlId="formItemPrice">
@@ -490,7 +491,7 @@ const Inventory = () => {
                                 value={price}
                                 onChange={(e) => setItemPrice(e.target.value)}
                                 className='form-item-price'
-                            required/>
+                                required />
                         </Form.Group>
 
 
@@ -501,7 +502,7 @@ const Inventory = () => {
                                 value={category}
                                 onChange={(e) => setCategoryName(e.target.value)}
                                 className='form-item-category'
-                            required>
+                                required>
                                 <option value="">Select Category</option>
                                 {categories.map((cat, i) => (
                                     <option key={i} value={cat.category_name}>{cat.category_name}</option>
@@ -518,7 +519,7 @@ const Inventory = () => {
                                     value={newCategory}
                                     onChange={(e) => setNewCategory(e.target.value)}
                                     className='form-new-category'
-                                required/>
+                                    required />
                                 <div className='pt-3 d-flex justify-content-end'>
                                     <Button variant="dark" onClick={addCategory} className='add-category-btn'>
                                         Add Category
@@ -534,7 +535,7 @@ const Inventory = () => {
                                 value={selectedIngredient}
                                 onChange={handleIngredientSelection}
                                 className='form-item-ingredient'
-                            required>
+                                required>
                                 <option>Select Ingredient</option>
                                 {ingredients.map((ingredient, i) => (
                                     <option key={i} value={ingredient.stock_item_name}>
@@ -553,7 +554,7 @@ const Inventory = () => {
                                         value={ingredientQuantity}
                                         onChange={(e) => setIngredientQuantity(e.target.value)}
                                         className='form-ingredient-quantity'
-                                    required/>
+                                        required />
                                 </Form.Group>
 
                                 <Form.Group className="mb-3" controlId="formIngredientUnit">
@@ -566,9 +567,9 @@ const Inventory = () => {
                                     />
                                 </Form.Group>
                                 <div className='d-flex justify-content-end'>
-                                <Button onClick={addIngredient} className='bg-dark add-ingredient'>
-                                    Add Ingredient
-                                </Button>
+                                    <Button onClick={addIngredient} className='bg-dark add-ingredient'>
+                                        Add Ingredient
+                                    </Button>
                                 </div>
                             </>
                         )}
@@ -601,7 +602,7 @@ const Inventory = () => {
                                 name="photo"
                                 onChange={(e) => setFile(e.target.files[0])}
                                 className='form-item-image'
-                            required/>
+                                required />
                         </Form.Group>
                     </Form>
                 </Modal.Body>
@@ -617,188 +618,188 @@ const Inventory = () => {
 
             {/* Add Stock Modal */}
             <Modal show={stockModalShow} onHide={handleClose} dialogClassName="fullscreen-modal">
-    <Modal.Header closeButton>
-        <Modal.Title>Add New Stock</Modal.Title>
-    </Modal.Header>
-    <Modal.Body>
-        <Form>
-            {/* Stock Name */}
-            <Form.Group className="mb-3" controlId="formStockName">
-                <Form.Label>Stock Name</Form.Label>
-                <Form.Control
-                    type="text"
-                    name='stockName'
-                    value={stockName}
-                    onChange={(e) => setStockName(e.target.value)}
-                    className='form-stock-name'
-                />
-            </Form.Group>
+                <Modal.Header closeButton>
+                    <Modal.Title>Add New Stock</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        {/* Stock Name */}
+                        <Form.Group className="mb-3" controlId="formStockName">
+                            <Form.Label>Stock Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                name='stockName'
+                                value={stockName}
+                                onChange={(e) => setStockName(e.target.value)}
+                                className='form-stock-name'
+                            />
+                        </Form.Group>
 
-            {/* Only show Quantity input if the stock does NOT require raw materials */}
-            {!requiresRawMaterial && (
-                <Form.Group className="mb-3" controlId="formStockQuantity">
-                    <Form.Label>Quantity</Form.Label>
-                    <Form.Control
-                        type="number"
-                        name='stockQuantity'
-                        value={stockQuantity}
-                        onChange={(e) => setStockQuantity(e.target.value)}
-                        className='form-stock-quantity'
-                    />
-                </Form.Group>
-            )}
+                        {/* Only show Quantity input if the stock does NOT require raw materials */}
+                        {!requiresRawMaterial && (
+                            <Form.Group className="mb-3" controlId="formStockQuantity">
+                                <Form.Label>Quantity</Form.Label>
+                                <Form.Control
+                                    type="number"
+                                    name='stockQuantity'
+                                    value={stockQuantity}
+                                    onChange={(e) => setStockQuantity(e.target.value)}
+                                    className='form-stock-quantity'
+                                />
+                            </Form.Group>
+                        )}
 
-            <Form.Group className="mb-3" controlId="formStockUnit">
-                <Form.Label>Unit</Form.Label>
-                <Form.Control
-                    type="text"
-                    name='stockUnit'
-                    value={stockUnit}
-                    onChange={(e) => setStockUnit(e.target.value)}
-                    className='form-stock-unit'
-                />
-            </Form.Group>
+                        <Form.Group className="mb-3" controlId="formStockUnit">
+                            <Form.Label>Unit</Form.Label>
+                            <Form.Control
+                                type="text"
+                                name='stockUnit'
+                                value={stockUnit}
+                                onChange={(e) => setStockUnit(e.target.value)}
+                                className='form-stock-unit'
+                            />
+                        </Form.Group>
 
-            {/* Checkbox for Raw Material Requirement */}
-            <Form.Group controlId="requiresRawMaterial">
-                <Form.Check
-                    type="checkbox"
-                    label="Does this stock require raw materials?"
-                    checked={requiresRawMaterial}
-                    onChange={(e) => setRequiresRawMaterial(e.target.checked)}
-                />
-            </Form.Group>
+                        {/* Checkbox for Raw Material Requirement */}
+                        <Form.Group controlId="requiresRawMaterial">
+                            <Form.Check
+                                type="checkbox"
+                                label="Does this stock require raw materials?"
+                                checked={requiresRawMaterial}
+                                onChange={(e) => setRequiresRawMaterial(e.target.checked)}
+                            />
+                        </Form.Group>
 
-            {/* Conditional Fields for Raw Material Details */}
-            {requiresRawMaterial && (
-                <>
-                    <Form.Group className="mb-3" controlId="formRawMaterialId">
-                        <Form.Label>Raw Material</Form.Label>
-                        <Form.Control
-                            as="select"
-                            value={selectedRawMaterialId}
-                            onChange={(e) => setSelectedRawMaterialId(e.target.value)}
-                        >
-                            <option value="">Select Raw Material</option>
-                            {rawMaterialsData.map((material) => (
-                                <option key={material.raw_material_id} value={material.raw_material_id}>
-                                    {material.raw_material_name}
-                                </option>
-                            ))}
-                        </Form.Control>
-                    </Form.Group>
+                        {/* Conditional Fields for Raw Material Details */}
+                        {requiresRawMaterial && (
+                            <>
+                                <Form.Group className="mb-3" controlId="formRawMaterialId">
+                                    <Form.Label>Raw Material</Form.Label>
+                                    <Form.Control
+                                        as="select"
+                                        value={selectedRawMaterialId}
+                                        onChange={(e) => setSelectedRawMaterialId(e.target.value)}
+                                    >
+                                        <option value="">Select Raw Material</option>
+                                        {rawMaterialsData.map((material) => (
+                                            <option key={material.raw_material_id} value={material.raw_material_id}>
+                                                {material.raw_material_name}
+                                            </option>
+                                        ))}
+                                    </Form.Control>
+                                </Form.Group>
 
-                    {/* Input for Quantity of Raw Material to Use */}
-                    <Form.Group className="mb-3" controlId="formRawMaterialUsageQuantity">
-                        <Form.Label>Quantity of Raw Material to Use</Form.Label>
-                        <Form.Control
-                            type="number"
-                            value={rawMaterialUsageQuantity}
-                            onChange={(e) => setRawMaterialUsageQuantity(e.target.value)}
-                            placeholder="Enter quantity of raw material to use"
-                        />
-                    </Form.Group>
+                                {/* Input for Quantity of Raw Material to Use */}
+                                <Form.Group className="mb-3" controlId="formRawMaterialUsageQuantity">
+                                    <Form.Label>Quantity of Raw Material to Use</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        value={rawMaterialUsageQuantity}
+                                        onChange={(e) => setRawMaterialUsageQuantity(e.target.value)}
+                                        placeholder="Enter quantity of raw material to use"
+                                    />
+                                </Form.Group>
 
-                    <Form.Group className="mb-3" controlId="formQuantityRequired">
-                        <Form.Label>Quantity Required</Form.Label>
-                        <Form.Control
-                            type="number"
-                            value={quantityRequired}
-                            onChange={(e) => setQuantityRequired(e.target.value)}
-                        />
-                    </Form.Group>
+                                <Form.Group className="mb-3" controlId="formQuantityRequired">
+                                    <Form.Label>Quantity Required</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        value={quantityRequired}
+                                        onChange={(e) => setQuantityRequired(e.target.value)}
+                                    />
+                                </Form.Group>
 
-                    <Form.Group className="mb-3" controlId="formConversionRatio">
-                        <Form.Label>Conversion Ratio</Form.Label>
-                        <Form.Control
-                            type="number"
-                            value={conversionRatio}
-                            onChange={(e) => setConversionRatio(e.target.value)}
-                        />
-                    </Form.Group>
-                </>
-            )}
-        </Form>
-    </Modal.Body>
-    <Modal.Footer>
-        <Button className="food-save" onClick={addStockData}>
-            Save Changes
-        </Button>
-    </Modal.Footer>
-</Modal>
+                                <Form.Group className="mb-3" controlId="formConversionRatio">
+                                    <Form.Label>Conversion Ratio</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        value={conversionRatio}
+                                        onChange={(e) => setConversionRatio(e.target.value)}
+                                    />
+                                </Form.Group>
+                            </>
+                        )}
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button className="food-save" onClick={addStockData}>
+                        Save Changes
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
 
 
 
             <Modal show={rawMaterialModalShow} onHide={handleClose} dialogClassName="fullscreen-modal">
-    <Modal.Header closeButton>
-        <Modal.Title>Add New Material</Modal.Title>
-    </Modal.Header>
-    <Modal.Body>
-        <Form>
-            {/* Raw Material Name */}
-            <Form.Group className="mb-3" controlId="formRawMaterialName">
-                <Form.Label>Raw Material Name</Form.Label>
-                <Form.Control
-                    type="text"
-                    name='rawMaterialName'
-                    value={stockName} // Use stockName as it aligns with raw_material_name
-                    onChange={(e) => setStockName(e.target.value)} // Update name as stockName
-                    className='form-raw-material-name'
-                />
-            </Form.Group>
+                <Modal.Header closeButton>
+                    <Modal.Title>Add New Material</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        {/* Raw Material Name */}
+                        <Form.Group className="mb-3" controlId="formRawMaterialName">
+                            <Form.Label>Raw Material Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                name='rawMaterialName'
+                                value={stockName} // Use stockName as it aligns with raw_material_name
+                                onChange={(e) => setStockName(e.target.value)} // Update name as stockName
+                                className='form-raw-material-name'
+                            />
+                        </Form.Group>
 
-            {/* Raw Material Quantity */}
-            <Form.Group className="mb-3" controlId="formRawMaterialQuantity">
-                <Form.Label>Quantity</Form.Label>
-                <Form.Control
-                    type="number"
-                    name='rawMaterialQuantity'
-                    value={stockQuantity} // Use stockQuantity for raw_material_quantity
-                    onChange={(e) => setStockQuantity(e.target.value)} 
-                    className='form-raw-material-quantity'
-                />
-            </Form.Group>
+                        {/* Raw Material Quantity */}
+                        <Form.Group className="mb-3" controlId="formRawMaterialQuantity">
+                            <Form.Label>Quantity</Form.Label>
+                            <Form.Control
+                                type="number"
+                                name='rawMaterialQuantity'
+                                value={stockQuantity} // Use stockQuantity for raw_material_quantity
+                                onChange={(e) => setStockQuantity(e.target.value)}
+                                className='form-raw-material-quantity'
+                            />
+                        </Form.Group>
 
-            {/* Unit */}
-            <Form.Group className="mb-3" controlId="formRawMaterialUnit">
-                <Form.Label>Unit</Form.Label>
-                <Form.Control
-                    type="text"
-                    name='rawMaterialUnit'
-                    value={stockUnit} // Use stockUnit for unit
-                    onChange={(e) => setStockUnit(e.target.value)} 
-                    className='form-raw-material-unit'
-                />
-            </Form.Group>
-        </Form>
-    </Modal.Body>
-    <Modal.Footer>
-    <Button className="food-save" onClick={addRawMaterial}>
-    Save Changes
-</Button>
+                        {/* Unit */}
+                        <Form.Group className="mb-3" controlId="formRawMaterialUnit">
+                            <Form.Label>Unit</Form.Label>
+                            <Form.Control
+                                type="text"
+                                name='rawMaterialUnit'
+                                value={stockUnit} // Use stockUnit for unit
+                                onChange={(e) => setStockUnit(e.target.value)}
+                                className='form-raw-material-unit'
+                            />
+                        </Form.Group>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button className="food-save" onClick={addRawMaterial}>
+                        Save Changes
+                    </Button>
 
-    </Modal.Footer>
-</Modal>
+                </Modal.Footer>
+            </Modal>
 
-<Modal show={showConfirmationModal} onHide={() => setShowConfirmationModal(false)}>
-                  <Modal.Header closeButton>
-                      <Modal.Title>Order Complete</Modal.Title>
-                  </Modal.Header>
-                  <Modal.Body className="confirmation-modal-body">
-                      <div className="checkmark-animation">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                          </svg>
-                      </div>
-                      <p>Item Added to Cart!</p>
-                  </Modal.Body>
-                  <Modal.Footer>
-                      <Button variant="secondary" onClick={() => setShowConfirmationModal(false)}>
-                          Close
-                      </Button>
-                  </Modal.Footer>
-              </Modal>
+            <Modal show={showConfirmationModal} onHide={() => setShowConfirmationModal(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Order Complete</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="confirmation-modal-body">
+                    <div className="checkmark-animation">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <p>Item Added to Cart!</p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowConfirmationModal(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
         </div>
     );

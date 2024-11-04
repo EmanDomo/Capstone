@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import Logo from "../../Assets/logo.png";
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { FaArrowLeft } from "react-icons/fa6";
+import { host } from '../../apiRoutes';
 
 const SuperAdminLogin = () => {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ const SuperAdminLogin = () => {
     const password = e.target.elements.password.value;
 
     try {
-      const response = await fetch('http://localhost:3000/SuperAdminLoginForm', {
+      const response = await fetch(`${host}/SuperAdminLoginForm`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -64,11 +65,11 @@ const SuperAdminLogin = () => {
             {errorMessage && <p id='errormsg'>{errorMessage}</p>}
             <div className="input-box" id="inputbx">
               <h6 id='lblSuperAdminLogin'>Admin Login</h6>
-              <FaUser className="icon"/>
+              <FaUser className="icon" />
               <input type='text' name='username' id="input-admin" placeholder='Username' required />
             </div>
             <div className="input-box">
-              <FaLock className="icon"/>
+              <FaLock className="icon" />
               <input type={showPassword ? "text" : "password"} name='password' id="input-admin" placeholder='Password' required />
               {showPassword ? (
                 <IoMdEyeOff className="icon3" id="hidePass" onClick={togglePasswordVisibility} />
@@ -79,8 +80,8 @@ const SuperAdminLogin = () => {
             <button id="login" type='submit' className='text-white'>Login</button>
           </form>
           {remainingAttempts !== null && (
-              <p className="attempts-message text-secondary">Attempts remaining: {remainingAttempts}</p>
-            )}
+            <p className="attempts-message text-secondary">Attempts remaining: {remainingAttempts}</p>
+          )}
         </div>
       </div>
     </div>
