@@ -103,7 +103,7 @@ color: black;
 }
 
 /* Styles for mobile devices (max-width: 480px) */
-@media (max-width: 480px) {
+@media (min-width: 344px) and (max-width: 767px) {
 #card {
   width: 100vw;
   height: 100vh;
@@ -129,11 +129,13 @@ color: black;
   font-size: large;
   padding-bottom: 36px;
 }
-
+#ad-close {
+  margin-left: -120px;
+}
 }
 
 /* Styles for tablets (min-width: 481px and max-width: 768px) */
-@media (min-width: 481px) and (max-width: 768px) {
+@media (min-width: 768px) and (max-width: 1024px) {
 #card {
   width: 100vw;
   height: 100vh;
@@ -191,6 +193,13 @@ color: black;
   height: 150px;
   margin-top: 60px;
 }
+#ad-close {
+  color: white;
+  font-size: 30px;
+  position: absolute;
+  margin: 40px 0px 0px -280px;
+}
+
 }
 
 /* Styles for larger screens (min-width: 769px) */

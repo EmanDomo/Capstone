@@ -99,10 +99,23 @@ const authorizeRoles = (...roles) => {
         next();
     };
 };
+const superAdminLoginAttempts = {}; // Temporary in-memory store
+
 router.post('/SuperAdminLoginForm', (req, res) => { 
     const { username, password } = req.body;
 
-    const query = `SELECT * FROM tbl_superadmins WHERE username = ? AND password = ?`;
+    // Check if account is locked
+    if (superAdminLoginAttempts[username] && superAdminLoginAttempts[username].count >= 3) {
+        const remainingTime = (Date.now() - superAdminLoginAttempts[username].timestamp) / 1000;
+        if (remainingTime < 300) {
+            return res.status(403).json({ message: 'Account locked. Try again in 5 minutes.' });
+        } else {
+            // Reset attempts after 5 minutes
+            superAdminLoginAttempts[username] = { count: 0, timestamp: Date.now() };
+        }
+    }
+
+    const query = `SELECT * FROM tbl_superadmins WHERE username = ? AND BINARY password = ?`; // BINARY makes password case-sensitive
     conn.query(query, [username, password], (err, results) => {
         if (err) {
             console.error('Error executing query:', err.stack);
@@ -112,28 +125,61 @@ router.post('/SuperAdminLoginForm', (req, res) => {
         if (results.length > 0) {
             const user = results[0];
             const token = jwt.sign(
-                { userId: user.id, role: 'superadmin' }, // SuperAdmin role
+                { userId: user.id, role: 'superadmin' },
                 secretKey, 
                 { expiresIn: '1h' }
             );
-            
+
+            // Reset login attempts on successful login
+            if (superAdminLoginAttempts[username]) {
+                delete superAdminLoginAttempts[username];
+            }
+
             res.status(200).json({ 
                 message: 'SuperAdmin login successful', 
                 token, 
                 role: 'superadmin' 
             });
         } else {
-            res.status(401).json({ message: 'Invalid username or password' });
+            // Increment login attempt count
+            if (!superAdminLoginAttempts[username]) {
+                superAdminLoginAttempts[username] = { count: 1, timestamp: Date.now() };
+            } else {
+                superAdminLoginAttempts[username].count += 1;
+            }
+
+            // Calculate remaining attempts
+            const remainingAttempts = 3 - superAdminLoginAttempts[username].count;
+
+            if (remainingAttempts <= 0) {
+                superAdminLoginAttempts[username].timestamp = Date.now();
+                return res.status(403).json({ message: 'Account locked. Try again in 5 minutes.' });
+            } else {
+                // Send remaining attempts only if account is not locked
+                res.status(401).json({ message: 'Invalid username or password', remainingAttempts });
+            }
         }
     });
 });
 
-
 // Admin login
+const adminLoginAttempts = {}; // Temporary in-memory store for login attempts
+
 router.post('/LoginForm', (req, res) => { 
     const { username, password } = req.body;
 
-    const query = `SELECT * FROM tbl_admins WHERE username = ? AND password = ?`;
+    // Check if account is locked
+    if (adminLoginAttempts[username] && adminLoginAttempts[username].count >= 3) {
+        const remainingTime = (Date.now() - adminLoginAttempts[username].timestamp) / 1000;
+        if (remainingTime < 300) {
+            return res.status(403).json({ message: 'Account locked. Try again in 5 minutes.' });
+        } else {
+            // Reset attempts after 5 minutes
+            adminLoginAttempts[username] = { count: 0, timestamp: Date.now() };
+        }
+    }
+
+    const query = `SELECT * FROM tbl_admins WHERE username = ? AND BINARY password = ?`; // BINARY makes password case-sensitive
     conn.query(query, [username, password], (err, results) => {
         if (err) {
             console.error('Error executing query:', err.stack);
@@ -143,31 +189,62 @@ router.post('/LoginForm', (req, res) => {
         if (results.length > 0) {
             const user = results[0];
             const token = jwt.sign(
-                { userId: user.id, role: user.role }, // Include role in token
+                { userId: user.id, role: user.role },
                 secretKey, 
                 { expiresIn: '1h' }
             );
-            
-            // Send role with token so frontend can decide the redirection
+
+            // Reset login attempts on successful login
+            if (adminLoginAttempts[username]) {
+                delete adminLoginAttempts[username];
+            }
+
             res.status(200).json({ 
                 message: 'Login successful', 
                 token, 
                 role: user.role 
             });
         } else {
-            res.status(401).json({ message: 'Invalid username or password' });
+            // Initialize or increment login attempts
+            if (!adminLoginAttempts[username]) {
+                adminLoginAttempts[username] = { count: 1, timestamp: Date.now() };
+            } else {
+                adminLoginAttempts[username].count += 1;
+            }
+
+            // Calculate remaining attempts
+            const remainingAttempts = 3 - adminLoginAttempts[username].count;
+
+            if (remainingAttempts <= 0) {
+                adminLoginAttempts[username].timestamp = Date.now();
+                return res.status(403).json({ message: 'Account locked. Try again in 5 minutes.' });
+            } else {
+                // Send remaining attempts only if account is not locked
+                res.status(401).json({ message: 'Invalid username or password', remainingAttempts });
+            }
         }
     });
 });
 
-
+const loginAttempts = {}; // Temporary in-memory store
 
 // Customer login
 router.post('/UserLogin', (req, res) => {
     const { username, password } = req.body;
 
-    // Include gender in the query
-    const query = 'SELECT name, userId, gender FROM tbl_users WHERE username = ? AND password = ?';
+    // Check if account is locked
+    if (loginAttempts[username] && loginAttempts[username].count >= 3) {
+        const remainingTime = (Date.now() - loginAttempts[username].timestamp) / 1000;
+        if (remainingTime < 300) {
+            return res.status(403).json({ message: 'Account locked. Try again in 5 minutes.' });
+        } else {
+            // Reset attempts after 5 minutes
+            loginAttempts[username] = { count: 0, timestamp: Date.now() };
+        }
+    }
+
+    // Query with case-sensitive password
+    const query = 'SELECT name, userId, gender FROM tbl_users WHERE username = ? AND BINARY password = ?';
     
     conn.query(query, [username, password], (err, results) => {
         if (err) {
@@ -176,19 +253,39 @@ router.post('/UserLogin', (req, res) => {
         }
 
         if (results.length > 0) {
-            const { name, userId, gender } = results[0]; // Destructure the result to get gender as well
+            const { name, userId, gender } = results[0];
 
-            // Include gender in the JWT token payload
-            const token = jwt.sign({ userId, name, gender, role: 'customer' }, secretKey, { expiresIn: '1h' }); 
-            
+            // Create the token with gender information
+            const token = jwt.sign({ userId, name, gender, role: 'customer' }, secretKey, { expiresIn: '1h' });
+
+            // Reset login attempts on successful login
+            if (loginAttempts[username]) {
+                delete loginAttempts[username];
+            }
+
             res.status(200).json({ message: 'Login successful', token });
         } else {
-            res.status(401).json({ message: 'Invalid username or password' });
+            // Initialize or increment login attempts
+            if (!loginAttempts[username]) {
+                loginAttempts[username] = { count: 1, timestamp: Date.now() };
+            } else {
+                loginAttempts[username].count += 1;
+            }
+
+            // Calculate remaining attempts
+            const remainingAttempts = 3 - loginAttempts[username].count;
+
+            if (remainingAttempts <= 0) {
+                // Lock the account and do not include remaining attempts
+                loginAttempts[username].timestamp = Date.now();
+                return res.status(403).json({ message: 'Account locked. Try again in 5 minutes.' });
+            } else {
+                // Send remaining attempts when the account is not locked
+                res.status(401).json({ message: 'Invalid username or password', remainingAttempts });
+            }
         }
     });
 });
-
-
 
 // img storage confing
 var imgconfig = multer.diskStorage({
@@ -569,9 +666,6 @@ router.get('/getstock', authenticateToken, authorizeRoles('superadmin', 'superad
     });
 });
 
-
-
-//add to cart, customer role
 router.post('/add-to-cart', authenticateToken, authorizeRoles('customer'), (req, res) => {
     const userId = req.user.userId;
     const { itemId, quantity } = req.body;
@@ -621,6 +715,8 @@ router.post('/add-to-cart', authenticateToken, authorizeRoles('customer'), (req,
     );
 });
 
+
+
 router.post('/add-to-pos', authenticateToken, authorizeRoles('admin'), (req, res) => {
     const userId = req.user.userId; // This refers to adminId, based on tbl_pos
     const { itemId, quantity } = req.body;
@@ -669,7 +765,6 @@ router.post('/add-to-pos', authenticateToken, authorizeRoles('admin'), (req, res
         }
     );
 });
-
 
 
 //cart, customer role
@@ -787,7 +882,6 @@ router.post('/remove-pos-item', authenticateToken, authorizeRoles('admin'), (req
     );
 });
 
-
 // Update cart item quantity
 router.post('/update-cart', authenticateToken, authorizeRoles('customer'), (req, res) => {
     const userId = req.user.userId;
@@ -827,6 +921,7 @@ router.post('/update-cart', authenticateToken, authorizeRoles('customer'), (req,
         }
     );
 });
+
 
 router.post('/update-pos', authenticateToken, authorizeRoles('admin'), (req, res) => {
     const userId = req.user.userId;  // This refers to adminId in tbl_pos
@@ -1980,6 +2075,8 @@ router.post('/Register', (req, res) => {
     });
   });
   
+
+
 
 
 module.exports = router;

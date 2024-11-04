@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import '../../styles/SuperAdmin.css';
 import { FaUser, FaLock } from 'react-icons/fa';
@@ -9,6 +10,7 @@ import { FaArrowLeft } from "react-icons/fa6";
 const SuperAdminLogin = () => {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState('');
+  const [remainingAttempts, setRemainingAttempts] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePasswordVisibility = () => {
@@ -37,6 +39,13 @@ const SuperAdminLogin = () => {
       } else {
         const errorData = await response.json();
         setErrorMessage(errorData.message);
+
+        // Only set remainingAttempts if it exists in the response
+        if (errorData.remainingAttempts !== undefined) {
+          setRemainingAttempts(errorData.remainingAttempts);
+        } else {
+          setRemainingAttempts(null); // Clear attempts if account is locked
+        }
       }
     } catch (error) {
       console.error(error);
@@ -67,8 +76,11 @@ const SuperAdminLogin = () => {
                 <IoMdEye className="icon3" id="showPass" onClick={togglePasswordVisibility} />
               )}
             </div>
-            <button id="login" type='submit'>Login</button>
+            <button id="login" type='submit' className='text-white'>Login</button>
           </form>
+          {remainingAttempts !== null && (
+              <p className="attempts-message text-secondary">Attempts remaining: {remainingAttempts}</p>
+            )}
         </div>
       </div>
     </div>

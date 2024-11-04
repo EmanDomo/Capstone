@@ -18,6 +18,16 @@ font-size: larger !important;
 margin-left: 20px !important;
 }
 
+.confirm-logout {
+  background-color: hotpink;
+  border: none;
+  width: 25%;
+}
+
+.cancel-logout {
+  width: 25%;
+}
+
 .navlink-admin:hover {
 color: white !important;
 }

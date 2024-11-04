@@ -9,6 +9,7 @@ import { FaArrowLeft } from "react-icons/fa6";
 const Login = () => {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState('');
+  const [remainingAttempts, setRemainingAttempts] = useState(null);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -18,10 +19,10 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
+  
     const username = e.target.elements.username.value;
     const password = e.target.elements.password.value;
-
+  
     try {
       const response = await fetch('http://localhost:3000/UserLogin', {
         method: 'POST',
@@ -30,7 +31,7 @@ const Login = () => {
         },
         body: JSON.stringify({ username, password }),
       });
-
+  
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('token', data.token); // Store the token in local storage
@@ -38,11 +39,19 @@ const Login = () => {
       } else {
         const errorData = await response.json();
         setErrorMessage(errorData.message);
+  
+        // Only display remaining attempts if they are included in the response
+        if (errorData.remainingAttempts !== undefined) {
+          setRemainingAttempts(errorData.remainingAttempts);
+        } else {
+          setRemainingAttempts(null); // Clear attempts if account is locked
+        }
       }
     } catch (error) {
       console.error(error);
     }
   };
+  
 
   const handleRegister = () => {
     navigate('/register');
@@ -77,9 +86,14 @@ const Login = () => {
           <button id="login2" className="text-white" type='submit'>Login</button>
 
           <div className='register-link'>
+          {remainingAttempts !== null && (
+            <p className="attempts-message text-secondary">Attempts remaining: {remainingAttempts}</p>
+          )}
+
             <p>
               Don't have an account? <a id="stud-register" onClick={handleRegister}>Register</a>
             </p>
+            
           </div>
         </form>
         </div>

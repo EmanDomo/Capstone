@@ -10,10 +10,7 @@ import { Table, Container, Alert } from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { FaPlus, FaMinus, FaTrash } from 'react-icons/fa';
-import { useRef } from 'react';
-import { IoMdExit } from "react-icons/io";
 import { MdOutlineLogin } from "react-icons/md";
-
 
 function Header() {
     const [data, setData] = useState([]);
@@ -26,6 +23,7 @@ function Header() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -182,6 +180,14 @@ function Header() {
         setOpenLinks(!openLinks);
     };
 
+    const handleLogoutShow = () => setShowLogoutConfirm(true);
+    const handleLogoutClose = () => setShowLogoutConfirm(false);
+
+    const handleLogoutConfirm = () => {
+        localStorage.removeItem('token');
+        navigate('/');
+    };
+
     return (
         <>
             <Navbar expand="lg" sticky="top" className="bg-body-tertiary customer-nav">
@@ -206,10 +212,9 @@ function Header() {
                             <Nav.Link onClick={handleCartShow} className='text-white'>My Cart</Nav.Link>
                             <Nav.Link onClick={handleOrdersShow} className='text-white'> My Orders </Nav.Link>
                             <div className="d-flex">
-                                <Nav.Link href="/" className='text-white ms-0 d-lg-block d-sm-none fs-4 logout-customer'> <MdOutlineLogin /> </Nav.Link>
-                                <Nav.Link href="/" className='text-white ms-2 d-lg-none d-sm-block'> Logout </Nav.Link>
+                                <Nav.Link onClick={handleLogoutShow} className='text-white ms-0 d-lg-block d-sm-block fs-4 logout-customer'> <MdOutlineLogin /> </Nav.Link>
+                                <Nav.Link onClick={handleLogoutShow} className='text-white ms-2 d-lg-none d-sm-block'> Logout </Nav.Link>
                             </div>
-
                         </Nav>  
                     </Navbar.Collapse>
                 </Container>
@@ -236,7 +241,7 @@ function Header() {
                                     <td className='text-center'>
                                         <div className='d-flex justify-content-between checkOut-container'>                                         
                                             <Button variant='outline-primary' className='quantity-buttonmin' size='sm' onClick={() => handleDecreaseQuantity(item.itemId)}>-</Button>
-                                            <label htmlFor="" className='px-1 py-1'>{item.quantity}</label>
+                                            <label className='px-1 py-1'>{item.quantity}</label>
                                             <Button variant='outline-primary' className='quantity-buttonadd' size='sm' onClick={() => handleIncreaseQuantity(item.itemId)}>+</Button>
                                         </div>
                                     </td>
@@ -254,9 +259,9 @@ function Header() {
                     </tbody>
                 </Table>
                 <Modal.Footer>
-                  <Button variant="dark" className='customer-cart'  onClick={handleCheckout} disabled={cartItems.length === 0}>
-                      Checkout
-                  </Button>
+                    <Button variant="dark" className='customer-cart' onClick={handleCheckout} disabled={cartItems.length === 0}>
+                        Checkout
+                    </Button>
                 </Modal.Footer>
             </Modal>
 
@@ -286,7 +291,7 @@ function Header() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {orders.map((order, index) => (
+                                    {orders.map((order) => (
                                         <tr key={order.orderId}>
                                             <td className='text-center'>{order.orderNumber}</td>
                                             <td>{order.itemname}</td>
@@ -310,6 +315,21 @@ function Header() {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="dark" onClick={handleOrdersClose}>Close</Button>
+                </Modal.Footer>
+            </Modal>
+
+            <Modal show={showLogoutConfirm} onHide={handleLogoutClose} dialogClassName="fullscreen-modal">
+                <Modal.Header closeButton>
+                    <Modal.Title className='text-danger'>Confirm Logout</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>Are you sure you want to log out?</Modal.Body>
+                <Modal.Footer className="d-flex justify-content-between">
+                    <Button variant="dark cancel-logout" onClick={handleLogoutClose}>
+                        Cancel
+                    </Button>
+                    <Button variant="dark confirm-logout" onClick={handleLogoutConfirm}>
+                        Yes
+                    </Button>
                 </Modal.Footer>
             </Modal>
         </>

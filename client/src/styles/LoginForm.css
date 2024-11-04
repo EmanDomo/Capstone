@@ -102,7 +102,7 @@ color: black;
 }
 
 /* Styles for mobile devices (max-width: 480px) */
-@media (max-width: 480px) {
+@media (min-width: 344px) and (max-width: 767px) {
 #card-cashier {
   width: 100vw;
   height: 100vh;
@@ -127,7 +127,9 @@ color: black;
   border-radius: 30px;
   font-size: large;
 }
-
+#ad-close-cashier {
+  margin-left: -120px;
+}
 }
 
 /* Styles for tablets (min-width: 481px and max-width: 768px) */

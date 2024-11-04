@@ -4,11 +4,10 @@ import { MdOutlineLogin } from "react-icons/md";
 import { FaTrash } from 'react-icons/fa';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode'; // Updated import
+import { jwtDecode } from 'jwt-decode'; 
 import Logo1 from "../../Assets/logo.png";
 import "../../styles/HeaderCashier.css";
 import { IoCartOutline } from "react-icons/io5";
-
 
 function Header1() {
   const [data, setData] = useState([]);
@@ -21,6 +20,9 @@ function Header1() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isToastVisible, setIsToastVisible] = useState(false);
+  
+  // State for logout confirmation modal
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   
   const navigate = useNavigate();
 
@@ -179,6 +181,11 @@ function Header1() {
     setShowCart(false);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/'); // Redirect to login or home page
+  };
+
   return (
     <>
       <Navbar expand="lg" sticky="top" className="bg-body-tertiary admin-nav">
@@ -193,19 +200,34 @@ function Header1() {
               <Nav.Link href="/pos" className='text-white'>POS</Nav.Link>
               <Nav.Link href="/orders" className='text-white'>Orders</Nav.Link>
               <div className="d-flex">
-                <Nav.Link onClick={handleCartShow} className='text-white ms-0 d-lg-block fs-4 logout-cashier'><IoCartOutline /></Nav.Link>
+                <Nav.Link onClick={handleCartShow} className='text-white ms-0 d-lg-none d-sm-block fs-4 logout-cashier'><IoCartOutline /></Nav.Link>
                 <Nav.Link onClick={handleCartShow} className='text-white ms-2 d-lg-none d-sm-block'>My Cart</Nav.Link>
               </div>
               <div className="d-flex">
-                <Nav.Link href="/" className='text-white ms-0 d-lg-block fs-4 logout-cashier'><MdOutlineLogin /></Nav.Link>
-                <Nav.Link href="/" className='text-white ms-2 d-lg-none d-sm-block'>Logout</Nav.Link>
+                <Nav.Link onClick={() => setShowLogoutModal(true)} className='text-white ms-0 d-lg-block fs-4 logout-cashier'><MdOutlineLogin /></Nav.Link>
+                <Nav.Link onClick={() => setShowLogoutModal(true)} className='text-white ms-2 d-lg-none d-sm-block'>Logout</Nav.Link>
               </div>
-             
             </Nav>
           </Navbar.Collapse>
         </Container>
       </Navbar>
-      
+
+      {/* Logout Confirmation Modal */}
+      <Modal show={showLogoutModal} onHide={() => setShowLogoutModal(false)} dialogClassName="fullscreen-modal">
+        <Modal.Header closeButton>
+          <Modal.Title className='text-danger'>Confirm Logout</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure you want to logout?</Modal.Body>
+        <Modal.Footer className="d-flex justify-content-between">
+          <Button variant="dark cancel-logout" onClick={() => setShowLogoutModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="dark confirm-logout" onClick={handleLogout}>
+            Yes
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       <Modal show={showCart} onHide={handleCartClose} dialogClassName="fullscreen-modal">
         <Modal.Header closeButton>
           <Modal.Title className='cart-title'>Cart Items</Modal.Title>
@@ -226,6 +248,7 @@ function Header1() {
                   <td>{item.itemname}</td>
                   <td className='text-center'>
                     <div className='d-flex justify-content-between checkOut-container'>                                         
+
                       <Button variant='outline-primary' className='quantity-buttonmin' size='sm' onClick={() => handleDecreaseQuantity(item.itemId)}>-</Button>
                       <label className='px-1 py-1'>{item.quantity}</label>
                       <Button variant='outline-primary' className='quantity-buttonadd' size='sm' onClick={() => handleIncreaseQuantity(item.itemId)}>+</Button>
@@ -250,7 +273,7 @@ function Header1() {
           </Button>
         </Modal.Footer>
       </Modal>
-      
+
       <div className="position-fixed bottom-0 end-0 p-3">
         <Row>
           <Col xs={12}>

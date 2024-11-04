@@ -39,7 +39,7 @@
 }
 
 .order-list-container {
-    max-height: 600px;
+    height: 600px;
     overflow-y: auto;
     overflow-x: hidden;
     width: 100%;
@@ -200,5 +200,8 @@
     .ordersd{
         box-shadow: none;
         height: 100%;
+    }
+    .order-list-container {
+        height: 900px;
     }
 }

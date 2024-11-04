@@ -479,7 +479,7 @@ const Inventory = () => {
                                 value={fname}
                                 onChange={(e) => setFName(e.target.value)}
                                 className='form-item-name'
-                            />
+                            required/>
                         </Form.Group>
 
                         <Form.Group className="mb-3" controlId="formItemPrice">
@@ -490,7 +490,7 @@ const Inventory = () => {
                                 value={price}
                                 onChange={(e) => setItemPrice(e.target.value)}
                                 className='form-item-price'
-                            />
+                            required/>
                         </Form.Group>
 
 
@@ -501,7 +501,7 @@ const Inventory = () => {
                                 value={category}
                                 onChange={(e) => setCategoryName(e.target.value)}
                                 className='form-item-category'
-                            >
+                            required>
                                 <option value="">Select Category</option>
                                 {categories.map((cat, i) => (
                                     <option key={i} value={cat.category_name}>{cat.category_name}</option>
@@ -518,10 +518,12 @@ const Inventory = () => {
                                     value={newCategory}
                                     onChange={(e) => setNewCategory(e.target.value)}
                                     className='form-new-category'
-                                />
-                                <Button variant="secondary" onClick={addCategory} className='add-category-btn'>
-                                    Add Category
-                                </Button>
+                                required/>
+                                <div className='pt-3 d-flex justify-content-end'>
+                                    <Button variant="dark" onClick={addCategory} className='add-category-btn'>
+                                        Add Category
+                                    </Button>
+                                </div>
                             </Form.Group>
                         )}
 
@@ -532,7 +534,7 @@ const Inventory = () => {
                                 value={selectedIngredient}
                                 onChange={handleIngredientSelection}
                                 className='form-item-ingredient'
-                            >
+                            required>
                                 <option>Select Ingredient</option>
                                 {ingredients.map((ingredient, i) => (
                                     <option key={i} value={ingredient.stock_item_name}>
@@ -551,7 +553,7 @@ const Inventory = () => {
                                         value={ingredientQuantity}
                                         onChange={(e) => setIngredientQuantity(e.target.value)}
                                         className='form-ingredient-quantity'
-                                    />
+                                    required/>
                                 </Form.Group>
 
                                 <Form.Group className="mb-3" controlId="formIngredientUnit">
@@ -573,19 +575,19 @@ const Inventory = () => {
 
                         {selectedIngredients.length > 0 && (
                             <div className="ingredients-list">
-                                <h5>Added Ingredients</h5>
+                                <h5 className='p-1 text-center added-ing-title'>Added Ingredients</h5>
                                 <Table responsive className='table-ingredients'>
-                                    <tr>
-                                        <th>Ingredient Name</th>
-                                        <th className='ing-th'>Quantity & Unit</th>
-                                        <th className='ing-th1'>Action</th>
+                                    <tr className='p-1'>
+                                        <th className='p-2'>Ingredient Name</th>
+                                        <th className='ing-th p-2'>Quantity & Unit</th>
+                                        <th className='ing-th1 p-2'>Action</th>
                                     </tr>
                                     {selectedIngredients.map((ingredient, index) => (
                                         <tr key={index}>
 
-                                            <td>{ingredient.name}</td>
-                                            <td className='ing-td'>{ingredient.quantity} {ingredient.unit}</td>
-                                            <td><button type="button" className="btn-remove-ingredient" onClick={() => removeIngredient(index)}><IoTrashOutline /></button></td>
+                                            <td className='p-2'>{ingredient.name}</td>
+                                            <td className='ing-td p-2'>{ingredient.quantity} {ingredient.unit}</td>
+                                            <td className='text-center'><button type="button" className="btn-remove-ingredient" onClick={() => removeIngredient(index)}><IoTrashOutline /></button></td>
                                         </tr>
                                     ))}
                                 </Table>
@@ -599,7 +601,7 @@ const Inventory = () => {
                                 name="photo"
                                 onChange={(e) => setFile(e.target.files[0])}
                                 className='form-item-image'
-                            />
+                            required/>
                         </Form.Group>
                     </Form>
                 </Modal.Body>
@@ -607,7 +609,7 @@ const Inventory = () => {
                     {/* <Button className="bg-black" onClick={handleClose}>
                         Close
                     </Button> */}
-                    <Button className="food-save" onClick={addUserData}>
+                    <Button className="food-save" variant="dark" onClick={addUserData}>
                         Save Changes
                     </Button>
                 </Modal.Footer>

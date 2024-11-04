@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import '../../styles/LoginForm.css';
 import { FaUser, FaLock } from 'react-icons/fa';
@@ -9,7 +10,7 @@ import { FaArrowLeft } from "react-icons/fa6";
 const Login = () => {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState('');
-
+  const [remainingAttempts, setRemainingAttempts] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePasswordVisibility = () => {
@@ -24,21 +25,27 @@ const Login = () => {
 
     try {
       const response = await fetch('http://localhost:3000/LoginForm', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({ username, password }),
-});
-
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('token', data.token); // Store the token in local storage
-        navigate('/pos');
+        navigate('/pos'); // Redirect to POS dashboard
       } else {
         const errorData = await response.json();
         setErrorMessage(errorData.message);
+
+        // Only set remainingAttempts if it exists in the response
+        if (errorData.remainingAttempts !== undefined) {
+          setRemainingAttempts(errorData.remainingAttempts);
+        } else {
+          setRemainingAttempts(null); // Clear attempts if account is locked
+        }
       }
     } catch (error) {
       console.error(error);
@@ -71,23 +78,11 @@ const Login = () => {
                 <IoMdEye className="icon3-cashier" id="showPass" onClick={togglePasswordVisibility} />
               )}
           </div>
-
-          {/* <div className='remember-forgot'>
-            <label>
-              <input type='checkbox' />
-              Remember me
-            </label>
-            <a href='#'>Forgot password?</a>
-          </div> */}
-
           <button id="login-cashier" className='text-white' type='submit'>Login</button>
-
-          {/* <div className='register-link'>
-            <p>
-              Don't have an account?<a href='#'>Register</a>
-            </p>
-          </div> */}
         </form>
+          {remainingAttempts !== null && (
+              <p className="attempts-message text-secondary">Attempts remaining: {remainingAttempts}</p>
+            )}
         </div>
       </div>
     </div>

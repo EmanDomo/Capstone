@@ -354,15 +354,16 @@ const POS = () => {
                         </div>
                         <div className="col-5 d-flex px-2 py-2 flex-row-reverse">
                         <DropdownButton id="category-dropdown" title={selectedCategory}>
-                            <Dropdown.Item onClick={() => {handleCategorySelect('Show All'); handleShowAll();}}>Show All</Dropdown.Item>
+                            <Dropdown.Item onClick={() => { handleCategorySelect('Show All'); handleShowAll(); }}>
+                                Show All
+                            </Dropdown.Item>
                             {categories.map((cat, i) => (
-                                <Dropdown.Item key={i} onClick={() => handleCategoryClick(cat.category_name)}>
+                                <Dropdown.Item key={i} onClick={() => handleCategorySelect(cat.category_name)}>
                                     {cat.category_name}
                                 </Dropdown.Item>
                             ))}
                         </DropdownButton>
-                        </div>
-                          
+                    </div>         
                     </div>
                             <div className="pos-content">
                             <Row xs={2} md={4} lg={4} className="g-2">

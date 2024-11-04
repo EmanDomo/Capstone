@@ -164,10 +164,9 @@ const Orders = () => {
                         <Row xs={2} md={4} lg={6} className="g-4 mb-5 pb-5 px-2">
                             {Object.entries(groupedOrders).map(([orderId, orderGroup]) => (
                                 <Col key={orderId}>
-                                    <Card className="order-card">
+                                    <Card className="order-card" onClick={() => handleShowOrderModal(orderGroup)}>
                                         <Card.Header className="order-card-header d-flex justify-content-between text-black">
-                                            <strong htmlFor="">Order #</strong>
-                                            
+                                            <strong htmlFor="">Order #</strong>        
                                             <OverlayTrigger
                                             placement="bottom"
                                             delay={{ show: 200, hide: 200 }}
@@ -196,49 +195,50 @@ const Orders = () => {
                 {selectedOrderGroup && (
                    <Modal show={showOrderModal} onHide={handleCloseOrderModal} dialogClassName="fullscreen-modal">
                    <Modal.Header closeButton>
-                       <Modal.Title className='modalorder'>Order Summary</Modal.Title>
+                       <Modal.Title className='modalorder'>Order #: {selectedOrderGroup[0].orderNumber}</Modal.Title>
                    </Modal.Header>
-                   <Modal.Body>
-                       <div className='d-flex justify-content-between'>
-                           <div><h5>User:</h5></div>
-                           <div><label className='text-secondary'>{selectedOrderGroup[0].userName}</label></div>
-                       </div>     
-                       <div className="order-items-list">
-                           <Table>
-                               <thead>
-                                   <tr>
-                                       <th className='text-center'>Name</th>
-                                       <th className='text-center'>Quantity</th>
-                                       <th className='text-center'>Amount</th>
-                                   </tr>
-                               </thead>
-                               <tbody>
-                                   {Object.values(selectedOrderGroup.reduce((acc, order) => {
-                                       if (!acc[order.itemname]) {
-                                           acc[order.itemname] = {
-                                               itemname: order.itemname,
-                                               quantity: 0,
-                                               totalPrice: 0
-                                           };
-                                       }
-                                       acc[order.itemname].quantity += order.quantity;
-                                       acc[order.itemname].totalPrice += order.price * order.quantity;
-                                       return acc;
-                                   }, {})).map((groupedItem, index) => (
-                                       <tr key={index}>
-                                           <td>{groupedItem.itemname}</td>
-                                           <td className='text-center'>{groupedItem.quantity}</td>
-                                           <td className='text-center'>₱{groupedItem.totalPrice.toFixed(2)}</td>
-                                       </tr>
-                                   ))}
-                               </tbody>
-                           </Table>
-                       </div>
-                       <div className="d-flex justify-content-between">
-                           <h6>Total Amount:</h6>
-                           <strong className="col-7 d-flex justify-content-end">₱{calculateTotal().toFixed(2)}</strong>
-                       </div>
-                   </Modal.Body>
+                   <Modal.Body>          
+                        <div className='d-flex justify-content-between'>
+                            <div><h5>User:</h5></div>
+                            <div><label className='text-secondary'>{selectedOrderGroup[0].userName}</label></div>
+                        </div>
+                        <div className="order-items-list">
+                            <Table>
+                                <thead>
+                                    <tr>
+                                        <th className='text-center'>Name</th>
+                                        <th className='text-center'>Quantity</th>
+                                        <th className='text-center'>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Object.values(selectedOrderGroup.reduce((acc, order) => {
+                                        if (!acc[order.itemname]) {
+                                            acc[order.itemname] = {
+                                                itemname: order.itemname,
+                                                quantity: 0,
+                                                totalPrice: 0
+                                            };
+                                        }
+                                        acc[order.itemname].quantity += order.quantity;
+                                        acc[order.itemname].totalPrice += order.price * order.quantity;
+                                        return acc;
+                                    }, {})).map((groupedItem, index) => (
+                                        <tr key={index}>
+                                            <td>{groupedItem.itemname}</td>
+                                            <td className='text-center'>{groupedItem.quantity}</td>
+                                            <td className='text-center'>₱{groupedItem.totalPrice.toFixed(2)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        </div>
+                        <div className="d-flex justify-content-between">
+                            <h6>Total Amount:</h6>
+                            <strong className="col-7 d-flex justify-content-end">₱{calculateTotal().toFixed(2)}</strong>
+                        </div>
+                    </Modal.Body>
+
                    <Modal.Footer className='d-flex justify-content-between'>
                        <Button variant="dark" onClick={() => handleShowCancelModal(selectedOrderGroup[0].orderId)}>
                            Cancel Order
@@ -274,43 +274,23 @@ const Orders = () => {
                         </Button>
                     </Modal.Footer>
                 </Modal>
-
-                {/* Confirmation Modal */}
-                {/* <Modal show={showConfirmationModal} onHide={() => setShowConfirmationModal(false)}>
-                    <Modal.Header closeButton>
-                        <Modal.Title>Order Complete</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body className="confirmation-modal-body">
-                        <div className="checkmark-animation">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-                            </svg>
-                        </div>
-                        <p>Order has been successfully completed!</p>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button variant="secondary" onClick={() => setShowConfirmationModal(false)}>
-                            Close
-                        </Button>
-                    </Modal.Footer>
-                </Modal> */}
-                        <div className="position-fixed bottom-0 end-0 p-3">
-            <Row>
-                <Col xs={12}>
-                <Toast onClose={toggleToast} show={isToastVisible} delay={3000} autohide>
-                    <Toast.Header>
-                    <strong className="me-auto">Order Complete</strong>
-                    <small>Just now</small>
-                    </Toast.Header>
-                    <Toast.Body className="confirmation-toast-body">
-                    <p>Checkout completed!</p>
-                    </Toast.Body>
-                </Toast>
-                </Col>
-            </Row>
-            </div>
-            </div>
-        </div>
+                <div className="position-fixed bottom-0 end-0 p-3">
+                    <Row>
+                        <Col xs={12}>
+                        <Toast onClose={toggleToast} show={isToastVisible} delay={3000} autohide>
+                            <Toast.Header>
+                            <strong className="me-auto text-success">Order Complete</strong>
+                            <small>Just now</small>
+                            </Toast.Header>
+                            <Toast.Body className="confirmation-toast-body">
+                            <p>Checkout completed!</p>
+                            </Toast.Body>
+                        </Toast>
+                        </Col>
+                    </Row>
+                    </div>
+                    </div>
+                </div>
     );
 };
 
