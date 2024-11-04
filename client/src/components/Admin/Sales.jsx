@@ -112,6 +112,7 @@ const Sales = () => {
         };
         fetchSalesData();
     }, [filter, token, cashier1Total, cashier2Total]);
+    
     const generatePDF = () => {
         const doc = new jsPDF();
     
@@ -126,7 +127,13 @@ const Sales = () => {
         doc.setFontSize(12);
         doc.setFont("helvetica", "normal");
         const tableColumn = ["Sale ID", "Order Number", "Username", "Total Amount", "Sale Date", "Item Name", "Quantity"];
-        const tableRows = salesData.map(sale => [
+        
+        // Filter sales data based on selected cashier and date filter
+        let filteredSalesData = salesData;
+        if (selectedCashier !== 'all') {
+            filteredSalesData = selectedCashier === 'cashier1' ? cashier1Sales : cashier2Sales;
+        }
+        const tableRows = filteredSalesData.map(sale => [
             sale.saleId,
             sale.orderNumber,
             sale.userName,
@@ -165,48 +172,6 @@ const Sales = () => {
             startY: doc.lastAutoTable.finalY + 10,
             theme: 'grid',
             headStyles: { fillColor: [169, 204, 227], fontStyle: 'bold' },
-        });
-    
-        // Cashier 1 Sales table
-        doc.text('Cashier 1 Sales', 14, doc.lastAutoTable.finalY + 10);
-        const cashier1Columns = ["Sale ID", "Order Number", "Username", "Total Amount", "Sale Date", "Item Name", "Quantity"];
-        const cashier1Rows = cashier1Sales.map(sale => [
-            sale.saleId,
-            sale.orderNumber,
-            sale.userName,
-            `₱${sale.totalAmount}`,
-            new Date(sale.saleDate).toLocaleDateString(),
-            sale.itemname,
-            sale.quantity
-        ]);
-    
-        doc.autoTable({
-            head: [cashier1Columns],
-            body: cashier1Rows,
-            startY: doc.lastAutoTable.finalY + 10,
-            theme: 'striped',  // Alternating row colors for readability
-            headStyles: { fillColor: [123, 239, 178], fontStyle: 'bold' },
-        });
-    
-        // Cashier 2 Sales table
-        doc.text('Cashier 2 Sales', 14, doc.lastAutoTable.finalY + 10);
-        const cashier2Columns = ["Sale ID", "Order Number", "Username", "Total Amount", "Sale Date", "Item Name", "Quantity"];
-        const cashier2Rows = cashier2Sales.map(sale => [
-            sale.saleId,
-            sale.orderNumber,
-            sale.userName,
-            `₱${sale.totalAmount}`,
-            new Date(sale.saleDate).toLocaleDateString(),
-            sale.itemname,
-            sale.quantity
-        ]);
-    
-        doc.autoTable({
-            head: [cashier2Columns],
-            body: cashier2Rows,
-            startY: doc.lastAutoTable.finalY + 10,
-            theme: 'striped',
-            headStyles: { fillColor: [249, 231, 159], fontStyle: 'bold' },
         });
     
         // Footer with total sales earned and page numbers
@@ -438,7 +403,7 @@ useEffect(() => {
 
         );
     };
-
+    
     const [selectedSales, setSelectedSales] = useState('dashboard');
 
     const handleTabSelect = (key) => {

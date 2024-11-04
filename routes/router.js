@@ -530,16 +530,29 @@ router.delete("/:id", authenticateToken, authorizeRoles('admin'), (req, res) => 
 
 router.get("/get-menu-data", authenticateToken, authorizeRoles('admin', 'customer'), (req, res) => {
     try {
-        conn.query("SELECT * FROM tbl_items", (err, result) => {
+        conn.query(`
+            SELECT 
+                tbl_items.id, 
+                tbl_items.itemname, 
+                tbl_items.img, 
+                tbl_items.price, 
+                MIN(IFNULL(FLOOR(tbl_stocks.stock_quantity / tbl_item_ingredients.quantity_required), 0)) AS max_meals
+            FROM tbl_items
+            LEFT JOIN tbl_item_ingredients ON tbl_items.id = tbl_item_ingredients.item_id
+            LEFT JOIN tbl_stocks ON tbl_item_ingredients.stock_id = tbl_stocks.stockId
+            GROUP BY tbl_items.id;
+        `, (err, result) => {
             if (err) {
-                console.log("error");
+                console.error("Error fetching data:", err);
+                res.status(500).json({ status: 500, message: "Internal server error" });
             } else {
-                console.log("data get -- pag eto nag infinite loop pa, mababaliw na ako");
-                res.status(201).json({ status: 201, data: result });
+                console.log("Data fetched successfully.");
+                res.status(200).json({ status: 201, data: result });
             }
         });
     } catch (error) {
-        res.status(422).json({ status: 422, error });
+        console.error("Unexpected error:", error);
+        res.status(500).json({ status: 500, message: "Unexpected server error" });
     }
 });
 router.get("/top-selling", authenticateToken, authorizeRoles('customer'), (req, res) => {
