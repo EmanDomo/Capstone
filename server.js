@@ -1,9 +1,10 @@
+require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
 const app = express();
+require('./routes/conn');
+const cors = require('cors');
 const router = require('./routes/router');
 const port = 8004;
-require("dotenv").config();
 
 const corsOptions = {
     origin: procress.env.CORS_ORIGIN, // your local frontend URL
