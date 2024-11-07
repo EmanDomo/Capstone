@@ -71,7 +71,7 @@ const Checkout = () => {
     };
 
     const handleComplete = () => {
-        navigate('/success', {
+        navigate(`${host}/success`, {
             state: { cartItems, selectedFile, overallTotal, orderId: location.state.orderId },
         });
     };

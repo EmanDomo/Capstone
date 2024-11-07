@@ -1,18 +1,25 @@
-
-import React, { useState } from 'react';
-import '../../styles/SuperAdmin.css';
-import { FaUser, FaLock } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import Button from 'react-bootstrap/Button';
+import Card from 'react-bootstrap/Card';
+import CloseButton from 'react-bootstrap/CloseButton';  
+import '../../styles/Login.css';
+import { useNavigate } from "react-router-dom";
 import Logo from "../../Assets/logo.png";
-import { IoMdEye, IoMdEyeOff } from "react-icons/io";
-import { FaArrowLeft } from "react-icons/fa6";
+import Form from 'react-bootstrap/Form';
+import InputGroup from 'react-bootstrap/InputGroup';
+import { IoMdPerson } from "react-icons/io";
+import { FaUnlock } from "react-icons/fa";
+import { FaRegEye } from "react-icons/fa";
+import { FaRegEyeSlash } from "react-icons/fa";
+import React, { useState, useRef } from 'react';
 import { host } from '../../apiRoutes';
+
 
 const SuperAdminLogin = () => {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState('');
   const [remainingAttempts, setRemainingAttempts] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const formRef = useRef(null);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -21,8 +28,9 @@ const SuperAdminLogin = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    const username = e.target.elements.username.value;
-    const password = e.target.elements.password.value;
+    const username = formRef.current.username.value;  // Access input values from formRef
+    const password = formRef.current.password.value;
+
 
     try {
       const response = await fetch(`${host}/SuperAdminLoginForm`, {
@@ -36,7 +44,7 @@ const SuperAdminLogin = () => {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('token', data.token); // Store the token in local storage
-        navigate('/inventory'); // Redirect to SuperAdmin dashboard
+        navigate('/inventory'); // Redirect to POS dashboard
       } else {
         const errorData = await response.json();
         setErrorMessage(errorData.message);
@@ -54,36 +62,82 @@ const SuperAdminLogin = () => {
   };
 
   return (
-    <div>
-      <div id="card">
-        <div id="logo-container">
-          <FaArrowLeft id='ad-close' onClick={() => navigate('/')} />
-          <img src={Logo} id="logo" alt="logo" />
-        </div>
-        <div className="inpt">
-          <form onSubmit={handleLogin}>
-            {errorMessage && <p id='errormsg'>{errorMessage}</p>}
-            <div className="input-box" id="inputbx">
-              <h6 id='lblSuperAdminLogin'>Admin Login</h6>
-              <FaUser className="icon" />
-              <input type='text' name='username' id="input-admin" placeholder='Username' required />
-            </div>
-            <div className="input-box">
-              <FaLock className="icon" />
-              <input type={showPassword ? "text" : "password"} name='password' id="input-admin" placeholder='Password' required />
-              {showPassword ? (
-                <IoMdEyeOff className="icon3" id="hidePass" onClick={togglePasswordVisibility} />
-              ) : (
-                <IoMdEye className="icon3" id="showPass" onClick={togglePasswordVisibility} />
+    <div className="login-main">
+      <Card className="login-card d-flex flex-column">
+        <Card.Header className="login-card-header text-center position-relative">
+          <div className="d-flex justify-content-end">
+            <CloseButton
+              className="text-white"
+              onClick={() => navigate('/')}
+            />
+          </div>
+          <img src={Logo} className="login-header-logo mt-1" alt="Logo" />
+        </Card.Header>
+        <Card.Body className="d-flex flex-column flex-grow-1">
+          <Card.Title className="text-center fs-6 card-title">Admin Login</Card.Title>
+          <div>
+            <form ref={formRef} onSubmit={handleLogin}>
+              <div className="login-body mt-5">
+                <InputGroup className="mb-2 input-group">
+                  <InputGroup.Text className="login-body-icon">
+                    <IoMdPerson className="fs-5" />
+                  </InputGroup.Text>
+                  <Form.Control
+                    name="username"
+                    type="text"
+                    placeholder="Enter username"
+                    aria-label="Username"
+                    aria-describedby="basic-addon1"
+                    className="login-body-input"
+                    required
+                  />
+                  <InputGroup.Text className="hidden-icon">
+                    <IoMdPerson className="fs-5" />
+                  </InputGroup.Text>
+                </InputGroup>
+
+                <InputGroup className="mb-3 mt-4 input-group">
+                  <InputGroup.Text className="login-body-icon">
+                    <FaUnlock className="fs-5" />
+                  </InputGroup.Text>
+                  <Form.Control
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter password"
+                    aria-label="Password"
+                    aria-describedby="basic-addon1"
+                    className="login-body-input"
+                    required
+                  />
+                  <InputGroup.Text
+                    className="login-body-icon"
+                    onClick={togglePasswordVisibility}
+                  >
+                    {showPassword ? <FaRegEyeSlash className="fs-5" /> : <FaRegEye className="fs-5" />}
+                  </InputGroup.Text>
+                </InputGroup>
+              </div>
+            </form>
+          </div>
+        </Card.Body>
+        <Card.Body className='pt-0 pb-0'>
+        {errorMessage && <p className="text-center text-danger lh-1">{errorMessage}</p>}
+              {remainingAttempts !== null && (
+                <p className="attempts-message text-secondary text-center lh-1">
+                  Attempt(s) remaining: {remainingAttempts}
+                </p>
               )}
+        </Card.Body>
+        <Card.Footer className='login-mainfooter'>
+          <div className="login-footer-container mt-auto text-center mb-3">
+            <Button variant="dark" className="login-footer" onClick={handleLogin}>
+              Login
+            </Button>
+            <div className="register-link mt-2">
             </div>
-            <button id="login" type='submit' className='text-white'>Login</button>
-          </form>
-          {remainingAttempts !== null && (
-            <p className="attempts-message text-secondary">Attempts remaining: {remainingAttempts}</p>
-          )}
-        </div>
-      </div>
+          </div>
+        </Card.Footer>
+      </Card>
     </div>
   );
 };

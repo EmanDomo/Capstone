@@ -315,6 +315,8 @@ var upload = multer({
 
 // addItem
 router.post("/addItem", upload.single("photo"), (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     const { fname, price, category, ingredients } = req.body;
     const { filename } = req.file;
 
@@ -683,52 +685,66 @@ router.post('/add-to-cart', authenticateToken, authorizeRoles('customer'), (req,
     const userId = req.user.userId;
     const { itemId, quantity } = req.body;
 
+    if (!itemId || !quantity || isNaN(itemId) || isNaN(quantity)) {
+        return res.status(400).json({ status: 'error', message: 'Invalid item ID or quantity' });
+    }
+
+    console.log('Adding item to cart:', { itemId, quantity });
+
     conn.query(
         'SELECT price FROM tbl_items WHERE id = ?',
         [itemId],
         (error, results) => {
             if (error) {
                 console.error(error);
-                res.status(500).json({ status: 'error', message: 'Internal server error' });
-            } else {
-                if (results.length > 0) {
-                    const price = results[0].price;
-                    // Check if the item is already in the cart
-                    conn.query(
-                        'SELECT * FROM tbl_cart WHERE userId = ? AND id = ?',
-                        [userId, itemId],
-                        (error, results) => {
-                            if (error) {
-                                console.error(error);
-                                res.status(500).json({ status: 'error', message: 'Internal server error' });
-                            } else if (results.length > 0) {
-                                res.status(400).json({ status: 'error', message: 'Item already in cart' });
-                            } else {
-                                // Insert new item to the cart
-                                conn.query(
-                                    'INSERT INTO tbl_cart (userId, id, quantity, price) VALUES (?, ?, ?, ?)',
-                                    [userId, itemId, quantity, price],
-                                    (error, results) => {
-                                        if (error) {
-                                            console.error(error);
-                                            res.status(500).json({ status: 'error', message: 'Internal server error' });
-                                        } else {
-                                            res.status(201).json({ status: 'success', message: 'Item added to cart' });
-                                        }
-                                    }
-                                );
-                            }
-                        }
-                    );
-                } else {
-                    res.status(404).json({ status: 'error', message: 'Item not found' });
-                }
+                return res.status(500).json({ status: 'error', message: 'Internal server error' });
             }
+            if (results.length === 0) {
+                return res.status(404).json({ status: 'error', message: 'Item not found' });
+            }
+
+            const price = results[0].price;
+
+            conn.query(
+                'SELECT * FROM tbl_cart WHERE userId = ? AND id = ?',
+                [userId, itemId],
+                (error, results) => {
+                    if (error) {
+                        console.error(error);
+                        return res.status(500).json({ status: 'error', message: 'Internal server error' });
+                    }
+                    if (results.length > 0) {
+ 
+                        const newQuantity = results[0].quantity + quantity;
+                        conn.query(
+                            'UPDATE tbl_cart SET quantity = ? WHERE userId = ? AND id = ?',
+                            [newQuantity, userId, itemId],
+                            (error, results) => {
+                                if (error) {
+                                    console.error(error);
+                                    return res.status(500).json({ status: 'error', message: 'Internal server error' });
+                                }
+                                return res.status(200).json({ status: 'success', message: 'Item quantity updated in cart' });
+                            }
+                        );
+                    } else {
+                        conn.query(
+                            'INSERT INTO tbl_cart (userId, id, quantity, price) VALUES (?, ?, ?, ?)',
+                            [userId, itemId, quantity, price],
+                            (error, results) => {
+                                if (error) {
+                                    console.error(error);
+                                    return res.status(500).json({ status: 'error', message: 'Internal server error' });
+                                }
+                                return res.status(201).json({ status: 'success', message: 'Item added to cart' });
+                            }
+                        );
+                    }
+                }
+            );
         }
     );
 });
-
-
 
 router.post('/add-to-pos', authenticateToken, authorizeRoles('admin'), (req, res) => {
     const userId = req.user.userId; // This refers to adminId, based on tbl_pos

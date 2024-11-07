@@ -1,16 +1,16 @@
 import React, { useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Unauthorized = () => {
-    const history = useHistory();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            history.push('/login'); // Redirect to login page after 3 seconds
+            navigate('/userlogin'); // Redirect to login page after 3 seconds
         }, 3000);
 
         return () => clearTimeout(timer); // Cleanup the timer on unmount
-    }, [history]);
+    }, [navigate]);
 
     return (
         <div>

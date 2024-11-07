@@ -1,0 +1,185 @@
+.login-main {
+    height: 100vh;               
+    display: flex;               
+    justify-content: center;     
+    align-items: center;       
+  }
+  
+  
+  .login-card {
+    width: 25%;
+    height: 520px;
+    border: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .login-card-header {
+    height: 150px;
+    background-color: hotpink;
+  }
+  
+  .login-header-logo {
+    width: 100px;
+  }
+  
+  .login-mainfooter {
+    background-color: transparent;
+    border: none;
+  }
+  
+  .hidden-icon {
+    color: #ced4da00;
+    background-color: transparent;
+    border: none;
+  }
+  
+  .login-footer {
+    width: 50%;
+    background-color: hotpink;
+    border: none;
+    height: 40px;
+    border-radius: 25px;
+  }
+  
+  .login-body-icon {
+    background-color: transparent;
+    border: none;
+    color: rgba(57, 55, 55, 0.526);
+  }
+  
+  .login-body-input {
+    background-color: transparent;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+  }
+  
+  .login-body-input:focus {
+    background-color: transparent !important; /* Removes background color */
+    box-shadow: none !important;  /* Removes the blue outline shadow */
+    border-color: #ced4da !important; /* Optional: Sets border to default color */
+  }
+  
+  #student-register {
+    color: hotpink;
+    cursor: pointer;
+  }
+  
+  @media (min-width: 344px) and (max-width: 767px) {
+    .login-main {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh; /* Full screen height */
+      margin: 0; /* Remove any default margin */
+  
+    }
+  
+    .login-card {
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      max-width: none; /* Remove max-width constraint */
+      border-radius: 0px !important;
+    }
+  
+    .login-card-header {
+      text-align: center;
+      border-radius: 0px !important;
+    }
+  
+    .login-footer-container {
+      width: 100%;
+      margin-top: auto; 
+      padding: 1rem;
+    }
+  
+    .input-group {
+      margin-bottom: 50px !important;
+    }
+  
+    .login-body {
+      margin: 80px auto !important;
+    }
+  
+    .login-footer {
+      width: 100%;
+      padding: auto;
+    }
+  
+    .login-body-icon {
+      font-size: 18px;
+    }
+  }
+  
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .login-main {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh; /* Full screen height */
+      margin: 0; /* Remove margin */
+    }
+  
+    .login-header-logo {
+        width: 140px;
+        margin-top: 30px !important;
+    }
+  
+    .card-title {
+        font-size: x-large !important;
+    }
+  
+    .login-card {
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      max-width: none; /* Remove max-width constraint */
+      border-radius: 0 !important; /* Optional: remove border-radius for full edge */
+    }
+  
+    .login-card-header {
+      text-align: center;
+      height: 250px;
+      border-radius: 0px !important;
+    }
+  
+    .login-card-body {
+      padding: 1.5rem; /* Larger padding for tablet */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+  
+    .login-body {
+        width: 75%;
+        margin: 150px auto !important;
+    }
+  
+    .input-group {
+        margin-bottom: 50px !important;
+    }
+  
+    .login-body-input {
+        font-size: x-large !important;
+    }
+  
+    .login-footer-container {
+      width: 100%;
+      margin-top: auto; /* Push the footer to the bottom */
+      padding: 1.5rem;
+    }
+  
+    .login-footer {
+      width: 50%;
+      padding: auto;
+      height: 70px;
+      font-size: x-large !important;
+      border-radius: 80px;
+    }
+  
+    .login-body-icon {
+      font-size: 40px; /* Slightly larger icons on tablets */
+    }
+  
+  }
+  

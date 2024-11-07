@@ -16,7 +16,7 @@ async function createPaymongoLink(amount, description, remarks) {
           attributes: {
             amount: amount * 100, // PayMongo expects the amount in cents
             redirect: {
-              success: 'http://localhost:3000/success', // Ensure this URL matches your front-end success page
+              success: 'https://sjisc-canteen.online/success', // Ensure this URL matches your front-end success page
               failed: 'http://localhost:3000/failed'
             },
             description: "You are making a payment to Saint Jerome Integrated School of Cabuyao .",

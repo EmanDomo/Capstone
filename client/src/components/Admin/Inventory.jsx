@@ -221,8 +221,11 @@ const Inventory = () => {
             const res = await axios.post(`${host}/addItem`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
-                }
+                },
+                withCredentials: true
             });
+            
+            
 
             if (res.data.status === 201) {
                 handleClose();

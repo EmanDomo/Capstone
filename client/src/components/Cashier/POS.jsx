@@ -1,4 +1,4 @@
-import "../../styles/POS.css";
+import "../../styles/POS.css"; 
 import Header from "./HeaderCashier";
 import Footer from "../Customer/Footer";
 import Dropdown from 'react-bootstrap/Dropdown';
@@ -11,13 +11,13 @@ import Form from 'react-bootstrap/Form';
 import Alert from 'react-bootstrap/Alert';
 import axios from 'axios';
 import moment from 'moment';
-import { VscTrash } from "react-icons/vsc";
+import { VscTrash} from "react-icons/vsc";
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import { IoMdAdd } from "react-icons/io";
 import Table from 'react-bootstrap/Table';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
-import { Toast } from 'react-bootstrap';
+import { Toast} from 'react-bootstrap';
 import ToastContainer from 'react-bootstrap/ToastContainer';
 import { host } from '../../apiRoutes';
 
@@ -29,9 +29,11 @@ const POS = () => {
     const [categories, setCategories] = useState([]);
     const [show, setShow] = useState(false);
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+    const [isOutOfStockToastVisible, setIsOutOfStockToastVisible] = useState(false);
+    const [isInsufficientStockToastVisible, setIsInsufficientStockToastVisible] = useState(false);
 
     const [modalShow, setModalShow] = useState(false);
-
+ 
 
     const [isToastVisible, setIsToastVisible] = useState(false);
 
@@ -49,6 +51,10 @@ const POS = () => {
     const handleClose = () => setModalShow(false);
 
     const [selectedCategory, setSelectedCategory] = useState('Show All');
+    // Function to toggle the insufficient stock toast visibility
+    const toggleInsufficientStockToast = () => setIsInsufficientStockToastVisible(prev => !prev);
+// Function to toggle the out-of-stock toast visibility
+    const toggleOutOfStockToast = () => setIsOutOfStockToastVisible(prev => !prev);
 
     const handleCategorySelect = (categoryName) => {
         setSelectedCategory(categoryName);
@@ -89,26 +95,26 @@ const POS = () => {
         }
     };
 
-    // const dltUser = async (id) => {
-    //     try {
-    //         const token = localStorage.getItem('token');
-    //         const res = await axios.delete(`/${id}`, {
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //                 'Authorization': `Bearer ${token}`,
-    //             },
-    //         });
+    const dltUser = async (id) => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.delete(`/${id}`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
 
-    //         if (res.data.status === 201) {
-    //             getUserData();
-    //             setShow(true);
-    //         } else {
-    //             console.error('Failed to delete item');
-    //         }
-    //     } catch (error) {
-    //         console.error('Error deleting item:', error);
-    //     }
-    // };
+            if (res.data.status === 201) {
+                getUserData();
+                setShow(true);
+            } else {
+                console.error('Failed to delete item');
+            }
+        } catch (error) {
+            console.error('Error deleting item:', error);
+        }
+    };
 
     const addUserData = async (e) => {
         e.preventDefault();
@@ -147,7 +153,7 @@ const POS = () => {
                     }
                 }
             );
-
+    
             if (res.data.status === 'success') {
                 addToast(`${itemName} Added Successfully!`, 'success'); // Ensure itemName is passed here
                 getPosItems();
@@ -160,7 +166,7 @@ const POS = () => {
             }
         }
     };
-
+    
 
 
     const handleCategoryClick = (category) => {
@@ -168,7 +174,7 @@ const POS = () => {
         const filteredItems = data.filter(item => item.category.toLowerCase() === category.toLowerCase());
         setFilteredData(filteredItems);
     };
-
+    
 
     const handleShowAll = () => {
         setFilteredData(data);
@@ -246,10 +252,19 @@ const POS = () => {
     };
 
     const handleCheckout = async () => {
+        // Check if there is enough stock for each item in the cart
+        const insufficientStockItems = posItems.filter(item => item.quantity > item.max_meals);
+    
+        if (insufficientStockItems.length > 0) {
+            // Show insufficient stock toast if any item is out of stock
+            setIsInsufficientStockToastVisible(true);
+            return;
+        }
+    
         try {
             const token = localStorage.getItem('token');
             const res = await axios.post(
-                `${host}/pos-place-order`,
+                '/pos-place-order',
                 { posItems },
                 {
                     headers: {
@@ -257,7 +272,7 @@ const POS = () => {
                     },
                 }
             );
-
+        
             if (res.data.success) {
                 console.log('Order placed successfully');
                 setPosItems([]); // Clear POS items after successful order placement
@@ -266,10 +281,16 @@ const POS = () => {
                 console.error('Error placing order:', res.data.error);
             }
         } catch (error) {
-            console.error('Error placing order:', error);
+            if (error.response && error.response.status === 400) {
+                // Show insufficient stock toast if the server responds with a 400 error
+                setIsInsufficientStockToastVisible(true);
+                console.error('Insufficient stock for some items.');
+            } else {
+                console.error('Error placing order:', error);
+            }
         }
     };
-
+    
 
     // Call getPosItems when component mounts or data changes
     useEffect(() => {
@@ -282,13 +303,13 @@ const POS = () => {
 
     const addToast = (message, type) => {
         setToasts((prev) => [...prev, { message, type, id: Date.now() }]);
-    };
-
-    const removeToast = (id) => {
+      };
+    
+      const removeToast = (id) => {
         setToasts((prev) => prev.filter(toast => toast.id !== id));
-    };
+      };
 
-    return (
+    return ( 
         <div>
             <Header />
             <div className="container-fluid posd">
@@ -340,104 +361,134 @@ const POS = () => {
                                 <h5>Total Amount:</h5>
                                 <label className="col-7 d-flex justify-content-end">₱{calculateTotal().toFixed(2)}</label>
                             </div>
-
+                    
                             <div className="mt-2 d-flex flex-row-reverse cashier-checkout">
-                                <Button variant='dark' id="cashier-checkout-button" onClick={handleCheckout}>
-                                    Checkout
-                                </Button>
+                            <Button variant='dark' id="cashier-checkout-button" onClick={handleCheckout}>
+                                Checkout
+                            </Button>
                             </div>
                         </div>
                     </div>
                     <div className='col-12 col-lg-8 col-md-12 col-sm-12 pos-main'>
-                        <div className="d-flex w-100% mx-2 my-4 pos-header">
-                            <div className="col-7 d-flex justify-content-end">
-                                <h1 className="pos-menu-title ">MENU</h1>
-                            </div>
-                            <div className="col-5 d-flex px-2 py-2 flex-row-reverse">
-                                <DropdownButton id="category-dropdown" title={selectedCategory}>
-                                    <Dropdown.Item onClick={() => { handleCategorySelect('Show All'); handleShowAll(); }}>
-                                        Show All
-                                    </Dropdown.Item>
-                                    {categories.map((cat, i) => (
-                                        <Dropdown.Item key={i} onClick={() => handleCategorySelect(cat.category_name)}>
-                                            {cat.category_name}
-                                        </Dropdown.Item>
-                                    ))}
-                                </DropdownButton>
-                            </div>
+                    <div className="d-flex w-100% mx-2 my-4 pos-header">
+                        <div className="col-7 d-flex justify-content-end">
+                            <h1 className="pos-menu-title ">MENU</h1>
                         </div>
-                        <div className="pos-content">
-                            <Row xs={2} md={4} lg={4} className="g-2">
-                                {filteredData.length > 0 ? (
-                                    filteredData.map((el, i) => (
-                                        <Col key={i}>
-                                            <Card id="cashier-card">
-                                                <div className="cashier-img">
-                                                    <Card.Img variant="top" src={`/uploads/${el.img}`} className="cashier-itm" alt="itm" />
-                                                </div>
-                                                <Card.Body>
-                                                    <Card.Title>{el.itemname}</Card.Title>
-                                                    <div className="d-flex justify-content-between p-2">
-                                                        <Card.Text className="d-flex align-items-center">
-                                                            <label className="p-1 cashier-price">₱{el.price}</label>
-                                                        </Card.Text>
-                                                        <Button variant="dark" className="cashier-add-to-cart" onClick={() => addToPOS(el.id, 1, el.price, el.itemname)}>
-                                                            <IoMdAdd />
-                                                        </Button>
-
-                                                    </div>
-                                                </Card.Body>
-                                            </Card>
-                                        </Col>
-                                    ))
-                                ) : (
-                                    <Col>
-                                        <Card className="text-center">
-                                            <Card.Body>
-                                                <Card.Text>No items available in the menu.</Card.Text>
-                                            </Card.Body>
-                                        </Card>
-                                    </Col>
-                                )}
-                            </Row>
+                        <div className="col-5 d-flex px-2 py-2 flex-row-reverse">
+                        <DropdownButton id="category-dropdown" title={selectedCategory}>
+                            <Dropdown.Item onClick={() => {handleCategorySelect('Show All'); handleShowAll();}}>Show All</Dropdown.Item>
+                            {categories.map((cat, i) => (
+                                <Dropdown.Item key={i} onClick={() => handleCategoryClick(cat.category_name)}>
+                                    {cat.category_name}
+                                </Dropdown.Item>
+                            ))}
+                        </DropdownButton>
+                        </div>
+                          
+                    </div>
+                    <div className="mx-2 pos-content">
+                            <Row xs={2} md={3} lg={4} className="g-4 mx-2">
+    {filteredData.length > 0 ? (
+        filteredData.map((el, i) => (
+            <Col key={i}>
+                <Card id="cashier-card">
+                    <div className="cashier-img">
+                        <Card.Img variant="top" src={`/uploads/${el.img}`} className="cashier-itm" alt="itm" />
+                    </div>
+                    <Card.Body>
+                        <Card.Title>{el.itemname}</Card.Title>
+                        <div className="d-flex justify-content-between p-2">
+                            <Card.Text className="d-flex align-items-center">
+                                <label className="p-1 cashier-price">₱{el.price}</label>
+                            </Card.Text>
+                            <Button 
+                            variant="dark" 
+                            className="cashier-add-to-cart" 
+                            onClick={() => addToPOS(el.id, 1, el.price, el.max_meals)} // Pass max_meals as an argument
+                            disabled={el.max_meals === 0} // Disable if out of stock
+                        >
+                            <IoMdAdd />
+                        </Button>
 
                         </div>
+                        {/* Display available stock/meals */}
+                        <div className="text-muted text-center">
+                            {el.max_meals > 0 
+                                ? `Available Meals: ${el.max_meals}`
+                                : 'Out of Stock'}
+                        </div>
+                    </Card.Body>
+                </Card>
+            </Col>
+        ))
+    ) : (
+        <Col>
+            <Card className="text-center">
+                <Card.Body>
+                    <Card.Text>No items available in the menu.</Card.Text>
+                </Card.Body>
+            </Card>
+        </Col>
+    )}
+</Row>
 
+                            </div>
+                
                     </div>
                 </div>
-
+                
             </div>
             <div className="position-fixed bottom-0 end-0 p-3">
-                <Row>
-                    <Col xs={12}>
-                        <Toast onClose={toggleToast} show={isToastVisible} delay={3000} autohide>
-                            <Toast.Header>
-                                <strong className="me-auto order-add">Order Added!</strong>
-                                <small>Just now</small>
-                            </Toast.Header>
-                            <Toast.Body className="confirmation-toast-body">
-                                <p>Proceed to My Orders to complete your order/s!</p>
-                            </Toast.Body>
-                        </Toast>
-                    </Col>
-                </Row>
+            <Row>
+                <Col xs={12}>
+                <Toast onClose={toggleToast} show={isToastVisible} delay={3000} autohide>
+                    <Toast.Header>
+                    <strong className="me-auto order-add">Order Added!</strong>
+                    <small>Just now</small>
+                    </Toast.Header>
+                    <Toast.Body className="confirmation-toast-body">
+                    <p>Proceed to My Orders to complete your order/s!</p>
+                    </Toast.Body>
+                </Toast>
+                <Toast onClose={toggleOutOfStockToast} show={isOutOfStockToastVisible} delay={3000} autohide>
+                <Toast.Header>
+                    <strong className="me-auto">Out of Stock</strong>
+                    <small>Just now</small>
+                </Toast.Header>
+                <Toast.Body className="out-of-stock-toast-body">
+                    <p>This item is out of stock and cannot be added to the cart.</p>
+                </Toast.Body>
+            </Toast>
+
+            {/* Insufficient Stock Toast */}
+            <Toast onClose={toggleInsufficientStockToast} show={isInsufficientStockToastVisible} delay={3000} autohide>
+                <Toast.Header>
+                    <strong className="me-auto">Insufficient Stock</strong>
+                    <small>Just now</small>
+                </Toast.Header>
+                <Toast.Body className="insufficient-stock-toast-body">
+                    <p>Some items in your cart exceed available stock and cannot be checked out.</p>
+                </Toast.Body>
+            </Toast>
+                </Col>
+            </Row>
             </div>
             {/* Toast for the added item and already in the cart item */}
             <ToastContainer className="position-fixed bottom-0 end-0 p-3 toast-menu" style={{ zIndex: 1 }}>
-                {toasts.map((toast) => (
-                    <Toast key={toast.id} onClose={() => removeToast(toast.id)} delay={3000} autohide>
-                        <Toast.Header>
-                            <strong className={`me-auto ${toast.type === 'success' ? 'text-success' : 'text-danger'}`}>
-                                {toast.type === 'success' ? 'Added in the Cart' : 'Already in the Cart'}
-                            </strong>
-                            <small>just now</small>
-                        </Toast.Header>
-                        <Toast.Body>{toast.message}</Toast.Body>
-                    </Toast>
-                ))}
-            </ToastContainer>
+          {toasts.map((toast) => (
+            <Toast key={toast.id} onClose={() => removeToast(toast.id)} delay={3000} autohide>
+              <Toast.Header>
+              <strong className={`me-auto ${toast.type === 'success' ? 'text-success' : 'text-danger'}`}>
+                {toast.type === 'success' ? 'Added in the Cart' : 'Already in the Cart'}
+                </strong>
+                <small>just now</small>
+              </Toast.Header>
+              <Toast.Body>{toast.message}</Toast.Body>
+            </Toast>
+          ))}
+        </ToastContainer>
         </div>
-    );
+     );
 }
-
+ 
 export default POS;
