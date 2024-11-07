@@ -5,7 +5,7 @@ const router = require('./routes/router');
 const port = 8004;
 
 const corsOptions = {
-    origin: 'http://localhost:3000', // your local frontend URL
+    origin: 'https://sjisc-canteen.online', // your local frontend URL
     credentials: false,               // enable cookies or authorization headers
     optionsSuccessStatus: 200
 };
