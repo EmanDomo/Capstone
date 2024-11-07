@@ -222,7 +222,7 @@ const Menu = () => {
                         <Card.Title>{item.itemname}</Card.Title>
                         <div className="d-flex justify-content-between">
                           <Card.Text className="d-flex align-items-center">
-                            <label className="p-1 customer-price">â‚±{item.price}</label>
+                            <label className="p-1 customer-price">₱{item.price}</label>
                           </Card.Text>
                           <Button variant="dark" className="customer-add-to-cart" onClick={() => handleAddToCart(item.id, item.itemname)}>
                             <IoMdAdd />

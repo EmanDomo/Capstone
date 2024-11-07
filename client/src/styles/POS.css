@@ -46,7 +46,7 @@
 
 #cashier-card {
   width: 200px;
-  height: 250px;
+  height: 300px;
 }
 
 .cashier-itm {
@@ -131,7 +131,7 @@
 
   #cashier-card {
     width: 160px;
-    height: 250px;
+    height: 300px !important;
   }  
 
   .cashier-itm {
@@ -148,7 +148,7 @@
 
   #cashier-card {
     width: 160px;
-    height: 250px;
+    height: 300px;
   }  
 
   .cashier-itm {

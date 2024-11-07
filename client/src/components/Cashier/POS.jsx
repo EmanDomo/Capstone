@@ -144,25 +144,33 @@ const POS = () => {
     const addToPOS = async (itemId, quantity, price, itemName) => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.post(
-                `${host}/add-to-pos`,
-                { itemId, quantity, price },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    }
-                }
-            );
+            const existingItem = posItems.find(item => item.itemId === itemId);
     
-            if (res.data.status === 'success') {
-                addToast(`${itemName} Added Successfully!`, 'success'); // Ensure itemName is passed here
-                getPosItems();
+            if (existingItem) {
+                await updatePos(itemId, quantity);
+                addToast(`${itemName} added successfully!`, 'success');
+            } else {
+                const token = localStorage.getItem('token');
+                const res = await axios.post(
+                    `${host}/add-to-pos`,
+                    { itemId, quantity, price },
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                        }
+                    }    
+                );
+    
+                if (res.data.status === 'success') {
+                    addToast(`${itemName} added successfully!`, 'success');
+                    getPosItems();
+                }
             }
         } catch (error) {
             if (error.response && error.response.status === 400) {
-                addToast(`${itemName} is already in the cart!`, 'error'); // Use itemName here too
+                addToast(`${itemName} is already in the cart!`, 'error');
             } else {
-                console.error('Error adding item to cart:', error);
+                console.error('Error adding item to POS:', error);
             }
         }
     };
@@ -393,7 +401,7 @@ const POS = () => {
             <Col key={i}>
                 <Card id="cashier-card">
                     <div className="cashier-img">
-                        <Card.Img variant="top" src={`/uploads/${el.img}`} className="cashier-itm" alt="itm" />
+                        <Card.Img variant="top" src={`${host}/uploads/${el.img}`} className="cashier-itm" alt="itm" />
                     </div>
                     <Card.Body>
                         <Card.Title>{el.itemname}</Card.Title>
@@ -401,14 +409,14 @@ const POS = () => {
                             <Card.Text className="d-flex align-items-center">
                                 <label className="p-1 cashier-price">₱{el.price}</label>
                             </Card.Text>
-                            <Button 
-                            variant="dark" 
-                            className="cashier-add-to-cart" 
-                            onClick={() => addToPOS(el.id, 1, el.price, el.max_meals)} // Pass max_meals as an argument
-                            disabled={el.max_meals === 0} // Disable if out of stock
-                        >
-                            <IoMdAdd />
-                        </Button>
+                        <Button 
+                        variant="dark" 
+                        className="cashier-add-to-cart" 
+                        onClick={() => addToPOS(el.id, 1, el.price, el.itemname)} // Pass itemname instead of max_meals
+                        disabled={el.max_meals === 0} // Disable if out of stock
+                    >
+                        <IoMdAdd />
+                    </Button>
 
                         </div>
                         {/* Display available stock/meals */}
