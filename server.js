@@ -3,9 +3,10 @@ const cors = require('cors');
 const app = express();
 const router = require('./routes/router');
 const port = 8004;
+require("dotenv").config();
 
 const corsOptions = {
-    origin: 'https://sjisc-canteen.online', // your local frontend URL
+    origin: procress.env.CORS_ORIGIN, // your local frontend URL
     credentials: false,               // enable cookies or authorization headers
     optionsSuccessStatus: 200
 };

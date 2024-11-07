@@ -15,21 +15,5 @@ conn.connect((error)=>{
 
 module.exports = conn
 
-// const mysql = require("mysql2");
 
-
-// const conn = mysql.createConnection({
-//     host: "localhost",
-//     user: "root",
-//     password: "Qw01093512734863",
-//     database: "capstone",
-//     multipleStatements: true
-// })
-
-// conn.connect((error) => {
-//     if (error) throw error;
-//     console.log("connected !")
-// });
-
-// module.exports = conn
 
