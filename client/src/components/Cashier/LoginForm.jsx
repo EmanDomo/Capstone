@@ -27,7 +27,7 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    const username = formRef.current.username.value;  // Access input values from formRef
+    const username = formRef.current.username.value;  
     const password = formRef.current.password.value;
 
 
@@ -42,17 +42,16 @@ const Login = () => {
 
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem('token', data.token); // Store the token in local storage
-        navigate('/pos'); // Redirect to POS dashboard
+        localStorage.setItem('token', data.token);
+        navigate('/pos');
       } else {
         const errorData = await response.json();
         setErrorMessage(errorData.message);
 
-        // Only set remainingAttempts if it exists in the response
         if (errorData.remainingAttempts !== undefined) {
           setRemainingAttempts(errorData.remainingAttempts);
         } else {
-          setRemainingAttempts(null); // Clear attempts if account is locked
+          setRemainingAttempts(null); 
         }
       }
     } catch (error) {

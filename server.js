@@ -6,13 +6,13 @@ const cors = require('cors');
 const router = require('./routes/router');
 const port = 8004;
 
-const corsOptions = {
-    origin: procress.env.CORS_ORIGIN, // your local frontend URL
-    credentials: false,               // enable cookies or authorization headers
-    optionsSuccessStatus: 200
-};
+// const corsOptions = {
+//     origin: procress.env.CORS_ORIGIN, // your local frontend URL
+//     credentials: false,               // enable cookies or authorization headers
+//     optionsSuccessStatus: 200
+// };
 
-app.use(cors(corsOptions));  // Apply CORS globally
+// app.use(cors(corsOptions));  // Apply CORS globally
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

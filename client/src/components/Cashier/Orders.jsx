@@ -13,7 +13,6 @@ import { Toast } from 'react-bootstrap';
 import Table from 'react-bootstrap/Table';
 import { host } from '../../apiRoutes';
 
-
 const Orders = () => {
     const [orders, setOrders] = useState([]);
     const [groupedOrders, setGroupedOrders] = useState({});
@@ -24,10 +23,7 @@ const Orders = () => {
     const [cancelReason, setCancelReason] = useState('');
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
     const token = localStorage.getItem('token');
-
     const [isToastVisible, setIsToastVisible] = useState(false);
-
-    // Toggle the toast visibility
     const toggleToast = () => setIsToastVisible(prev => !prev);
 
     const renderTooltip = (props) => (
@@ -45,7 +41,7 @@ const Orders = () => {
                     }
                 });
                 setOrders(response.data);
-                groupOrdersByNumber(response.data);  // Group by orderNumber
+                groupOrdersByNumber(response.data);  
             } catch (error) {
                 console.error('Error fetching orders:', error);
             }
@@ -66,7 +62,6 @@ const Orders = () => {
 
     const handleCompleteOrder = async () => {
         try {
-            // Get all orderIds for the selected order group (same orderNumber)
             const orderIds = selectedOrderGroup.map(order => order.orderId);
             const userId = selectedOrderGroup[0].userId;
             const totalAmount = selectedOrderGroup.reduce((total, order) => total + order.price * order.quantity, 0);
@@ -74,7 +69,7 @@ const Orders = () => {
             const userName = selectedOrderGroup[0].userName;
 
             const response = await axios.post(`${host}/complete-order`, {
-                orderIds,  // Send all orderIds
+                orderIds,  
                 userId,
                 totalAmount,
                 userName,
@@ -86,12 +81,11 @@ const Orders = () => {
             });
 
             if (response.data.success) {
-                // Remove the completed orders from the orders array
                 setOrders(orders.filter(order => !orderIds.includes(order.orderId)));
                 groupOrdersByNumber(orders.filter(order => !orderIds.includes(order.orderId)));
-                handleShowConfirmationModal();  // Show the confirmation modal
+                handleShowConfirmationModal(); 
                 setShowOrderModal(false);
-                setIsToastVisible(true); // Show confirmation modal
+                setIsToastVisible(true); 
             } else {
                 console.error('Failed to complete orders:', response.data.error);
             }
@@ -101,11 +95,10 @@ const Orders = () => {
     };
     const handleCancelOrder = async () => {
         try {
-            // Get all orderIds for the selected order group (same orderNumber)
             const orderIds = selectedOrderGroup.map(order => order.orderId);
 
-            const response = await axios.post('/cancel-order', {
-                orderIds,  // Send all orderIds for cancellation
+            const response = await axios.post(`${host}/cancel-order`, {
+                orderIds,  
                 reason: cancelReason,
             }, {
                 headers: {
@@ -114,7 +107,6 @@ const Orders = () => {
             });
 
             if (response.data.success) {
-                // Remove the canceled orders from the orders array
                 setOrders(orders.filter(order => !orderIds.includes(order.orderId)));
                 groupOrdersByNumber(orders.filter(order => !orderIds.includes(order.orderId)));
                 setShowCancelModal(false);
@@ -193,7 +185,6 @@ const Orders = () => {
                     <p>No orders available.</p>
                 )}
 
-                {/* Order Modal */}
                 {selectedOrderGroup && (
                     <Modal show={showOrderModal} onHide={handleCloseOrderModal} dialogClassName="fullscreen-modal">
                         <Modal.Header closeButton>
@@ -252,7 +243,6 @@ const Orders = () => {
                     </Modal>
                 )}
 
-                {/* Cancel Order Modal */}
                 <Modal show={showCancelModal} onHide={handleCloseCancelModal} dialogClassName="fullscreen-modal">
                     <Modal.Header closeButton>
                         <Modal.Title>Cancel Order</Modal.Title>

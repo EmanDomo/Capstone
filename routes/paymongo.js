@@ -1,7 +1,6 @@
 const axios = require('axios');
-require('dotenv').config(); // To load the .env file
+require('dotenv').config(); 
 
-// Function to create a link using PayMongo API
 async function createPaymongoLink(amount, description, remarks) {
   try {
     const response = await axios({
@@ -14,9 +13,9 @@ async function createPaymongoLink(amount, description, remarks) {
       data: {
         data: {
           attributes: {
-            amount: amount * 100, // PayMongo expects the amount in cents
+            amount: amount * 100, 
             redirect: {
-              success: 'https://sjisc-canteen.online/success', // Ensure this URL matches your front-end success page
+              success: 'https://sjisc-canteen.online/success', 
               failed: 'http://localhost:3000/failed'
             },
             description: "You are making a payment to Saint Jerome Integrated School of Cabuyao .",
@@ -34,7 +33,6 @@ async function createPaymongoLink(amount, description, remarks) {
   }
 }
 
-// Export the function for use in other files
 module.exports = {
   createPaymongoLink
 };

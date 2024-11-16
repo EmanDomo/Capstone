@@ -11,20 +11,17 @@ const Confirm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { selectedFile } = location.state || {};
-
   const [showModal, setShowModal] = useState(false);
 
   const handlePlaceOrder = async () => {
     try {
       const token = localStorage.getItem('token');
-      const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+      const userId = localStorage.getItem('userId'); 
 
-      // Prepare form data to send
       const formData = new FormData();
       formData.append('userId', userId);
       formData.append('qrCodeImage', selectedFile);
 
-      // Send order placement request to the server
       const response = await fetch(`${host}/place-order`, {
         method: 'POST',
         headers: {
@@ -34,13 +31,13 @@ const Confirm = () => {
       });
 
       const data = await response.json();
-      console.log('Response data:', data); // Debug response data
+      console.log('Response data:', data); 
       if (data.success) {
         console.log('Order placed successfully');
         setShowModal(true);
         setTimeout(() => {
           navigate('/menu');
-        }, 3000); // Redirect after 3 seconds
+        }, 3000); 
       } else {
         console.error('Failed to place order:', data.error);
         alert('Failed to place order. Please try again.');

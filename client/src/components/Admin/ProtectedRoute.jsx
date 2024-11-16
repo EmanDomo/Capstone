@@ -1,23 +1,19 @@
-// ProtectedRoute.jsx
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom'; 
+import { useAuth } from './authContext'; 
 
-const ProtectedRoute = ({ element: Component, roles, ...rest }) => {
-    const user = JSON.parse(localStorage.getItem('token'));
+const ProtectedRoute = ({ element, allowedRoles }) => {
+    const { isAuthenticated, role } = useAuth();  
 
-    if (!user) {
-        // If no user is found, redirect to login
-        return <Navigate to="/userlogin" replace />;
+    if (isAuthenticated === null) {
+        return <div>Loading...</div>;
     }
 
-    // Check if the user's role is authorized to access this route
-    if (roles && roles.length && !roles.includes(user.role)) {
-        // If not authorized, redirect to unauthorized page
-        return <Navigate to="/unauthorized" replace />;
+    if (!isAuthenticated || !allowedRoles.includes(role)) {
+        return <Navigate to="/Unauthorized" replace />;
     }
 
-    // If authorized, render the requested component
-    return <Component />;
+    return element;
 };
 
 export default ProtectedRoute;

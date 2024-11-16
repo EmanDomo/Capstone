@@ -1,3 +1,4 @@
+
 const express = require("express");
 const conn = require("./conn");
 const multer = require("multer");
@@ -5,10 +6,9 @@ const moment = require("moment");
 const router = new express.Router();
 const jwt = require('jsonwebtoken');
 const secretKey = '123';
-
 const paypal = require('./paypal');
-const { createPaymongoLink } = require('./paymongo'); // Correct import
-const { createPaymongoSource } = require('./gcash'); // Correct import
+const { createPaymongoLink } = require('./paymongo'); 
+const { createPaymongoSource } = require('./gcash'); 
 
 router.post('/payment', async (req, res) => {
     const { totalAmount } = req.body;
@@ -33,13 +33,45 @@ router.post('/payment', async (req, res) => {
     }
 });
 
+router.post('/pay', async (req, res) => {
+    const { totalAmount } = req.body;
+    if (!totalAmount) {
+        return res.status(400).send('Total amount is required');
+    }
+
+    const parsedTotalAmount = parseFloat(totalAmount);
+    if (isNaN(parsedTotalAmount)) {
+        return res.status(400).send('Total amount must be a number');
+    }
+
+    try {
+        const url = await paypal.createOrder(parsedTotalAmount);
+        res.json({ url });
+    } catch (error) {
+        res.status(500).send('Error: ' + error);
+    }
+});
+
+router.post('/capture-payment', async (req, res) => {
+    const { orderId } = req.body;
+    console.log("Received Order ID:", orderId); 
+
+    try {
+        const captureData = await paypal.capturePayment(orderId);
+        console.log("Payment captured data:", captureData);  
+        res.json(captureData);
+    } catch (error) {
+        console.error("Error capturing payment:", error);  
+        res.status(500).send('Error capturing payment: ' + error.message);
+    }
+});
+
 router.post('/pay-gcash', async (req, res) => {
     const { totalAmount } = req.body;
 
     if (!totalAmount) {
         return res.status(400).send('Total amount is required');
     }
-
     const parsedTotalAmount = parseFloat(totalAmount);
     if (isNaN(parsedTotalAmount)) {
         return res.status(400).send('Total amount must be a number');
@@ -82,11 +114,11 @@ const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    if (token == null) return res.sendStatus(401); // If no token, return unauthorized
+    if (token == null) return res.sendStatus(401); 
 
     jwt.verify(token, secretKey, (err, user) => {
-        if (err) return res.sendStatus(403); // If token is invalid, return forbidden
-        req.user = user; // Store user information in request
+        if (err) return res.sendStatus(403); 
+        req.user = user; 
         next();
     });
 };
@@ -99,23 +131,52 @@ const authorizeRoles = (...roles) => {
         next();
     };
 };
-const superAdminLoginAttempts = {}; // Temporary in-memory store
+
+
+router.post('/Register', (req, res) => {
+    const { fullName, gender, username, password } = req.body;
+  
+    if (!fullName || !gender || !username || !password) {
+      return res.status(400).json({ message: 'Invalid input data' });
+    }
+  
+    const checkQuery = 'SELECT * FROM tbl_users WHERE username = ?';
+    conn.query(checkQuery, [username], (checkError, checkResults) => {
+      if (checkError) {
+        console.error('Error checking username:', checkError);
+        return res.status(500).json({ message: 'Server error' });
+      }
+  
+      if (checkResults.length > 0) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+  
+      const query = 'INSERT INTO tbl_users (name, gender, username, password) VALUES (?, ?, ?, ?)';
+      
+      conn.query(query, [fullName, gender, username, password], (error) => {
+        if (error) {
+          console.error('Error adding user:', error);
+          return res.status(500).json({ message: 'Failed to add user' });
+        }
+        res.status(201).json({ message: 'Customer added successfully' });
+      });
+    });
+  });
+  const superAdminLoginAttempts = {}; 
 
 router.post('/SuperAdminLoginForm', (req, res) => { 
     const { username, password } = req.body;
 
-    // Check if account is locked
     if (superAdminLoginAttempts[username] && superAdminLoginAttempts[username].count >= 3) {
         const remainingTime = (Date.now() - superAdminLoginAttempts[username].timestamp) / 1000;
         if (remainingTime < 300) {
             return res.status(403).json({ message: 'Account locked. Try again in 5 minutes.' });
         } else {
-            // Reset attempts after 5 minutes
             superAdminLoginAttempts[username] = { count: 0, timestamp: Date.now() };
         }
     }
 
-    const query = `SELECT * FROM tbl_superadmins WHERE username = ? AND BINARY password = ?`; // BINARY makes password case-sensitive
+    const query = `SELECT * FROM tbl_superadmins WHERE username = ? AND BINARY password = ?`; 
     conn.query(query, [username, password], (err, results) => {
         if (err) {
             console.error('Error executing query:', err.stack);
@@ -130,7 +191,6 @@ router.post('/SuperAdminLoginForm', (req, res) => {
                 { expiresIn: '1h' }
             );
 
-            // Reset login attempts on successful login
             if (superAdminLoginAttempts[username]) {
                 delete superAdminLoginAttempts[username];
             }
@@ -141,45 +201,38 @@ router.post('/SuperAdminLoginForm', (req, res) => {
                 role: 'superadmin' 
             });
         } else {
-            // Increment login attempt count
             if (!superAdminLoginAttempts[username]) {
                 superAdminLoginAttempts[username] = { count: 1, timestamp: Date.now() };
             } else {
                 superAdminLoginAttempts[username].count += 1;
             }
-
-            // Calculate remaining attempts
             const remainingAttempts = 3 - superAdminLoginAttempts[username].count;
 
             if (remainingAttempts <= 0) {
                 superAdminLoginAttempts[username].timestamp = Date.now();
                 return res.status(403).json({ message: 'Account locked. Try again in 5 minutes.' });
             } else {
-                // Send remaining attempts only if account is not locked
                 res.status(401).json({ message: 'Invalid username or password', remainingAttempts });
             }
         }
     });
 });
 
-// Admin login
-const adminLoginAttempts = {}; // Temporary in-memory store for login attempts
+const adminLoginAttempts = {}; 
 
 router.post('/LoginForm', (req, res) => { 
     const { username, password } = req.body;
 
-    // Check if account is locked
     if (adminLoginAttempts[username] && adminLoginAttempts[username].count >= 3) {
         const remainingTime = (Date.now() - adminLoginAttempts[username].timestamp) / 1000;
         if (remainingTime < 300) {
             return res.status(403).json({ message: 'Account locked. Try again in 5 minutes.' });
         } else {
-            // Reset attempts after 5 minutes
             adminLoginAttempts[username] = { count: 0, timestamp: Date.now() };
         }
     }
 
-    const query = `SELECT * FROM tbl_admins WHERE username = ? AND BINARY password = ?`; // BINARY makes password case-sensitive
+    const query = `SELECT * FROM tbl_admins WHERE username = ? AND BINARY password = ? AND is_archived = 0`; 
     conn.query(query, [username, password], (err, results) => {
         if (err) {
             console.error('Error executing query:', err.stack);
@@ -194,7 +247,6 @@ router.post('/LoginForm', (req, res) => {
                 { expiresIn: '1h' }
             );
 
-            // Reset login attempts on successful login
             if (adminLoginAttempts[username]) {
                 delete adminLoginAttempts[username];
             }
@@ -205,46 +257,40 @@ router.post('/LoginForm', (req, res) => {
                 role: user.role 
             });
         } else {
-            // Initialize or increment login attempts
             if (!adminLoginAttempts[username]) {
                 adminLoginAttempts[username] = { count: 1, timestamp: Date.now() };
             } else {
                 adminLoginAttempts[username].count += 1;
             }
 
-            // Calculate remaining attempts
             const remainingAttempts = 3 - adminLoginAttempts[username].count;
 
             if (remainingAttempts <= 0) {
                 adminLoginAttempts[username].timestamp = Date.now();
                 return res.status(403).json({ message: 'Account locked. Try again in 5 minutes.' });
             } else {
-                // Send remaining attempts only if account is not locked
                 res.status(401).json({ message: 'Invalid username or password', remainingAttempts });
             }
         }
     });
 });
 
-const loginAttempts = {}; // Temporary in-memory store
 
-// Customer login
+const loginAttempts = {}; 
+
 router.post('/UserLogin', (req, res) => {
     const { username, password } = req.body;
 
-    // Check if account is locked
     if (loginAttempts[username] && loginAttempts[username].count >= 3) {
         const remainingTime = (Date.now() - loginAttempts[username].timestamp) / 1000;
         if (remainingTime < 300) {
             return res.status(403).json({ message: 'Account locked. Try again in 5 minutes.' });
         } else {
-            // Reset attempts after 5 minutes
             loginAttempts[username] = { count: 0, timestamp: Date.now() };
         }
     }
 
-    // Query with case-sensitive password
-    const query = 'SELECT name, userId, gender FROM tbl_users WHERE username = ? AND BINARY password = ?';
+    const query = 'SELECT name, userId, gender FROM tbl_users WHERE username = ? AND BINARY password = ? AND is_archived = 0';
     
     conn.query(query, [username, password], (err, results) => {
         if (err) {
@@ -254,40 +300,32 @@ router.post('/UserLogin', (req, res) => {
 
         if (results.length > 0) {
             const { name, userId, gender } = results[0];
-
-            // Create the token with gender information
             const token = jwt.sign({ userId, name, gender, role: 'customer' }, secretKey, { expiresIn: '1h' });
 
-            // Reset login attempts on successful login
             if (loginAttempts[username]) {
                 delete loginAttempts[username];
             }
 
             res.status(200).json({ message: 'Login successful', token });
         } else {
-            // Initialize or increment login attempts
             if (!loginAttempts[username]) {
                 loginAttempts[username] = { count: 1, timestamp: Date.now() };
             } else {
                 loginAttempts[username].count += 1;
             }
 
-            // Calculate remaining attempts
             const remainingAttempts = 3 - loginAttempts[username].count;
 
             if (remainingAttempts <= 0) {
-                // Lock the account and do not include remaining attempts
                 loginAttempts[username].timestamp = Date.now();
                 return res.status(403).json({ message: 'Account locked. Try again in 5 minutes.' });
             } else {
-                // Send remaining attempts when the account is not locked
                 res.status(401).json({ message: 'Invalid username or password', remainingAttempts });
             }
         }
     });
 });
 
-// img storage confing
 var imgconfig = multer.diskStorage({
     destination: (req, file, callback) => {
         callback(null, "./uploads");
@@ -298,7 +336,6 @@ var imgconfig = multer.diskStorage({
 });
 
 
-// img filter
 const isImage = (req, file, callback) => {
     if (file.mimetype.startsWith("image")) {
         callback(null, true)
@@ -312,11 +349,7 @@ var upload = multer({
     fileFilter: isImage
 })
 
-
-// addItem
 router.post("/addItem", upload.single("photo"), (req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
     const { fname, price, category, ingredients } = req.body;
     const { filename } = req.file;
 
@@ -345,7 +378,6 @@ router.post("/addItem", upload.single("photo"), (req, res) => {
             return res.status(422).json({ status: 422, message: "Ingredients should be an array" });
         }
 
-        // Debugging: Check if stock_id is present
         parsedIngredients.forEach((ingredient, index) => {
             console.log(`Ingredient ${index}:`, ingredient);
             if (ingredient.stock_id === undefined) {
@@ -391,9 +423,86 @@ router.post("/addItem", upload.single("photo"), (req, res) => {
     }
 });
 
+router.put('/update-food/:id', authenticateToken, authorizeRoles('superadmin', 'admin'), (req, res) => {
+    const foodId = req.params.id;
 
+    if (!foodId || isNaN(foodId)) {
+        console.error(`Invalid foodId: ${foodId}`);
+        return res.status(400).json({ message: 'Invalid food ID' });
+    }
 
+    const { Item_Name, Price, ingredients } = req.body;
 
+    if (!Item_Name || isNaN(Price) || (ingredients && !Array.isArray(ingredients))) {
+        return res.status(400).json({ message: 'Invalid input data' });
+    }
+
+    const updateFoodQuery = `
+        UPDATE tbl_items 
+        SET itemname = ?, price = ? 
+        WHERE id = ?
+    `;
+
+    conn.query(updateFoodQuery, [Item_Name, Price, foodId], (error, results) => {
+        if (error) {
+            console.error('Error updating food item:', error);
+            return res.status(500).json({ message: 'Failed to update food item', error });
+        }
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ message: 'Food item not found' });
+        }
+        if (ingredients && ingredients.length > 0) {
+            const deleteIngredientsQuery = `
+                DELETE FROM tbl_item_ingredients 
+                WHERE item_id = ?
+            `;
+
+            conn.query(deleteIngredientsQuery, [foodId], (deleteError) => {
+                if (deleteError) {
+                    console.error('Error deleting old ingredients:', deleteError);
+                    return res.status(500).json({ message: 'Failed to update ingredients', deleteError });
+                }
+                const insertIngredientQuery = `
+                    INSERT INTO tbl_item_ingredients (item_id, stock_id, quantity_required) 
+                    VALUES ?
+                `;
+
+                const ingredientValues = ingredients.map(ingredient => [
+                    foodId,                
+                    ingredient.stock_id,   
+                    ingredient.quantity    
+                ]);
+
+                conn.query(insertIngredientQuery, [ingredientValues], (insertError) => {
+                    if (insertError) {
+                        console.error('Error inserting ingredients:', insertError);
+                        return res.status(500).json({ message: 'Failed to update ingredients', insertError });
+                    }
+
+                    res.status(200).json({ message: 'Food item updated successfully', status: 200 });
+                });
+            });
+        } else {
+         
+            res.status(200).json({ message: 'Food item updated successfully', status: 200 });
+        }
+    });
+});
+
+router.get("/categories", (req, res) => {
+    try {
+        conn.query("SELECT * FROM tbl_category", (err, results) => {
+            if (err) {
+                console.log("error:", err);
+                return res.status(500).json({ status: 500, error: "Database query error" });
+            }
+            return res.status(200).json({ status: 200, data: results });
+        });
+    } catch (error) {
+        console.log("error:", error);
+        res.status(500).json({ status: 500, error: "Server error" });
+    }
+});
 
 router.post("/category", (req, res) => {
     const { category } = req.body;
@@ -418,26 +527,11 @@ router.post("/category", (req, res) => {
     }
 });
 
-// Route to fetch all categories
-router.get("/categories", (req, res) => {
-    try {
-        conn.query("SELECT * FROM tbl_category", (err, results) => {
-            if (err) {
-                console.log("error:", err);
-                return res.status(500).json({ status: 500, error: "Database query error" });
-            }
-            return res.status(200).json({ status: 200, data: results });
-        });
-    } catch (error) {
-        console.log("error:", error);
-        res.status(500).json({ status: 500, error: "Server error" });
-    }
-});router.post('/complete-order', authenticateToken, authorizeRoles('admin'), (req, res) => {
+router.post('/complete-order', authenticateToken, authorizeRoles('admin'), (req, res) => {
     const { orderIds, userId, totalAmount } = req.body;
 
     console.log(`Received orderIds: ${orderIds}, userId: ${userId}, totalAmount: ${totalAmount}`);
 
-    // Fetch the details for all the orders with the provided orderIds, including orderNumber
     conn.query(
         'SELECT orderId, orderNumber, userName, quantity, gender FROM tbl_orders WHERE orderId IN (?)',
         [orderIds],
@@ -451,7 +545,6 @@ router.get("/categories", (req, res) => {
                 return res.status(404).json({ success: false, error: 'Orders not found' });
             }
 
-            // Insert each order into tbl_sale
             const salePromises = result.map(order => {
                 const { orderId, orderNumber, userName, quantity, gender } = order;
                 return new Promise((resolve, reject) => {
@@ -468,10 +561,8 @@ router.get("/categories", (req, res) => {
                 });
             });
 
-            // Wait for all sale inserts to complete
             Promise.all(salePromises)
                 .then(() => {
-                    // Now update the status of all the orders
                     conn.query(
                         'UPDATE tbl_orders SET status = ? WHERE orderId IN (?)',
                         ['completed', orderIds],
@@ -494,43 +585,238 @@ router.get("/categories", (req, res) => {
     );
 });
 
+router.put("/archive/:type/:id", authenticateToken, authorizeRoles('superadmin'), (req, res) => { 
+    const { type, id } = req.params;
+    let tableName, columnId, setArchivedField;
 
+    if (type === "raw_material") {
+        tableName = "tbl_raw_materials";
+        columnId = "raw_material_id";
+        setArchivedField = "is_archived = 1";
 
-
-
-
-router.delete("/:id", authenticateToken, authorizeRoles('admin'), (req, res) => {
-    const { id } = req.params;
-    try {
-        conn.query(`DELETE FROM tbl_items WHERE id ='${id}'`, (err, result) => {
-            if (err) {
-                console.log("error");
-            } else {
-                console.log("data delete");
-                res.status(201).json({ status: 201, data: result });
-            }
+        checkPendingOrdersForRelatedItems(id, type, res, () => {
+            archiveItem(id, tableName, columnId, setArchivedField, res);
         });
-    } catch (error) {
-        res.status(422).json({ status: 422, error });
+    } else if (type === "stock") {
+        tableName = "tbl_stocks";
+        columnId = "stockId";
+        setArchivedField = "is_archive = 1";
+
+        checkPendingOrdersForRelatedItems(id, type, res, () => {
+            archiveItem(id, tableName, columnId, setArchivedField, res);
+        });
+    } else if (type === "item") {
+        tableName = "tbl_items";
+        columnId = "id";
+        setArchivedField = "is_archived = 1";
+
+        const checkPendingOrdersQuery = `
+            SELECT COUNT(*) AS pendingCount
+            FROM tbl_orders
+            WHERE id = ? AND status = 'pending';
+        `;
+
+        conn.query(checkPendingOrdersQuery, [id], (err, results) => {
+            if (err) {
+                console.error("Error checking pending orders:", err);
+                return res.status(500).json({ status: 500, message: "Internal server error" });
+            }
+
+            if (results[0].pendingCount > 0) {
+                return res.status(400).json({ message: "Item cannot be removed because it has pending orders." });
+            }
+
+            archiveItem(id, tableName, columnId, setArchivedField, res);
+        });
+    } else {
+        return res.status(400).json({ status: 400, message: "Invalid type parameter" });
     }
 });
 
-// router.get("/getdata", authenticateToken, authorizeRoles('admin', 'customer'), (req, res) => {
-//     try {
-//         conn.query("SELECT * FROM tbl_items", (err, result) => {
-//             if (err) {
-//                 console.log("error");
-//             } else {
-//                 console.log("data get -- bakit ba nag iinfinite loop too nakakinis na ha???");
-//                 res.status(201).json({ status: 201, data: result });
-//             }
-//         });
-//     } catch (error) {
-//         res.status(422).json({ status: 422, error });
-//     }
-// });
+function checkPendingOrdersForRelatedItems(id, type, res, callback) {
+    let relatedItemsQuery;
 
-router.get("/get-menu-data", authenticateToken, authorizeRoles('admin', 'customer'), (req, res) => {
+    if (type === "raw_material") {
+        relatedItemsQuery = `
+            SELECT COUNT(*) AS pendingCount
+            FROM tbl_orders o
+            JOIN tbl_item_ingredients ii ON o.id = ii.item_id
+            JOIN tbl_stocks s ON ii.stock_id = s.stockId
+            WHERE s.raw_material_id = ? AND o.status = 'pending';
+        `;
+    } else if (type === "stock") {
+        relatedItemsQuery = `
+            SELECT COUNT(*) AS pendingCount
+            FROM tbl_orders o
+            JOIN tbl_item_ingredients ii ON o.id = ii.item_id
+            WHERE ii.stock_id = ? AND o.status = 'pending';
+        `;
+    }
+
+    conn.query(relatedItemsQuery, [id], (err, results) => {
+        if (err) {
+            console.error("Error checking related items for pending orders:", err);
+            return res.status(500).json({ status: 500, message: "Internal server error" });
+        }
+
+        if (results[0].pendingCount > 0) {
+            return res.status(400).json({ message: `${type.charAt(0).toUpperCase() + type.slice(1)} cannot be remove because related items have pending orders.` });
+        }
+
+        callback();
+    });
+}
+
+function archiveItem(id, tableName, columnId, setArchivedField, res) {
+    const query = `UPDATE ${tableName} SET ${setArchivedField} WHERE ${columnId} = ?`;
+    conn.query(query, [id], (err, result) => {
+        if (err) {
+            console.error("Error archiving record:", err);
+            return res.status(500).json({ status: 500, message: "Error archiving record" });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ status: 404, message: "Record not found" });
+        }
+
+        res.status(200).json({ status: 200, message: `${type.charAt(0).toUpperCase() + type.slice(1)} removed successfully` });
+    });
+}
+
+function archiveItem(id, tableName, columnId, setArchivedField, res) {
+    const query = `UPDATE ${tableName} SET ${setArchivedField} WHERE ${columnId} = ?`;
+    conn.query(query, [id], (err, result) => {
+        if (err) {
+            console.error("Error archiving record:", err);
+            return res.status(500).json({ status: 500, message: "Error deleting record" });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ status: 404, message: "Record not found" });
+        }
+
+        if (tableName === "tbl_items") {
+            const updateIngredientsQuery = `
+                UPDATE tbl_item_ingredients
+                SET is_archived = 1
+                WHERE item_id = ?
+            `;
+            conn.query(updateIngredientsQuery, [id], (ingredientsErr, ingredientsResult) => {
+                if (ingredientsErr) {
+                    console.error("Error archiving related ingredients:", ingredientsErr);
+                    return res.status(500).json({ status: 500, message: "Error deleting related ingredients" });
+                }
+
+                res.status(200).json({
+                    status: 200,
+                    message: "Item and related ingredients deleted successfully",
+                    archivedIngredients: ingredientsResult.affectedRows
+                });
+            });
+        } else if (tableName === "tbl_raw_materials") {
+            archiveRelatedRawMaterial(id, res);
+        } else {
+            res.status(200).json({ status: 200, message: "Record removed successfully" });
+        }
+    });
+}
+
+function archiveRelatedRawMaterial(id, res) {
+    const updateStocksQuery = `
+        UPDATE tbl_stocks SET is_archive = 1 WHERE raw_material_id = ?
+    `;
+    conn.query(updateStocksQuery, [id], (stockErr, stockResult) => {
+        if (stockErr) {
+            console.error("Error deleting related stocks:", stockErr);
+            return res.status(500).json({ status: 500, message: "Error archiving related stocks" });
+        }
+
+        const getItemIdsQuery = `
+            SELECT DISTINCT item_id
+            FROM tbl_item_ingredients
+            WHERE stock_id IN (SELECT stockId FROM tbl_stocks WHERE raw_material_id = ?)
+        `;
+        conn.query(getItemIdsQuery, [id], (itemErr, itemResults) => {
+            if (itemErr) {
+                console.error("Error fetching related items:", itemErr);
+                return res.status(500).json({ status: 500, message: "Error fetching related items" });
+            }
+
+            const itemIds = itemResults.map(row => row.item_id);
+
+            if (itemIds.length > 0) {
+                const updateIngredientsQuery = `
+                    UPDATE tbl_item_ingredients
+                    SET is_archived = 1
+                    WHERE item_id IN (?)
+                `;
+                conn.query(updateIngredientsQuery, [itemIds], (ingredientsErr, ingredientsResult) => {
+                    if (ingredientsErr) {
+                        console.error("Error deleting related ingredients:", ingredientsErr);
+                        return res.status(500).json({ status: 500, message: "Error deleting related ingredients" });
+                    }
+
+                    const updateItemsQuery = `
+                        UPDATE tbl_items
+                        SET is_archived = 1
+                        WHERE id IN (?)
+                    `;
+                    conn.query(updateItemsQuery, [itemIds], (itemsErr, itemsResult) => {
+                        if (itemsErr) {
+                            console.error("Error deleting related items:", itemsErr);
+                            return res.status(500).json({ status: 500, message: "Error deleting related items" });
+                        }
+
+                        res.status(200).json({
+                            status: 200,
+                            message: "Raw material, related stocks, ingredients, and items archived successfully",
+                            archivedStocks: stockResult.affectedRows,
+                            archivedIngredients: ingredientsResult.affectedRows,
+                            archivedItems: itemsResult.affectedRows
+                        });
+                    });
+                });
+            } else {
+                res.status(200).json({
+                    status: 200,
+                    message: "Raw material and related stocks archived successfully, no items or ingredients to archive"
+                });
+            }
+        });
+    });
+}
+
+router.get('/check-username/:type', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    const { type } = req.params;
+    const { username, id } = req.query; 
+    let query;
+    let params = [username, id];
+
+    if (type === 'admin') {
+        query = `SELECT COUNT(*) as count FROM tbl_admins WHERE username = ? AND id != ?`;
+    } else if (type === 'superadmin') {
+        query = `SELECT COUNT(*) as count FROM tbl_superadmins WHERE username = ? AND superadminid != ?`;
+    } else if (type === 'user') {
+        query = `SELECT COUNT(*) as count FROM tbl_users WHERE username = ? AND userId != ?`;
+    } else {
+        return res.status(400).json({ message: 'Invalid account type' });
+    }
+
+    conn.query(query, params, (err, result) => {
+        if (err) {
+            console.error('Error checking username:', err);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        if (result[0].count > 0) {
+            return res.json({ exists: true });
+        }
+
+        res.json({ exists: false });
+    });
+});
+
+router.get("/get-pos-data", authenticateToken, authorizeRoles('admin', 'customer'), (req, res) => {
     try {
         conn.query(`
             SELECT 
@@ -557,9 +843,41 @@ router.get("/get-menu-data", authenticateToken, authorizeRoles('admin', 'custome
         res.status(500).json({ status: 500, message: "Unexpected server error" });
     }
 });
+
+
+router.get("/get-menu-data", authenticateToken, authorizeRoles('admin', 'customer'), (req, res) => {
+    try {
+        conn.query(`
+            SELECT 
+    tbl_items.id, 
+    tbl_items.itemname, 
+    tbl_items.img, 
+    tbl_items.price, 
+    tbl_items.category,  -- Directly from tbl_items if no separate categories table
+    MIN(IFNULL(FLOOR(tbl_stocks.stock_quantity / tbl_item_ingredients.quantity_required), 0)) AS max_meals
+FROM tbl_items
+LEFT JOIN tbl_item_ingredients ON tbl_items.id = tbl_item_ingredients.item_id
+LEFT JOIN tbl_stocks ON tbl_item_ingredients.stock_id = tbl_stocks.stockId
+WHERE tbl_items.is_archived = 0
+GROUP BY tbl_items.id, tbl_items.category;
+`, (err, result) => {
+            if (err) {
+                console.error("Error fetching data:", err);
+                res.status(500).json({ status: 500, message: "Internal server error" });
+            } else {
+                console.log("Data fetched successfully.");
+                res.status(200).json({ status: 201, data: result });
+            }
+        });
+    } catch (error) {
+        console.error("Unexpected error:", error);
+        res.status(500).json({ status: 500, message: "Unexpected server error" });
+    }
+});
+
+
 router.get("/top-selling", authenticateToken, authorizeRoles('customer'), (req, res) => {
     try {
-        // Assume req.user contains the user's information, including gender
         const userGender = req.user.gender;
         const query = `
         SELECT i.id, i.itemname, i.img, i.price, SUM(o.quantity) AS total_quantity_sold
@@ -575,7 +893,6 @@ router.get("/top-selling", authenticateToken, authorizeRoles('customer'), (req, 
         LIMIT 3;
         `;
 
-        // Execute query with userGender as the parameter
         conn.query(query, [userGender], (err, result) => {
             if (err) {
                 console.error("Database query error:", err);
@@ -595,6 +912,7 @@ router.get("/getinventorydata", authenticateToken, authorizeRoles( 'superadmin')
     try {
         const sqlQuery = `
 SELECT 
+    i.id AS id,  -- Include the item ID
     i.itemname AS Item_Name, 
     i.category AS Category,
     i.price AS Price,
@@ -605,10 +923,15 @@ JOIN
     tbl_items i ON ii.item_id = i.id
 JOIN 
     tbl_stocks s ON ii.stock_id = s.stockId
+WHERE 
+    i.is_archived = 0  -- Filter to show only archived items
 GROUP BY 
+    i.id,  -- Group by the item ID
     i.itemname, 
     i.category,
     i.price;
+
+
         `;
 
         conn.query(sqlQuery, (err, result) => {
@@ -627,51 +950,50 @@ GROUP BY
 });
 
 router.post('/addStock', authenticateToken, authorizeRoles('superadmin'), async (req, res) => {
-    const { stockName, stockUnit, requiresRawMaterial, raw_material_id, quantity_required, conversion_ratio, raw_material_usage_quantity } = req.body;
+    const { stockName, stockUnit, requiresRawMaterial, raw_material_id, quantity_required, conversion_ratio, raw_material_usage_quantity, stockQuantity } = req.body;
 
     if (!stockName || !stockUnit) {
         return res.status(400).json({ error: 'Please provide all required fields.' });
     }
 
     try {
-        let calculatedStockQuantity = null;
+        const [results] = await conn.promise().query('SELECT COUNT(*) AS count FROM tbl_stocks WHERE stock_item_name = ?', [stockName]);
+        if (results[0].count > 0) {
+            return res.status(409).json({ message: 'Stock with the same name already exists' });
+        }
 
-        // If raw materials are required
+        let calculatedStockQuantity = stockQuantity;
+
         if (requiresRawMaterial) {
-            // Fetch the current quantity of the raw material
             const [rawMaterial] = await conn.promise().query('SELECT raw_material_quantity FROM tbl_raw_materials WHERE raw_material_id = ?', [raw_material_id]);
+            if (!rawMaterial.length) {
+                return res.status(400).json({ error: 'Invalid raw material ID' });
+            }
 
             if (rawMaterial[0].raw_material_quantity < raw_material_usage_quantity) {
                 return res.status(400).json({ error: 'Insufficient raw material quantity.' });
             }
 
-            // Calculate stock quantity based on the usage quantity and conversion ratio
             calculatedStockQuantity = raw_material_usage_quantity * conversion_ratio;
 
-            // Update the raw material quantity in `tbl_raw_materials`
             const newRawMaterialQuantity = rawMaterial[0].raw_material_quantity - raw_material_usage_quantity;
             await conn.promise().query('UPDATE tbl_raw_materials SET raw_material_quantity = ? WHERE raw_material_id = ?', [newRawMaterialQuantity, raw_material_id]);
         }
 
-        // Insert the new stock into `tbl_stocks` with the calculated stock quantity
-        const stockQuantity = calculatedStockQuantity || req.body.stockQuantity;
-        const query = 'INSERT INTO tbl_stocks (stock_item_name, stock_quantity, unit, requires_raw_material, raw_material_id, quantity_required, conversion_ratio) VALUES (?, ?, ?, ?, ?, ?, ?)';
-        const values = [stockName, stockQuantity, stockUnit, requiresRawMaterial, raw_material_id, quantity_required, conversion_ratio];
+        const query = 'INSERT INTO tbl_stocks (stock_item_name, stock_quantity, unit, requires_raw_material, raw_material_id, quantity_required, conversion_ratio, is_archive) VALUES (?, ?, ?, ?, ?, ?, ?, 0)';
+        const values = [stockName, calculatedStockQuantity, stockUnit, requiresRawMaterial, raw_material_id, quantity_required, conversion_ratio];
 
         await conn.promise().query(query, values);
-
         res.status(201).json({ message: 'Stock added successfully', status: 201 });
+
     } catch (err) {
         console.error('Error adding stock item:', err);
-        res.status(500).json({ error: 'Internal server error.' });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-
-
-// Route to get stock items
 router.get('/getstock', authenticateToken, authorizeRoles('superadmin', 'superadmin'), (req, res) => {
-    const query = 'SELECT * FROM tbl_stocks';
+    const query = 'SELECT * FROM tbl_stocks WHERE is_archive = 0';
     conn.query(query, (err, results) => {
         if (err) {
             console.error('Error fetching stock data:', err);
@@ -679,6 +1001,81 @@ router.get('/getstock', authenticateToken, authorizeRoles('superadmin', 'superad
         }
         res.status(200).json({ status: 'success', data: results });
     });
+});
+
+router.put('/update-stock/:id', authenticateToken, authorizeRoles('superadmin', 'admin'), async (req, res) => {
+    const stockId = req.params.id;
+    const { stock_item_name, stock_quantity, unit, raw_material_id, quantity_required, conversion_ratio, raw_material_usage_quantity } = req.body;
+
+    console.log('Received payload:', req.body);
+
+    if (!stock_item_name || isNaN(stock_quantity) || !unit) {
+        return res.status(400).json({ message: 'Invalid input data' });
+    }
+
+    try {
+        let calculatedStockQuantity = stock_quantity;
+        if (raw_material_id && raw_material_usage_quantity && conversion_ratio) {
+            calculatedStockQuantity = stock_quantity + raw_material_usage_quantity * conversion_ratio;
+        }
+        
+        console.log('Calculated stock quantity:', calculatedStockQuantity);
+
+        let stockQuery = `
+            UPDATE tbl_stocks 
+            SET stock_item_name = ?, stock_quantity = ?, unit = ?
+        `;
+        const stockParams = [stock_item_name, calculatedStockQuantity, unit];
+
+        if (raw_material_id && quantity_required && conversion_ratio) {
+            stockQuery += `, raw_material_id = ?, quantity_required = ?, conversion_ratio = ?`;
+            stockParams.push(raw_material_id, quantity_required, conversion_ratio);
+        }
+
+        stockQuery += ` WHERE stockId = ?`;
+        stockParams.push(stockId);
+
+        await conn.promise().query(stockQuery, stockParams);
+        console.log('Stock updated successfully');
+
+        if (raw_material_id && raw_material_usage_quantity) {
+            const [rawMaterial] = await conn.promise().query(
+                'SELECT raw_material_quantity FROM tbl_raw_materials WHERE raw_material_id = ?',
+                [raw_material_id]
+            );
+
+            if (rawMaterial.length === 0) {
+                return res.status(404).json({ message: 'Raw material not found' });
+            }
+            const currentQuantity = rawMaterial[0].raw_material_quantity;
+            const newRawMaterialQuantity = currentQuantity - raw_material_usage_quantity;
+            console.log(`Current raw material quantity for ID ${raw_material_id}: ${currentQuantity}`);
+            console.log(`Raw material usage quantity to deduct: ${raw_material_usage_quantity}`);
+            console.log(`New raw material quantity after deduction: ${newRawMaterialQuantity}`);
+
+            if (newRawMaterialQuantity >= 0) {
+                const [updateResult] = await conn.promise().query(
+                    'UPDATE tbl_raw_materials SET raw_material_quantity = ? WHERE raw_material_id = ?',
+                    [newRawMaterialQuantity, raw_material_id]
+                );
+                console.log('Raw material update result:', updateResult);
+
+                if (updateResult.affectedRows === 0) {
+                    return res.status(404).json({ message: 'Raw material not found or not updated' });
+                }
+                res.status(200).json({ message: 'Stock and raw material updated successfully' });
+            } else {
+                console.warn(`Insufficient quantity in raw materials. Current quantity: ${currentQuantity}, attempted deduction: ${raw_material_usage_quantity}`);
+                res.status(400).json({ message: 'Insufficient raw material quantity' });
+            }
+        } else {
+            console.log('No raw material deduction required or invalid data provided.');
+            res.status(200).json({ message: 'Stock updated successfully without raw material deduction' });
+        }
+    } catch (error) {
+        console.error('Error updating stock or raw material:', error);
+        res.status(500).json({ message: 'Failed to update stock or raw material', error });
+    }
 });
 
 router.post('/add-to-cart', authenticateToken, authorizeRoles('customer'), (req, res) => {
@@ -746,8 +1143,10 @@ router.post('/add-to-cart', authenticateToken, authorizeRoles('customer'), (req,
     );
 });
 
+
+
 router.post('/add-to-pos', authenticateToken, authorizeRoles('admin'), (req, res) => {
-    const userId = req.user.userId; // This refers to adminId, based on tbl_pos
+    const userId = req.user.userId; 
     const { itemId, quantity } = req.body;
 
     conn.query(
@@ -760,7 +1159,6 @@ router.post('/add-to-pos', authenticateToken, authorizeRoles('admin'), (req, res
             } else {
                 if (results.length > 0) {
                     const price = results[0].price;
-                    // Check if the item is already in the cart (POS)
                     conn.query(
                         'SELECT * FROM tbl_pos WHERE adminId = ? AND id = ?',
                         [userId, itemId],
@@ -771,7 +1169,6 @@ router.post('/add-to-pos', authenticateToken, authorizeRoles('admin'), (req, res
                             } else if (results.length > 0) {
                                 res.status(400).json({ status: 'error', message: 'Item already in POS' });
                             } else {
-                                // Insert new item to the POS
                                 conn.query(
                                     'INSERT INTO tbl_pos (adminId, id, quantity, price) VALUES (?, ?, ?, ?)',
                                     [userId, itemId, quantity, price],
@@ -795,13 +1192,22 @@ router.post('/add-to-pos', authenticateToken, authorizeRoles('admin'), (req, res
     );
 });
 
-
-//cart, customer role
 router.get('/cart', authenticateToken, authorizeRoles('customer'), (req, res) => {
     const userId = req.user.userId;
 
     conn.query(
-        'SELECT tbl_items.itemname, tbl_cart.id AS itemId, tbl_cart.quantity, tbl_cart.price FROM tbl_cart JOIN tbl_items ON tbl_cart.id = tbl_items.id WHERE tbl_cart.userId = ?;',
+        `SELECT 
+    tbl_items.itemname, 
+    tbl_cart.id AS itemId, 
+    tbl_cart.quantity, 
+    tbl_cart.price 
+FROM 
+    tbl_cart 
+JOIN 
+    tbl_items ON tbl_cart.id = tbl_items.id 
+WHERE 
+    tbl_cart.userId = ? 
+    AND tbl_items.is_archived = 0; `,
         [userId],
         (error, results) => {
             if (error) {
@@ -834,8 +1240,6 @@ router.get('/getpos', authenticateToken, authorizeRoles('admin'), (req, res) => 
         }
     );
 });
-
-
 
 router.post('/remove-cart-item', authenticateToken, authorizeRoles('customer'), (req, res) => {
     const userId = req.user.userId;
@@ -875,7 +1279,7 @@ router.post('/remove-cart-item', authenticateToken, authorizeRoles('customer'), 
 });
 
 router.post('/remove-pos-item', authenticateToken, authorizeRoles('admin'), (req, res) => {
-    const userId = req.user.userId; // This refers to adminId, based on tbl_pos
+    const userId = req.user.userId; 
     const { itemId } = req.body;
 
     console.log(`Attempting to remove item with id: ${itemId} for admin: ${userId}`);
@@ -911,7 +1315,6 @@ router.post('/remove-pos-item', authenticateToken, authorizeRoles('admin'), (req
     );
 });
 
-// Update cart item quantity
 router.post('/update-cart', authenticateToken, authorizeRoles('customer'), (req, res) => {
     const userId = req.user.userId;
     const { itemId, change } = req.body;
@@ -931,7 +1334,6 @@ router.post('/update-cart', authenticateToken, authorizeRoles('customer'), (req,
                 return res.status(500).json({ status: 'error', message: 'Internal server error' });
             }
 
-            // Optional: Ensure the updated quantity is valid (e.g., no negative quantities)
             if (change < 0) {
                 conn.query(
                     'DELETE FROM tbl_cart WHERE userId = ? AND id = ? AND quantity <= 0',
@@ -951,9 +1353,8 @@ router.post('/update-cart', authenticateToken, authorizeRoles('customer'), (req,
     );
 });
 
-
 router.post('/update-pos', authenticateToken, authorizeRoles('admin'), (req, res) => {
-    const userId = req.user.userId;  // This refers to adminId in tbl_pos
+    const userId = req.user.userId;  
     const { itemId, change } = req.body;
 
     console.log(`Attempting to update item with id: ${itemId} by ${change} for admin: ${userId}`);
@@ -971,7 +1372,6 @@ router.post('/update-pos', authenticateToken, authorizeRoles('admin'), (req, res
                 return res.status(500).json({ status: 'error', message: 'Internal server error' });
             }
 
-            // Optional: Ensure the updated quantity is valid (e.g., no negative quantities)
             if (change < 0) {
                 conn.query(
                     'DELETE FROM tbl_pos WHERE adminId = ? AND id = ? AND quantity <= 0',
@@ -990,26 +1390,6 @@ router.post('/update-pos', authenticateToken, authorizeRoles('admin'), (req, res
         }
     );
 });
-
-
-
-
-// router.get("/getsearch", (req, res) => {
-//     const { search } = req.query;
-//     try {
-//         conn.query("SELECT * FROM tbl_items WHERE description LIKE ?", [`%${search}%`], (err, result) => {
-//             if (err) {
-//                 console.log("error");
-//                 res.status(500).json({ status: 500, message: "Internal Server Error" });
-//             } else {
-//                 console.log("data get");
-//                 res.status(201).json({ status: 201, data: result });
-//             }
-//         });
-//     } catch (error) {
-//         res.status(422).json({ status: 422, error });
-//     }
-// });
 
 router.post('/pay', async (req, res) => {
     const { totalAmount } = req.body;
@@ -1060,52 +1440,8 @@ router.get('/comp-lete-order', async (req, res) => {
     }
 });
 
-
- 
-
-//                 const updateStockForIngredients = (ingredientIndex) => {
-//                     if (ingredientIndex >= ingredients.length) {
-//                         updateStock(index + 1);
-//                         return;
-//                     }
-
-//                     const ingredient = ingredients[ingredientIndex];
-//                     // Fetch the current stock quantity
-//                     conn.query('SELECT stock_quantity FROM tbl_stocks WHERE stockId = ?', [ingredient.stock_id], (err, stockResults) => {
-//                         if (err) {
-//                             return res.json({ success: false, error: err.message });
-//                         }
-
-//                         if (stockResults.length === 0 || stockResults[0].stock_quantity === null) {
-//                             console.error(`Stock not found or quantity is null for stockId: ${ingredient.stock_id}`);
-//                             return res.json({ success: false, error: `Stock not found or quantity is null for stockId: ${ingredient.stock_id}` });
-//                         }
-
-//                         const currentStockQuantity = stockResults[0].stock_quantity;
-//                         const newStockQuantity = roundToTwoDecimalPlaces(currentStockQuantity + item.quantity);
-
-//                         conn.query('UPDATE tbl_stocks SET stock_quantity = ? WHERE stockId = ?', 
-//                             [newStockQuantity, ingredient.stock_id], (err) => {
-//                                 if (err) {
-//                                     return res.json({ success: false, error: err.message });
-//                                 }
-
-//                                 updateStockForIngredients(ingredientIndex + 1);
-//                             });
-//                     });
-//                 };
-
-//                 updateStockForIngredients(0);
-//             });
-//         };
-
-//         updateStock(0);
-//     });
-// });
 router.post('/cancel-order', authenticateToken, (req, res) => {
-    const { orderIds, reason } = req.body;  // Accept an array of orderIds
-
-    // Query to get order items for all the orders
+    const { orderIds, reason } = req.body;  
     const getOrderQuery = `
         SELECT o.id, o.quantity, i.id AS item_id, ii.stock_id, ii.quantity_required, o.orderId
         FROM tbl_orders o
@@ -1124,10 +1460,8 @@ router.post('/cancel-order', authenticateToken, (req, res) => {
             return res.status(400).json({ success: false, error: 'No such pending orders found' });
         }
 
-        // Function to update stock quantities for each order
         const updateStocks = (index) => {
             if (index >= orderItems.length) {
-                // Update the status of all orders to 'cancelled'
                 const cancelOrderQuery = `
                     UPDATE tbl_orders 
                     SET status = 'cancelled', cancelReason = ?
@@ -1146,7 +1480,6 @@ router.post('/cancel-order', authenticateToken, (req, res) => {
             const item = orderItems[index];
             const restoreStockQuantity = item.quantity * item.quantity_required;
 
-            // Update stock quantities
             conn.query(
                 'UPDATE tbl_stocks SET stock_quantity = stock_quantity + ? WHERE stockId = ?',
                 [restoreStockQuantity, item.stock_id],
@@ -1155,23 +1488,20 @@ router.post('/cancel-order', authenticateToken, (req, res) => {
                         console.error('Error restoring stock:', err);
                         return res.status(500).json({ success: false, error: 'Failed to restore stock' });
                     }
-                    updateStocks(index + 1); // Move to the next item
+                    updateStocks(index + 1); 
                 }
             );
         };
 
-        updateStocks(0); // Start with the first item
+        updateStocks(0); 
     });
 });
 
-
-
 router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (req, res) => {
-    const userId = req.user.userId; // Get the user ID from the authenticated token
-    const qrCodeImage = req.file ? req.file.filename : null; // Get the uploaded QR code image filename if provided
-    let stockUpdates = []; // Array to keep track of stock updates for later processing
+    const userId = req.user.userId;
+    const qrCodeImage = req.file ? req.file.filename : null; 
+    let stockUpdates = [];
 
-    // First, fetch the user's name and gender from tbl_users
     conn.query('SELECT userName, gender FROM tbl_users WHERE userId = ?', [userId], (error, userResult) => {
         if (error) {
             console.error('Error fetching user name and gender:', error);
@@ -1182,48 +1512,41 @@ router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (re
             return res.status(400).json({ success: false, error: 'User not found' });
         }
 
-        const userName = userResult[0].userName; // Get the user's name
-        const gender = userResult[0].gender; // Get the user's gender
+        const userName = userResult[0].userName; 
+        const gender = userResult[0].gender; 
 
-        // Fetch all items in the user's cart
         conn.query('SELECT * FROM tbl_cart WHERE userId = ?', [userId], (error, cartItems) => {
             if (error) {
                 console.error('Error fetching cart items:', error);
                 return res.status(500).json({ success: false, error: 'Failed to fetch cart items' });
             }
 
-            // If the cart is empty, return an error response
             if (cartItems.length === 0) {
                 return res.status(400).json({ success: false, error: 'Cart is empty' });
             }
 
-            // Fetch the current maximum order number from tbl_orders to generate a new order number
             conn.query('SELECT MAX(orderNumber) AS maxOrderNumber FROM tbl_orders', (err, results) => {
                 if (err) {
                     console.error('Error fetching max order number:', err);
                     return res.status(500).json({ success: false, error: 'Failed to fetch max order number' });
                 }
 
-                const maxOrderNumber = results[0].maxOrderNumber || 0; // If no orders exist, set maxOrderNumber to 0
-                const newOrderNumber = maxOrderNumber + 1; // Generate the next order number
+                const maxOrderNumber = results[0].maxOrderNumber || 0; 
+                const newOrderNumber = maxOrderNumber + 1; 
 
-                // Recursive function to process each item in the cart one by one
                 const processCartItem = (itemIndex) => {
                     if (itemIndex >= cartItems.length) {
-                        // Clear the cart for the user after successfully placing the order
                         conn.query('DELETE FROM tbl_cart WHERE userId = ?', [userId], (err) => {
                             if (err) {
                                 console.error('Error emptying cart:', err);
                                 return res.status(500).json({ success: false, error: 'Failed to empty cart' });
                             }
-
-                            // Function to update stock quantities in tbl_stocks after all items have been processed
                             const insertStockUpdates = (index) => {
                                 if (index >= stockUpdates.length) {
                                     return res.json({ success: true, orderNumber: newOrderNumber });
                                 }
 
-                                const { stockId, newStockQuantity } = stockUpdates[index]; // Get stock update details
+                                const { stockId, newStockQuantity } = stockUpdates[index]; 
                                 conn.query('UPDATE tbl_stocks SET stock_quantity = ? WHERE stockId = ?', 
                                     [newStockQuantity, stockId], (err) => {
                                         if (err) {
@@ -1231,18 +1554,17 @@ router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (re
                                             return res.status(500).json({ success: false, error: 'Failed to update stock' });
                                         }
 
-                                        insertStockUpdates(index + 1); // Move to the next stock update
+                                        insertStockUpdates(index + 1); 
                                     });
                             };
 
-                            insertStockUpdates(0); // Start updating stocks after cart is cleared
+                            insertStockUpdates(0); 
                         });
                         return;
                     }
 
-                    const item = cartItems[itemIndex]; // Get the current cart item
+                    const item = cartItems[itemIndex]; 
 
-                    // Fetch required ingredients for the current cart item and their stock quantities
                     const getIngredientsQuery = `
                         SELECT i.stock_id, i.quantity_required, s.stock_quantity
                         FROM tbl_item_ingredients i
@@ -1266,7 +1588,6 @@ router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (re
 
                         const updateStock = (ingredientIndex) => {
                             if (ingredientIndex >= ingredients.length) {
-                                // Insert order details for the current cart item, including the userName and gender
                                 const insertOrderQuery = `
                                     INSERT INTO tbl_orders 
                                     (userId, id, quantity, price, orderNumber, status, qrCodeImage, userName, gender) 
@@ -1279,8 +1600,8 @@ router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (re
                                     item.price,
                                     newOrderNumber,
                                     qrCodeImage,
-                                    userName, // Insert the user's name
-                                    gender // Insert the user's gender
+                                    userName, 
+                                    gender
                                 ];
 
                                 conn.query(insertOrderQuery, insertOrderValues, (err) => {
@@ -1289,7 +1610,7 @@ router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (re
                                         return res.status(500).json({ success: false, error: 'Failed to place order' });
                                     }
 
-                                    processCartItem(itemIndex + 1); // Process the next cart item
+                                    processCartItem(itemIndex + 1); 
                                 });
                                 return;
                             }
@@ -1305,226 +1626,191 @@ router.post('/place-order', authenticateToken, upload.single('qrCodeImage'), (re
                                         return res.status(500).json({ success: false, error: 'Failed to deduct stock' });
                                     }
 
-                                    updateStock(ingredientIndex + 1); // Move to the next ingredient
+                                    updateStock(ingredientIndex + 1);
                                 });
                         };
 
-                        updateStock(0); // Start updating stocks for the current cart item
+                        updateStock(0); 
                     });
                 };
 
-                processCartItem(0); // Start processing cart items from the first one
+                processCartItem(0); 
             });
         });
     });
 });
 
-
-
-
 router.post('/pos-place-order', authenticateToken, authorizeRoles('admin'), (req, res) => {
-    const adminId = req.user.userId; // Get the admin's user ID from the authenticated request
-    const qrCodeImage = req.file ? req.file.filename : null; // Get the uploaded QR code image filename, if provided
-    const posItems = req.body.posItems; // Get the items in the POS (point of sale) system from the request body
-    let stockUpdates = []; // Array to track stock updates for later processing
+    const adminId = req.user.userId; 
+    const qrCodeImage = req.file ? req.file.filename : null; 
+    const posItems = req.body.posItems;
+    let stockUpdates = [];
 
-    // Check if there are items in the POS, if not, return an error
     if (!Array.isArray(posItems) || posItems.length === 0) {
         return res.status(400).json({ success: false, error: 'No items in POS' });
     }
 
-    // Begin database transaction to ensure data consistency
     conn.beginTransaction((err) => {
         if (err) {
-            console.error('Transaction error:', err); // Log transaction start error
+            console.error('Transaction error:', err); 
             return res.status(500).json({ success: false, error: 'Transaction failed' });
         }
 
-        // Fetch the admin's username using the adminId
         conn.query('SELECT username FROM tbl_admins WHERE id = ?', [adminId], (err, results) => {
             if (err) {
-                return conn.rollback(() => { // Rollback transaction if fetching the username fails
+                return conn.rollback(() => { 
                     console.error('Error fetching admin username:', err);
                     return res.status(500).json({ success: false, error: 'Failed to fetch admin username' });
                 });
             }
 
-            const adminUsername = results[0]?.username; // Extract admin's username
+            const adminUsername = results[0]?.username; 
 
-            // Get the maximum order number to calculate the next order number
             conn.query('SELECT MAX(orderNumber) AS maxOrderNumber FROM tbl_orders', (err, results) => {
                 if (err) {
-                    return conn.rollback(() => { // Rollback transaction if fetching the max order number fails
+                    return conn.rollback(() => { 
                         console.error('Error fetching max order number:', err);
                         return res.status(500).json({ success: false, error: 'Failed to fetch max order number' });
                     });
                 }
 
-                const maxOrderNumber = results[0].maxOrderNumber || 0; // Get the maximum order number or 0 if none exists
-                const newOrderNumber = maxOrderNumber + 1; // Increment to generate the new order number
+                const maxOrderNumber = results[0].maxOrderNumber || 0; 
+                const newOrderNumber = maxOrderNumber + 1; 
 
-                // Function to process each POS item one by one
                 const processPosItem = (itemIndex) => {
-                    if (itemIndex >= posItems.length) { // If all items are processed
-                        // Function to update stock quantities after processing all items
+                    if (itemIndex >= posItems.length) { 
                         const updateStocks = (index) => {
-                            if (index >= stockUpdates.length) { // If all stock updates are done
-                                // Delete all POS items for the admin once the transaction is complete
+                            if (index >= stockUpdates.length) {
                                 conn.query('DELETE FROM tbl_pos WHERE adminId = ?', [adminId], (err) => {
                                     if (err) {
-                                        return conn.rollback(() => { // Rollback if deleting POS items fails
+                                        return conn.rollback(() => { 
                                             console.error('Error emptying POS:', err);
                                             return res.status(500).json({ success: false, error: 'Failed to empty POS' });
                                         });
                                     }
-
-                                    // Commit the transaction after all updates are successful
                                     conn.commit((err) => {
                                         if (err) {
-                                            return conn.rollback(() => { // Rollback if committing the transaction fails
+                                            return conn.rollback(() => { 
                                                 console.error('Transaction commit failed:', err);
                                                 return res.status(500).json({ success: false, error: 'Transaction commit failed' });
                                             });
                                         }
-
-                                        // Respond with success and the new order number
                                         res.json({ success: true, orderNumber: newOrderNumber });
                                     });
                                 });
                                 return;
                             }
-
-                            // Update the stock quantity for each stock update in stockUpdates array
                             const { stockId, newStockQuantity } = stockUpdates[index];
                             conn.query('UPDATE tbl_stocks SET stock_quantity = ? WHERE stockId = ?', 
                                 [newStockQuantity, stockId], (err) => {
                                     if (err) {
-                                        return conn.rollback(() => { // Rollback if stock update fails
+                                        return conn.rollback(() => { 
                                             console.error('Error updating stock:', err);
                                             return res.status(500).json({ success: false, error: 'Failed to update stock' });
                                         });
                                     }
-
-                                    updateStocks(index + 1); // Recursively update the next stock
+                                    updateStocks(index + 1); 
                                 });
                         };
-
-                        updateStocks(0); // Start updating stocks after processing all items
+                        updateStocks(0); 
                         return;
                     }
 
-                    const item = posItems[itemIndex]; // Get the current POS item
+                    const item = posItems[itemIndex]; 
                     const getIngredientsQuery = 
                         `SELECT i.stock_id, i.quantity_required, s.stock_quantity
                         FROM tbl_item_ingredients i
                         JOIN tbl_stocks s ON i.stock_id = s.stockId
-                        WHERE i.item_id = ?`; // Query to get required ingredients and stock quantities
+                        WHERE i.item_id = ?`; 
 
-                    // Fetch ingredients and their stock quantities for the current item
                     conn.query(getIngredientsQuery, [item.itemId], (err, ingredients) => {
                         if (err) {
-                            return conn.rollback(() => { // Rollback if fetching ingredients fails
+                            return conn.rollback(() => { 
                                 console.error('Error fetching ingredients:', err);
                                 return res.status(500).json({ success: false, error: 'Failed to fetch ingredients' });
                             });
                         }
 
-                        // Check if any ingredient has insufficient stock
                         const insufficientStock = ingredients.some(ingredient =>
                             ingredient.stock_quantity < ingredient.quantity_required * item.quantity
                         );
 
                         if (insufficientStock) {
-                            return conn.rollback(() => { // Rollback if there is insufficient stock
+                            return conn.rollback(() => {
                                 res.status(400).json({ success: false, error: 'Insufficient stock for order' });
                             });
                         }
 
-                        // Function to update the stock for each ingredient
                         const updateStock = (ingredientIndex) => {
                             if (ingredientIndex >= ingredients.length) {
-                                // Insert order details into the orders table after stock updates
                                 const insertOrderQuery = 
                                 `INSERT INTO tbl_orders 
                                 (userId, id, quantity, price, orderNumber, status, qrCodeImage, adminName, userName) 
                                 VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?)`;
 
                                 const insertOrderValues = [
-                                    adminId, // Use adminId as the userId for POS orders
+                                    adminId, 
                                     item.itemId, 
                                     item.quantity, 
                                     item.price, 
                                     newOrderNumber, 
                                     qrCodeImage,
-                                    null, // No adminName needed
-                                    adminUsername // Use the admin's username as the userName
+                                    null, 
+                                    adminUsername 
                                 ];
                                 
-                                // Insert the order item into the orders table
                                 conn.query(insertOrderQuery, insertOrderValues, (err) => {
                                     if (err) {
-                                        return conn.rollback(() => { // Rollback if order insertion fails
+                                        return conn.rollback(() => {
                                             console.error('Error inserting order item:', err);
                                             return res.status(500).json({ success: false, error: 'Failed to place order' });
                                         });
                                     }
-
-                                    processPosItem(itemIndex + 1); // Process the next POS item
+                                    processPosItem(itemIndex + 1); 
                                 });
                                 
                                 return;
                             }
 
-                            const ingredient = ingredients[ingredientIndex]; // Get the current ingredient
-                            const newStockQuantity = ingredient.stock_quantity - (ingredient.quantity_required * item.quantity); // Calculate new stock quantity
-                            stockUpdates.push({ stockId: ingredient.stock_id, newStockQuantity }); // Add the stock update to the array
-
-                            // Update the stock quantity in the database
+                            const ingredient = ingredients[ingredientIndex]; 
+                            const newStockQuantity = ingredient.stock_quantity - (ingredient.quantity_required * item.quantity); 
+                            stockUpdates.push({ stockId: ingredient.stock_id, newStockQuantity }); 
                             conn.query('UPDATE tbl_stocks SET stock_quantity = ? WHERE stockId = ?', 
                                 [newStockQuantity, ingredient.stock_id], (err) => {
                                     if (err) {
-                                        return conn.rollback(() => { // Rollback if stock deduction fails
+                                        return conn.rollback(() => { 
                                             console.error('Error deducting stock:', err);
                                             return res.status(500).json({ success: false, error: 'Failed to deduct stock' });
                                         });
                                     }
 
-                                    updateStock(ingredientIndex + 1); // Recursively update the next stock
+                                    updateStock(ingredientIndex + 1); 
                                 });
                         };
 
-                        updateStock(0); // Start updating stocks for the current item
+                        updateStock(0); 
                     });
                 };
 
-                processPosItem(0); // Start processing POS items
+                processPosItem(0); 
             });
         });
     });
 });
 
-
-
-
-// Route to upload QR code image and insert order
 router.post('/upload-qr-code', upload.single('qrCodeImage'), async (req, res) => {
     const { userId, id, quantity, price, orderNumber } = req.body;
     const qrCodeImage = req.file ? req.file.filename : null;
 
-    // Check for undefined values
     if (!userId || !id || !quantity || !price || !orderNumber || !qrCodeImage) {
         return res.status(400).json({ success: false, error: 'Missing required fields' });
     }
 
     try {
-        // Insert new order with 'pending' status
         const query = `INSERT INTO tbl_orders (userId, id, quantity, price, orderNumber, status, qrCodeImage)
                        VALUES (?, ?, ?, ?, ?, 'pending', ?)`;
         const values = [userId, id, quantity, price, orderNumber, qrCodeImage];
-
-        // Execute the query
         await conn.execute(query, values);
-
         res.json({ success: true });
     } catch (error) {
         console.error('Error inserting order:', error);
@@ -1532,24 +1818,25 @@ router.post('/upload-qr-code', upload.single('qrCodeImage'), async (req, res) =>
     }
 });
 
-router.get('/orders', (req, res) => {
+router.get('/orders', authenticateToken, authorizeRoles('admin'),(req, res) => {
     console.log('Fetching pending orders...');
     const query = `
         SELECT 
-    tbl_orders.orderId,     -- Fetch orderId
-    tbl_orders.orderNumber,  -- Fetch orderNumber instead of orderId
-    tbl_orders.userName,     -- Fetch userName directly from tbl_orders
-    tbl_items.itemname,      -- Fetch item name from tbl_items
-    tbl_orders.quantity,     -- Fetch quantity from tbl_orders
-    tbl_orders.price         -- Fetch price from tbl_orders
+    tbl_orders.orderId,
+    tbl_orders.orderNumber,
+    tbl_orders.userName,
+    tbl_items.itemname,
+    tbl_orders.quantity,
+    tbl_orders.price
 FROM 
     tbl_orders
 JOIN 
-    tbl_items ON tbl_orders.id = tbl_items.id  -- Join to get item name
+    tbl_items ON tbl_orders.id = tbl_items.id
 WHERE 
-    tbl_orders.status = 'pending'  -- Fetch only pending orders
+    tbl_orders.status = 'pending'   -- Only pending orders
+    AND tbl_items.is_archived = 0   -- Only show items that are not archived
 ORDER BY 
-    tbl_orders.orderNumber;  -- Order by orderNumber
+    tbl_orders.orderNumber;
     `;
     
     conn.query(query, (error, rows) => {
@@ -1557,7 +1844,7 @@ ORDER BY
             console.error('Error fetching orders:', error);
             return res.status(500).json({ message: 'Error fetching orders', error });
         }
-        console.log('Pending orders fetched:', rows); // Log the fetched orders for debugging
+        console.log('Pending orders fetched:', rows); 
         res.json(rows);
     });
 });
@@ -1750,7 +2037,7 @@ router.post('/api/cashier2SalesWeek', authenticateToken, authorizeRoles('superad
 
 router.get('/api/sales/today', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
     const query = `
-        SELECT 
+          SELECT 
             s.saleId, 
             o.orderId, 
             o.orderNumber,  -- Include orderNumber
@@ -1809,8 +2096,6 @@ router.get('/api/sales/week', authenticateToken, authorizeRoles('superadmin'), (
     });
 });
 
-
-
 router.get('/api/sales/month', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
     const query = `
         SELECT 
@@ -1842,8 +2127,6 @@ router.get('/api/sales/month', authenticateToken, authorizeRoles('superadmin'), 
     });
 });
 
-
-// Fetch orders for the authenticated user
 router.get('/my-orders', authenticateToken, authorizeRoles('customer'), (req, res) => {
     const userId = req.user.userId;
     const query = `
@@ -1863,7 +2146,6 @@ router.get('/my-orders', authenticateToken, authorizeRoles('customer'), (req, re
         res.status(200).json({ success: true, orders: results });
     });
 });
-
 
 router.delete('/delete-order/:orderId', authenticateToken, authorizeRoles('customer'), (req, res) => {
     const orderId = req.params.orderId;
@@ -1898,10 +2180,8 @@ router.get('/warning-stocks', authenticateToken, authorizeRoles('superadmin'), (
         res.status(200).json(results);
     });
 });
-
-// Fetch all admins
 router.get('/api/admins', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
-    const query = `SELECT * FROM tbl_admins`;
+    const query = `SELECT * FROM tbl_admins WHERE is_archived = 0`; 
 
     conn.query(query, (err, results) => {
         if (err) {
@@ -1920,7 +2200,6 @@ router.get('/api/admins', authenticateToken, authorizeRoles('superadmin'), (req,
     });
 });
 
-// Fetch all superadmins
 router.get('/api/superadmins', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
     const query = `SELECT * FROM tbl_superadmins`;
 
@@ -1941,40 +2220,8 @@ router.get('/api/superadmins', authenticateToken, authorizeRoles('superadmin'), 
     });
 });
 
-// Fetch all accounts for editing
-// Update admin or superadmin based on type (admin or superadmin)
-router.put('/edit-accounts/:type/:id', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
-    const { type, id } = req.params;
-    const { name, username, password, role } = req.body;
-    let query;
-
-    if (type === 'admin') {
-        query = `UPDATE tbl_admins SET name = ?, username = ?, password = ?, role = ? WHERE id = ?`;
-    } else if (type === 'superadmin') {
-        query = `UPDATE tbl_superadmins SET name = ?, username = ?, password = ?, role = ? WHERE superadminid = ?`;
-    } else {
-        return res.status(400).json({ message: 'Invalid account type' });
-    }
-
-    conn.query(query, [name, username, password, role, id], (err, result) => {
-        if (err) {
-            console.error('Error updating account:', err);
-            return res.status(500).json({ message: 'Internal server error' });
-        }
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Account not found' });
-        }
-
-        res.status(200).json({ message: 'Account updated successfully' });
-    });
-});
-
-
-
-// Fetch all users
 router.get('/api/users', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
-    const query = `SELECT * FROM tbl_users`;
+    const query = `SELECT * FROM tbl_users WHERE is_archived = 0`;
 
     conn.query(query, (err, results) => {
         if (err) {
@@ -1993,16 +2240,15 @@ router.get('/api/users', authenticateToken, authorizeRoles('superadmin'), (req, 
     });
 });
 
-// Route to update stock item
 router.put('/updateStock/:id', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
-    const { stock_item_name, stock_quantity, unit } = req.body; // Adjusted variable names to match your table columns
+    const { stock_item_name, stock_quantity, unit } = req.body; 
     const stockId = req.params.id;
 
     if (!stock_item_name || !stock_quantity || !unit) {
         return res.status(400).json({ error: 'Please provide all required fields.' });
     }
 
-    const query = 'UPDATE tbl_stocks SET stock_item_name = ?, stock_quantity = ?, unit = ? WHERE stockId = ?'; // Updated WHERE clause
+    const query = 'UPDATE tbl_stocks SET stock_item_name = ?, stock_quantity = ?, unit = ? WHERE stockId = ?'; 
     conn.query(query, [stock_item_name, stock_quantity, unit, stockId], (err, results) => {
         if (err) {
             console.error('Error updating stock item:', err);
@@ -2013,10 +2259,10 @@ router.put('/updateStock/:id', authenticateToken, authorizeRoles('superadmin'), 
 });
 
 router.get('/get-raw-materials', authenticateToken, authorizeRoles('superadmin', 'superadmin'), (req, res) => {
-    const query = 'SELECT * FROM tbl_raw_materials';
+    const query = 'SELECT * FROM tbl_raw_materials WHERE is_archived = 0';
     conn.query(query, (err, results) => {
         if (err) {
-            console.error('Error fetching stock data:', err);
+            console.error('Error fetching raw material data:', err);
             return res.status(500).json({ error: 'Internal server error.' });
         }
         res.status(200).json({ status: 'success', data: results });
@@ -2027,22 +2273,58 @@ router.get('/get-raw-materials', authenticateToken, authorizeRoles('superadmin',
 router.post('/add-raw-material', authenticateToken, authorizeRoles('superadmin', 'admin'), (req, res) => {
     const { rawMaterialName, rawMaterialQuantity, rawMaterialUnit } = req.body;
 
-    // Validate inputs
-    if (!rawMaterialName || isNaN(rawMaterialQuantity) || !rawMaterialUnit) {
-        return res.status(400).json({ message: 'Invalid input data' });
+    if (!rawMaterialName || !rawMaterialQuantity || isNaN(rawMaterialQuantity) || !rawMaterialUnit) {
+        return res.status(400).json({ message: 'Please provide all required fields. Invalid data.' });
     }
 
-    const query = 'INSERT INTO tbl_raw_materials (raw_material_name, raw_material_quantity, raw_material_unit, date_added) VALUES (?, ?, ?, NOW())';
-    
-    conn.query(query, [rawMaterialName, rawMaterialQuantity, rawMaterialUnit], (error, results) => {
+    const checkQuery = 'SELECT COUNT(*) AS count FROM tbl_raw_materials WHERE raw_material_name = ?';
+    conn.query(checkQuery, [rawMaterialName], (error, results) => {
         if (error) {
-            console.error('Error adding raw material:', error);
-            return res.status(500).json({ message: 'Failed to add raw material', error });
+            console.error('Error checking for duplicate:', error);
+            return res.status(500).json({ message: 'Internal server error', error });
         }
-        res.status(201).json({ message: 'Raw material added successfully', status: 201 });
+
+        if (results[0].count > 0) {
+            return res.status(409).json({ message: 'Raw material with the same name already exists' });
+        }
+
+        const insertQuery = 'INSERT INTO tbl_raw_materials (raw_material_name, raw_material_quantity, raw_material_unit, date_added) VALUES (?, ?, ?, NOW())';
+        conn.query(insertQuery, [rawMaterialName, rawMaterialQuantity, rawMaterialUnit], (insertError, insertResults) => {
+            if (insertError) {
+                console.error('Error adding raw material:', insertError);
+                return res.status(500).json({ message: 'Failed to add raw material', error: insertError });
+            }
+            res.status(201).json({ message: 'Raw material added successfully', status: 201 });
+        });
     });
 });
 
+router.put('/update-raw-material/:id', authenticateToken, authorizeRoles('superadmin', 'admin'), (req, res) => {
+    const rawMaterialId = req.params.id;
+    const { raw_material_name, raw_material_quantity, raw_material_unit } = req.body;
+
+    if (!raw_material_name || isNaN(raw_material_quantity) || !raw_material_unit) {
+        return res.status(400).json({ message: 'Invalid input data' });
+    }
+
+    const query = `
+    UPDATE tbl_raw_materials 
+    SET raw_material_name = ?, raw_material_quantity = ?, raw_material_unit = ?, date_added = NOW() 
+    WHERE raw_material_id = ?
+`;
+
+conn.query(query, [raw_material_name, raw_material_quantity, raw_material_unit, rawMaterialId], (error, results) => {
+    if (error) {
+        console.error('Error updating raw material:', error);
+        return res.status(500).json({ message: 'Failed to update raw material', error });
+    }
+    if (results.affectedRows === 0) {
+        return res.status(404).json({ message: 'Raw material not found' });
+    }
+    res.status(200).json({ message: 'Raw material updated successfully', status: 200 });
+});
+
+});
 
 router.get("/top-selling-sales", authenticateToken, authorizeRoles('superadmin'), (req, res) => {
     try {
@@ -2059,7 +2341,6 @@ router.get("/top-selling-sales", authenticateToken, authorizeRoles('superadmin')
         LIMIT 3;
         `;
 
-        // Execute query without userGender parameter
         conn.query(query, (err, result) => {
             if (err) {
                 console.error("Database query error:", err);
@@ -2074,38 +2355,235 @@ router.get("/top-selling-sales", authenticateToken, authorizeRoles('superadmin')
     }
 });
 
-router.post('/Register', (req, res) => {
-    const { fullName, gender, username, password } = req.body;
-  
-    if (!fullName || !gender || !username || !password) {
-      return res.status(400).json({ message: 'Invalid input data' });
+router.post("/unit", (req, res) => {
+    const { unit_name } = req.body;
+    console.log(req.body);
+
+    if (!unit_name) {
+        return res.status(422).json({ status: 422, message: "Fill all the details" });
     }
-  
-    const checkQuery = 'SELECT * FROM tbl_users WHERE username = ?';
-    conn.query(checkQuery, [username], (checkError, checkResults) => {
-      if (checkError) {
-        console.error('Error checking username:', checkError);
-        return res.status(500).json({ message: 'Server error' });
-      }
-  
-      if (checkResults.length > 0) {
-        return res.status(400).json({ message: 'Username already exists' });
-      }
-  
-      const query = 'INSERT INTO tbl_users (name, gender, username, password) VALUES (?, ?, ?, ?)';
-      
-      conn.query(query, [fullName, gender, username, password], (error) => {
-        if (error) {
-          console.error('Error adding user:', error);
-          return res.status(500).json({ message: 'Failed to add user' });
+
+    try {
+        conn.query("INSERT INTO units SET ?", { unit_name: unit_name }, (err, result) => {
+            if (err) {
+                console.log("error:", err);
+                return res.status(500).json({ status: 500, error: "Database insertion error" });
+            }
+            console.log("data added");
+            return res.status(201).json({ status: 201, data: req.body });
+        });
+    } catch (error) {
+        console.log("error:", error);
+        res.status(500).json({ status: 500, error: "Server error" });
+    }
+});
+
+router.get("/units", (req, res) => {
+    try {
+        conn.query("SELECT * FROM units", (err, results) => {
+            if (err) {
+                console.log("error:", err);
+                return res.status(500).json({ status: 500, error: "Database query error" });
+            }
+            return res.status(200).json({ status: 200, data: results });
+        });
+    } catch (error) {
+        console.log("error:", error);
+        res.status(500).json({ status: 500, error: "Server error" });
+    }
+});
+
+router.post("/unit-stock", (req, res) => {
+    const { unit_stock_name } = req.body;
+    console.log(req.body);
+
+    if (!unit_stock_name) {
+        return res.status(422).json({ status: 422, message: "Unit stock name is required" });
+    }
+
+    try {
+        conn.query("INSERT INTO units_stock SET ?", { unit_stock_name: unit_stock_name }, (err, result) => {
+            if (err) {
+                console.log("error:", err);
+                return res.status(500).json({ status: 500, error: "Database insertion error" });
+            }
+            console.log("unit stock added");
+            return res.status(201).json({ status: 201, data: req.body });
+        });
+    } catch (error) {
+        console.log("error:", error);
+        res.status(500).json({ status: 500, error: "Server error" });
+    }
+});
+
+router.get("/unit-stocks", (req, res) => {
+    try {
+        conn.query("SELECT * FROM units_stock", (err, results) => {
+            if (err) {
+                console.log("error:", err);
+                return res.status(500).json({ status: 500, error: "Database query error" });
+            }
+            return res.status(200).json({ status: 200, data: results });
+        });
+    } catch (error) {
+        console.log("error:", error);
+        res.status(500).json({ status: 500, error: "Server error" });
+    }
+});
+
+router.get('/api/admins', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    const query = `SELECT * FROM tbl_admins`;
+
+    conn.query(query, (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            return res.status(500).json({ message: 'Internal server error' });
         }
-        res.status(201).json({ message: 'Customer added successfully' });
-      });
+
+        if (results.length > 0) {
+            res.status(200).json({
+                message: 'Admins fetched successfully',
+                admins: results,
+            });
+        } else {
+            res.status(404).json({ message: 'No admins found' });
+        }
     });
-  });
-  
+});
 
+router.get('/api/superadmins', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    const query = `SELECT * FROM tbl_superadmins`;
 
+    conn.query(query, (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
 
+        if (results.length > 0) {
+            res.status(200).json({
+                message: 'Super Admins fetched successfully',
+                admins: results,
+            });
+        } else {
+            res.status(404).json({ message: 'No superadmins found' });
+        }
+    });
+});
+
+router.get('/api/users', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    const query = `SELECT * FROM tbl_users WHERE is_archived = 0`;
+
+    conn.query(query, (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        if (results.length > 0) {
+            res.status(200).json({
+                message: 'Users fetched successfully',
+                admins: results,
+            });
+        } else {
+            res.status(404).json({ message: 'No users found' });
+        }
+    });
+});
+
+router.put('/edit-account/:type/:id', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    const { type, id } = req.params;
+    const { name, username, password, role, gender } = req.body;
+    let query;
+    let params = [name, username, password, id];
+    let checkQuery;
+    let checkParams = [username, id];
+
+    if (type === 'admin') {
+        checkQuery = `SELECT COUNT(*) as count FROM tbl_admins WHERE username = ? AND id != ?`;
+        query = `UPDATE tbl_admins SET name = ?, username = ?, password = ?, role = ? WHERE id = ?`;
+        params.splice(3, 0, role); 
+    } else if (type === 'superadmin') {
+        checkQuery = `SELECT COUNT(*) as count FROM tbl_superadmins WHERE username = ? AND superadminid != ?`;
+        query = `UPDATE tbl_superadmins SET name = ?, username = ?, password = ?, role = ? WHERE superadminid = ?`;
+        params.splice(3, 0, role);
+    } else if (type === 'user') {
+        checkQuery = `SELECT COUNT(*) as count FROM tbl_users WHERE username = ? AND userId != ?`;
+        query = `UPDATE tbl_users SET name = ?, username = ?, password = ?, gender = ? WHERE userId = ?`;
+        params.splice(3, 0, gender);
+    } else {
+        return res.status(400).json({ message: 'Invalid account type' });
+    }
+
+    conn.query(checkQuery, checkParams, (err, checkResult) => {
+        if (err) {
+            console.error('Error checking username:', err);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        if (checkResult[0].count > 0) {
+            return res.status(400).json({ message: 'Username already taken' });
+        }
+
+        conn.query(query, params, (err, result) => {
+            if (err) {
+                console.error('Error updating account:', err);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ message: 'Account not found' });
+            }
+
+            res.status(200).json({ message: 'Account updated successfully' });
+        });
+    });
+});
+
+router.put('/archive-account/:type/:id', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    const { type, id } = req.params;
+    let query;
+
+    if (type === 'admin') {
+        query = `UPDATE tbl_admins SET is_archived = 1 WHERE id = ?`;
+    } else if (type === 'user') {
+        query = `UPDATE tbl_users SET is_archived = 1 WHERE userId = ?`;
+    } else {
+        return res.status(400).json({ message: 'Invalid account type or account type not supported for archiving' });
+    }
+
+    conn.query(query, [id], (err, result) => {
+        if (err) {
+            console.error('Error archiving account:', err);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Account not found' });
+        }
+
+        res.status(200).json({ message: 'Account archived successfully' });
+    });
+});
+
+router.post('/api/cashiers/add', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    const { name, username, password } = req.body;
+
+    if (!name || !username || !password) {
+        return res.status(400).json({ message: 'All fields are required.' });
+    }
+    const role = 'admin';
+    const query = `INSERT INTO tbl_admins (name, username, password, role) VALUES (?, ?, ?, ?)`;
+    const values = [name, username, password, role];  
+
+    conn.query(query, values, (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        res.status(200).json({ message: 'Cashier added successfully' });
+    });
+});
 
 module.exports = router;

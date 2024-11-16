@@ -97,7 +97,7 @@
 
 
 
-@media (max-width: 376px) {
+@media (min-width: 344px) and (max-width: 767px) {
   .sales-header {
       display: block;
   }
@@ -121,7 +121,7 @@
   }
 
   .sales-tables {
-      height: 450px;
+      height: 600px;
   }
 
   .cashier-sales-label, .date-sales-label, .label-sales-report {
@@ -135,38 +135,11 @@
   .pie-container1 {
       width: 300px !important;
       height: 300px;
+      margin: auto;
     } 
 }
 
-@media (min-width: 377px) and (max-width: 768px) {
-  .sales-header {
-      flex-direction: column;
-      align-items: flex-start;
-  }
-
-  .sales-label {
-      margin-bottom: 15px;
-  }
-
-  .tab-sales-header {
-      width: 100%;
-  }
-
-  .salesd {
-      height: calc(98vh - 80px);
-      margin: 0;
-      padding: 15px;
-      overflow-y: auto;
-      border: none;
-      box-shadow: none;
-  }
-
-  .sales-tables {
-      height: 780px;
-  }
-}
-
-@media (min-width: 769px) and (max-width: 1024px) {
+@media (min-width: 768px) and (max-width: 1024px) {
   .sales-header {
       flex-direction: column;
       align-items: flex-start;
@@ -196,17 +169,6 @@
   }
 }
 
-@media (min-width: 1025px) and (max-width: 1280px) {
-  .salesd {
-      height: calc(100vh - 80px);
-      margin: 20px;
-      padding: 15px;
-  }
-
-  .sales-tables {
-      height: 500px;
-  }
-}
 
 .pie-container1 {
   display: flex;

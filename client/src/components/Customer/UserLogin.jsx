@@ -18,8 +18,6 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [remainingAttempts, setRemainingAttempts] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-
-  // Use useRef to get a reference to the form
   const formRef = useRef(null);
 
   const togglePasswordVisibility = () => {
@@ -27,9 +25,9 @@ const Login = () => {
   };
 
   const handleLogin = async (e) => {
-    e.preventDefault();  // Prevent default form submission behavior
+    e.preventDefault();  
 
-    const username = formRef.current.username.value;  // Access input values from formRef
+    const username = formRef.current.username.value; 
     const password = formRef.current.password.value;
 
     try {
@@ -43,7 +41,7 @@ const Login = () => {
 
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem('token', data.token); // Store the token in local storage
+        localStorage.setItem('token', data.token); 
         navigate('/menu');
       } else {
         const errorData = await response.json();

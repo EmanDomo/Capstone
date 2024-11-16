@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaPlus, FaMinus, FaTrash } from 'react-icons/fa';
 import { MdOutlineLogin } from "react-icons/md";
 import { host } from '../../apiRoutes';
+import { Spinner } from 'react-bootstrap'; 
 
 function Header() {
     const [data, setData] = useState([]);
@@ -181,13 +182,17 @@ function Header() {
         setOpenLinks(!openLinks);
     };
 
-    const handleLogoutShow = () => setShowLogoutConfirm(true);
-    const handleLogoutClose = () => setShowLogoutConfirm(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [loadingLogout, setLoadingLogout] = useState(false);
 
-    const handleLogoutConfirm = () => {
-        localStorage.removeItem('token');
-        navigate('/');
-    };
+    const handleLogout = () => {
+        setLoadingLogout(true); 
+        setTimeout(() => {
+          localStorage.removeItem('token');
+          setLoadingLogout(false); 
+          navigate('/'); 
+        }, 2000); 
+      };
 
     return (
         <>
@@ -213,8 +218,8 @@ function Header() {
                             <Nav.Link onClick={handleCartShow} className='text-white'>My Cart</Nav.Link>
                             <Nav.Link onClick={handleOrdersShow} className='text-white'> My Orders </Nav.Link>
                             <div className="d-flex">
-                                <Nav.Link onClick={handleLogoutShow} className='text-white ms-0 d-lg-block d-sm-block fs-4 logout-customer'> <MdOutlineLogin /> </Nav.Link>
-                                <Nav.Link onClick={handleLogoutShow} className='text-white ms-2 d-lg-none d-sm-block'> Logout </Nav.Link>
+                                <Nav.Link onClick={() => setShowLogoutModal(true)} className='text-white ms-0 d-lg-block fs-4 logout-cashier'><MdOutlineLogin /></Nav.Link>
+                                <Nav.Link onClick={() => setShowLogoutModal(true)} className='text-white ms-2 d-lg-none d-sm-block'>Logout</Nav.Link>
                             </div>
                         </Nav>
                     </Navbar.Collapse>
@@ -319,20 +324,29 @@ function Header() {
                 </Modal.Footer>
             </Modal>
 
-            <Modal show={showLogoutConfirm} onHide={handleLogoutClose} dialogClassName="fullscreen-modal">
-                <Modal.Header closeButton>
-                    <Modal.Title className='text-danger'>Confirm Logout</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>Are you sure you want to log out?</Modal.Body>
-                <Modal.Footer className="d-flex justify-content-between">
-                    <Button variant="dark cancel-logout" onClick={handleLogoutClose}>
-                        Cancel
-                    </Button>
-                    <Button variant="dark confirm-logout" onClick={handleLogoutConfirm}>
-                        Yes
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+            <Modal show={showLogoutModal} onHide={() => setShowLogoutModal(false)} dialogClassName="fullscreen-modal">
+        <Modal.Header closeButton>
+          <Modal.Title className='text-danger'>Confirm Logout</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>Are you sure you want to logout?</Modal.Body>
+        <Modal.Footer className="d-flex justify-content-between">
+  {loadingLogout ? (
+    <Button variant="dark" disabled>
+      <Spinner animation="border" size="sm" />
+      Logging out...
+    </Button>
+  ) : (
+    <>
+      <Button variant="dark cancel-logout" onClick={() => setShowLogoutModal(false)}>
+        Cancel
+      </Button>
+      <Button variant="dark confirm-logout" onClick={handleLogout}>
+        Yes
+      </Button>
+    </>
+  )}
+</Modal.Footer>
+      </Modal>
         </>
     );
 }

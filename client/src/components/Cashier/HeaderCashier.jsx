@@ -9,6 +9,7 @@ import Logo1 from "../../Assets/logo.png";
 import "../../styles/HeaderCashier.css";
 import { IoCartOutline } from "react-icons/io5";
 import { host } from '../../apiRoutes';
+import { Spinner } from 'react-bootstrap'; 
 
 function Header1() {
   const [data, setData] = useState([]);
@@ -21,11 +22,10 @@ function Header1() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isToastVisible, setIsToastVisible] = useState(false);
-
-  // State for logout confirmation modal
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-
   const navigate = useNavigate();
+  const [loadingLogout, setLoadingLogout] = useState(false);
+
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -123,7 +123,7 @@ function Header1() {
           },
         }
       );
-      getCartData(); // Refetch cart data
+      getCartData(); 
     } catch (error) {
       console.error('Error updating cart item quantity:', error);
     }
@@ -172,7 +172,7 @@ function Header1() {
       if (res.data.success) {
         console.log('Order placed successfully');
         setIsToastVisible(true);
-        getCartData(); // Clear cart after successful checkout
+        getCartData(); 
       } else {
         console.error('Error placing order:', res.data.error);
       }
@@ -183,10 +183,14 @@ function Header1() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/'); // Redirect to login or home page
+    setLoadingLogout(true); 
+    setTimeout(() => {
+      localStorage.removeItem('token');
+      setLoadingLogout(false); 
+      navigate('/');
+    }, 2000); 
   };
-
+  
   return (
     <>
       <Navbar expand="lg" sticky="top" className="bg-body-tertiary admin-nav">
@@ -213,19 +217,27 @@ function Header1() {
         </Container>
       </Navbar>
 
-      {/* Logout Confirmation Modal */}
       <Modal show={showLogoutModal} onHide={() => setShowLogoutModal(false)} dialogClassName="fullscreen-modal">
         <Modal.Header closeButton>
           <Modal.Title className='text-danger'>Confirm Logout</Modal.Title>
         </Modal.Header>
-        <Modal.Body>Are you sure you want to logout?</Modal.Body>
+          <Modal.Body>Are you sure you want to logout?</Modal.Body>
         <Modal.Footer className="d-flex justify-content-between">
-          <Button variant="dark cancel-logout" onClick={() => setShowLogoutModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="dark confirm-logout" onClick={handleLogout}>
-            Yes
-          </Button>
+          {loadingLogout ? (
+            <Button variant="dark" disabled>
+              <Spinner animation="border" size="sm" />
+              Logging out...
+            </Button>
+          ) : (
+            <>
+              <Button variant="dark cancel-logout" onClick={() => setShowLogoutModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="dark confirm-logout" onClick={handleLogout}>
+                Yes
+              </Button>
+            </>
+          )}
         </Modal.Footer>
       </Modal>
 

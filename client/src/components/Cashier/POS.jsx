@@ -1,9 +1,9 @@
+import React, { useEffect, useState } from 'react';
 import "../../styles/POS.css"; 
 import Header from "./HeaderCashier";
 import Footer from "../Customer/Footer";
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
-import React, { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Card from 'react-bootstrap/Card';
 import Modal from 'react-bootstrap/Modal';
@@ -31,35 +31,17 @@ const POS = () => {
     const [showConfirmationModal, setShowConfirmationModal] = useState(false);
     const [isOutOfStockToastVisible, setIsOutOfStockToastVisible] = useState(false);
     const [isInsufficientStockToastVisible, setIsInsufficientStockToastVisible] = useState(false);
-
     const [modalShow, setModalShow] = useState(false);
- 
-
     const [isToastVisible, setIsToastVisible] = useState(false);
-
-    // Toggle the toast visibility
     const toggleToast = () => setIsToastVisible(prev => !prev);
-
-    // State variables for form inputs
     const [fname, setFName] = useState("");
     const [file, setFile] = useState("");
     const [quantity, setQuantity] = useState("");
     const [price, setItemPrice] = useState("");
-    const [category, setCategoryName] = useState("");
-
     const handleShow = () => setModalShow(true);
     const handleClose = () => setModalShow(false);
-
-    const [selectedCategory, setSelectedCategory] = useState('Show All');
-    // Function to toggle the insufficient stock toast visibility
     const toggleInsufficientStockToast = () => setIsInsufficientStockToastVisible(prev => !prev);
-// Function to toggle the out-of-stock toast visibility
     const toggleOutOfStockToast = () => setIsOutOfStockToastVisible(prev => !prev);
-
-    const handleCategorySelect = (categoryName) => {
-        setSelectedCategory(categoryName);
-        handleCategoryClick(categoryName); // Call your existing function
-    };
 
     const getUserData = async () => {
         try {
@@ -82,23 +64,10 @@ const POS = () => {
         }
     };
 
-    const getCategories = async () => {
-        try {
-            const res = await axios.get(`${host}/categories`);
-            if (res.data.status === 200) {
-                setCategories(res.data.data);
-            } else {
-                console.log('Error fetching categories');
-            }
-        } catch (error) {
-            console.error('Error fetching categories:', error);
-        }
-    };
-
     const dltUser = async (id) => {
         try {
             const token = localStorage.getItem('token');
-            const res = await axios.delete(`/${id}`, {
+            const res = await axios.delete(`${host}/${id}`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
@@ -174,19 +143,6 @@ const POS = () => {
             }
         }
     };
-    
-
-
-    const handleCategoryClick = (category) => {
-        // Compare using category_name from item and selected category, adjusting for case sensitivity.
-        const filteredItems = data.filter(item => item.category.toLowerCase() === category.toLowerCase());
-        setFilteredData(filteredItems);
-    };
-    
-
-    const handleShowAll = () => {
-        setFilteredData(data);
-    };
 
     const getPosItems = async () => {
         try {
@@ -222,7 +178,7 @@ const POS = () => {
 
             if (res.data.status === 'success') {
                 console.log('Item removed from POS');
-                getPosItems();  // Refresh POS items after removal
+                getPosItems();  
             } else {
                 console.error('Error removing item from POS:', res.data.message);
             }
@@ -246,7 +202,7 @@ const POS = () => {
 
             if (res.data.status === 'success') {
                 console.log('Item quantity updated');
-                getPosItems();  // Refresh POS items after updating
+                getPosItems(); 
             } else {
                 console.error('Error updating item quantity:', res.data.message);
             }
@@ -260,11 +216,9 @@ const POS = () => {
     };
 
     const handleCheckout = async () => {
-        // Check if there is enough stock for each item in the cart
         const insufficientStockItems = posItems.filter(item => item.quantity > item.max_meals);
     
         if (insufficientStockItems.length > 0) {
-            // Show insufficient stock toast if any item is out of stock
             setIsInsufficientStockToastVisible(true);
             return;
         }
@@ -272,7 +226,7 @@ const POS = () => {
         try {
             const token = localStorage.getItem('token');
             const res = await axios.post(
-                '/pos-place-order',
+                `${host}/pos-place-order`,
                 { posItems },
                 {
                     headers: {
@@ -283,14 +237,13 @@ const POS = () => {
         
             if (res.data.success) {
                 console.log('Order placed successfully');
-                setPosItems([]); // Clear POS items after successful order placement
-                setIsToastVisible(true); // Show confirmation modal
+                setPosItems([]); 
+                setIsToastVisible(true); 
             } else {
                 console.error('Error placing order:', res.data.error);
             }
         } catch (error) {
             if (error.response && error.response.status === 400) {
-                // Show insufficient stock toast if the server responds with a 400 error
                 setIsInsufficientStockToastVisible(true);
                 console.error('Insufficient stock for some items.');
             } else {
@@ -298,14 +251,26 @@ const POS = () => {
             }
         }
     };
-    
 
-    // Call getPosItems when component mounts or data changes
     useEffect(() => {
         getUserData();
         getCategories();
         getPosItems();
     }, []);
+    
+    const getCategories = async () => {
+        try {
+            const res = await axios.get(`${host}/categories`);
+            if (res.data.status === 200) {
+                setCategories(res.data.data); 
+                console.log('Categories:', res.data.data); 
+            } else {
+                console.log('Error fetching categories');
+            }
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+        }
+    };
 
     getPosItems();
 
@@ -315,6 +280,39 @@ const POS = () => {
     
       const removeToast = (id) => {
         setToasts((prev) => prev.filter(toast => toast.id !== id));
+      };
+
+      const [selectedCategory, setSelectedCategory] = useState('Show All');
+
+      const handleCategorySelect = (categoryName) => {
+        console.log('Category Selected:', categoryName);
+        setSelectedCategory(categoryName);
+    
+        if (categoryName === 'Show All') {
+            setFilteredData(data);
+        } else {
+            handleCategoryClick(categoryName);
+        }
+    };
+    const handleCategoryClick = (category) => {
+        console.log('Category Selected:', category);
+        console.log('Data:', data);
+    
+        const selectedCategory = category.trim().toLowerCase();
+
+        const filteredItems = data.filter(item => {
+            const itemCategory = item.category ? item.category.trim().toLowerCase() : '';
+            console.log('Item Category:', itemCategory);  
+    
+            return itemCategory === selectedCategory;
+        });
+    
+        console.log('Filtered Items:', filteredItems);
+        setFilteredData(filteredItems);
+    };
+    
+      const handleShowAll = () => {
+        setFilteredData(data);
       };
 
     return ( 
@@ -344,7 +342,7 @@ const POS = () => {
                                                 <td id="quantity" className="text-center">
                                                     <ButtonGroup className="pos-btng">
                                                         <Button className="pos-add" onClick={() => updatePos(item.itemId, 1)}>+</Button>
-                                                        <label id="pos-quantity" className="px-2 py-1">{item.quantity}</label>
+                                                        <label id="pos-quantity" className="px-2 py-1 pe-3">{item.quantity}</label>
                                                         <Button className="pos-minus" onClick={() => updatePos(item.itemId, -1)}>-</Button>
                                                     </ButtonGroup>
                                                 </td>
@@ -383,68 +381,67 @@ const POS = () => {
                             <h1 className="pos-menu-title ">MENU</h1>
                         </div>
                         <div className="col-5 d-flex px-2 py-2 flex-row-reverse">
-                        <DropdownButton id="category-dropdown" title={selectedCategory}>
-                            <Dropdown.Item onClick={() => {handleCategorySelect('Show All'); handleShowAll();}}>Show All</Dropdown.Item>
-                            {categories.map((cat, i) => (
-                                <Dropdown.Item key={i} onClick={() => handleCategoryClick(cat.category_name)}>
-                                    {cat.category_name}
-                                </Dropdown.Item>
-                            ))}
-                        </DropdownButton>
+                         <DropdownButton id="category-dropdown" title={selectedCategory}>
+                        <Dropdown.Item onClick={() => { handleCategorySelect('Show All'); handleShowAll(); }} >
+                            Show All
+                        </Dropdown.Item>
+                        {categories.map((cat, i) => (
+                            <Dropdown.Item key={i} onClick={() => handleCategorySelect(cat.category_name)} >
+                                {cat.category_name}
+                            </Dropdown.Item>
+                        ))}
+                    </DropdownButton>
                         </div>
                           
                     </div>
                     <div className="mx-2 pos-content">
-                            <Row xs={2} md={3} lg={4} className="g-4 mx-2">
-    {filteredData.length > 0 ? (
-        filteredData.map((el, i) => (
-            <Col key={i}>
-                <Card id="cashier-card">
-                    <div className="cashier-img">
-                        <Card.Img variant="top" src={`${host}/uploads/${el.img}`} className="cashier-itm" alt="itm" />
-                    </div>
-                    <Card.Body>
-                        <Card.Title>{el.itemname}</Card.Title>
-                        <div className="d-flex justify-content-between p-2">
-                            <Card.Text className="d-flex align-items-center">
-                                <label className="p-1 cashier-price">₱{el.price}</label>
-                            </Card.Text>
-                        <Button 
-                        variant="dark" 
-                        className="cashier-add-to-cart" 
-                        onClick={() => addToPOS(el.id, 1, el.price, el.itemname)} // Pass itemname instead of max_meals
-                        disabled={el.max_meals === 0} // Disable if out of stock
-                    >
-                        <IoMdAdd />
-                    </Button>
+                        <Row xs={2} md={3} lg={4} className="g-4 mx-2">
+                            {filteredData.length > 0 ? (
+                                filteredData.map((el, i) => (
+                                    <Col key={i}>
+                                        <Card id="cashier-card">
+                                            <div className="cashier-img">
+                                                <Card.Img variant="top" src={`${host}/uploads/${el.img}`} className="cashier-itm" alt="itm" />
+                                            </div>
+                                            <Card.Body>
+                                                <Card.Title>{el.itemname}</Card.Title>
+                                                <div className="d-flex justify-content-between p-2">
+                                                    <Card.Text className="d-flex align-items-center">
+                                                        <label className="p-1 cashier-price">₱{el.price}</label>
+                                                    </Card.Text>
+                                                    <Button 
+                                                variant="dark" 
+                                                className="cashier-add-to-cart" 
+                                                onClick={() => addToPOS(el.id, 1, el.price, el.itemname)} // Pass itemname instead of max_meals
+                                                disabled={el.max_meals === 0} // Disable if out of stock
+                                            >
+                                                <IoMdAdd />
+                                            </Button>
 
-                        </div>
-                        {/* Display available stock/meals */}
-                        <div className="text-muted text-center">
-                            {el.max_meals > 0 
-                                ? `Available Meals: ${el.max_meals}`
-                                : 'Out of Stock'}
-                        </div>
-                    </Card.Body>
-                </Card>
-            </Col>
-        ))
-    ) : (
-        <Col>
-            <Card className="text-center">
-                <Card.Body>
-                    <Card.Text>No items available in the menu.</Card.Text>
-                </Card.Body>
-            </Card>
-        </Col>
-    )}
-</Row>
-
-                            </div>
-                
+                                                </div>
+                                                {/* Display available stock/meals */}
+                                                <div className="text-muted text-center">
+                                                    {el.max_meals > 0 
+                                                        ? `Available Meals: ${el.max_meals}`
+                                                        : 'Out of Stock'}
+                                                </div>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+                                ))
+                            ) : (
+                                <Col>
+                                    <Card className="text-center">
+                                        <Card.Body>
+                                            <Card.Text>No items available in the menu.</Card.Text>
+                                        </Card.Body>
+                                    </Card>
+                                </Col>
+                            )}
+                        </Row>
                     </div>
-                </div>
-                
+                    </div>
+                </div>               
             </div>
             <div className="position-fixed bottom-0 end-0 p-3">
             <Row>
@@ -468,7 +465,6 @@ const POS = () => {
                 </Toast.Body>
             </Toast>
 
-            {/* Insufficient Stock Toast */}
             <Toast onClose={toggleInsufficientStockToast} show={isInsufficientStockToastVisible} delay={3000} autohide>
                 <Toast.Header>
                     <strong className="me-auto">Insufficient Stock</strong>
@@ -481,20 +477,19 @@ const POS = () => {
                 </Col>
             </Row>
             </div>
-            {/* Toast for the added item and already in the cart item */}
             <ToastContainer className="position-fixed bottom-0 end-0 p-3 toast-menu" style={{ zIndex: 1 }}>
-          {toasts.map((toast) => (
-            <Toast key={toast.id} onClose={() => removeToast(toast.id)} delay={3000} autohide>
-              <Toast.Header>
-              <strong className={`me-auto ${toast.type === 'success' ? 'text-success' : 'text-danger'}`}>
-                {toast.type === 'success' ? 'Added in the Cart' : 'Already in the Cart'}
-                </strong>
-                <small>just now</small>
-              </Toast.Header>
-              <Toast.Body>{toast.message}</Toast.Body>
-            </Toast>
-          ))}
-        </ToastContainer>
+                {toasts.map((toast) => (
+                    <Toast key={toast.id} onClose={() => removeToast(toast.id)} delay={3000} autohide>
+                    <Toast.Header>
+                    <strong className={`me-auto ${toast.type === 'success' ? 'text-success' : 'text-danger'}`}>
+                        {toast.type === 'success' ? 'Added in the Cart' : 'Already in the Cart'}
+                        </strong>
+                        <small>just now</small>
+                    </Toast.Header>
+                    <Toast.Body>{toast.message}</Toast.Body>
+                    </Toast>
+                ))}
+            </ToastContainer>
         </div>
      );
 }

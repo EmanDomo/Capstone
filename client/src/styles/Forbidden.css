@@ -1,0 +1,42 @@
+/* ForbiddenPage.css */
+
+.forbidden-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #f8d7da; /* Light red background */
+    color: #721c24; /* Dark red text */
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+}
+
+.forbidden-page h2 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    font-weight: bold;
+}
+
+.forbidden-page p {
+    font-size: 1.25rem;
+    margin-top: 0;
+    padding: 0 20px;
+    line-height: 1.5;
+}
+
+.forbidden-page .back-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    background-color: #721c24;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.forbidden-page .back-button:hover {
+    background-color: #58151b; /* Darker red */
+}

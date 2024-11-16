@@ -74,12 +74,14 @@
 }
 
 #edit-inventory {
-  background-color: hotpink;
+  background-color: transparent;
+  color: black;
   border: none;
 }
 
 #delete-inventory {
-  background-color: black;
+  background-color: transparent;
+  color: red;
   border: none;
 }
 
@@ -120,7 +122,19 @@
 .invheader {
   display: flex;
 }
-@media (max-width: 376px) { /* Small phones */
+
+.inventory-button-2 {
+  display: none;
+}
+
+.btn-add-inventory2 {
+  border-radius: 40px;
+  height: 60px;
+  width: 60px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 344px) and (max-width: 767px) {
   .invcontainer {
     flex-direction: column;
     align-items: flex-start;
@@ -142,7 +156,7 @@
   }
 
   .inventoryd {
-    height: calc(95vh - 60px); /* Adjust based on header */
+    height: 95vh;
     margin: 0;
     padding: 10px; /* Reduced padding */
     overflow-y: hidden !important;
@@ -151,7 +165,7 @@
   }
 
   .inventory-tables {
-    height: 400px;
+    height: 700px;
     overflow-y: auto;
   }
   
@@ -164,60 +178,24 @@
     height: 100%;
     max-width: none;
     margin: 0;
-}
-
-.fullscreen-modal .modal-content {
-    /* height: 900px; */
-    border-radius: 0;
-}
-}
-
-@media (min-width: 377px) and (max-width: 767px) { /* Medium phones */
-  .invcontainer {
-    flex-direction: column;
-    align-items: flex-start;
   }
 
-  .logo-label {
-    margin-bottom: 15px;
+  .fullscreen-modal .modal-content {
+      /* height: 900px; */
+      border-radius: 0;
   }
 
-  .tab-header {
-    width: 100%;
+  .inventory-button {
+    display: none !important;
   }
 
-  .inventoryd {
-    height: calc(98vh - 80px);
-    margin: 0;
-    padding: 15px;
-    overflow-y: hidden;
-    border: none;
-    box-shadow: none; /* Subtle shadow */
+  .inventory-button-2 {
+    display: block;
   }
 
-  .inventory-tables {
-    height: 450px;
-    overflow-y: auto;
-  }
-  
-
-  .btn-add-inventory {
-    width: 100%; /* Full width on small screens */
-  }
-  .fullscreen-modal {
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    margin: 0;
 }
 
-.fullscreen-modal .modal-content {
-    /* height: 900px; */
-    border-radius: 0;
-}
-}
-
-@media (min-width: 768px) and (max-width: 1024px) { /* Tablets */
+@media (min-width: 768px) and (max-width: 1024px) {
   .fullscreen-modal {
     width: 100%;
     height: 100%;
@@ -244,14 +222,15 @@
   }
 
   .inventoryd {
-    height: calc(100vh - 80px);
+    height: 90vh;
     margin: 0;
     padding: 15px;
     overflow-y: hidden !important;
+    box-shadow: none;
   }
 
   .inventory-tables {
-    height: 750px;
+    height: 1000px;
     overflow-y: auto;
   }
   
@@ -259,6 +238,14 @@
   .table-fixed {
     height: 600px;
   
+  }
+
+  .inventory-button {
+    display: none !important;
+  }
+
+  .inventory-button-2 {
+    display: block;
   }
 }
 

@@ -7,25 +7,32 @@ import Modal from 'react-bootstrap/Modal';
 import "../../styles/HeaderAdmin.css";
 import Logo1 from "../../Assets/logo.png";
 import Button from 'react-bootstrap/Button';
+import Spinner from 'react-bootstrap/Spinner';  
+import { useNavigate } from 'react-router-dom';
 
 function Header1() {
   const [showModal, setShowModal] = useState(false);
-
-  const handleLogoutClick = () => {
-    setShowModal(true);
-  };
+  const [loading, setLoading] = useState(false); 
+  const navigate = useNavigate();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [loadingLogout, setLoadingLogout] = useState(false);
 
   const handleCloseModal = () => {
     setShowModal(false);
   };
 
-  const handleConfirmLogout = () => {
-    window.location.href = '/'; 
+  const handleLogout = () => {
+    setLoadingLogout(true); 
+    setTimeout(() => {
+      localStorage.removeItem('token');
+      setLoadingLogout(false);
+      navigate('/'); 
+    }, 2000); 
   };
-
+  
   return (
     <>
-      <Navbar expand="lg" className="bg-body-tertiary admin-nav">
+      <Navbar expand="lg" sticky="top" className="bg-body-tertiary admin-nav">
         <Container>
           <Navbar.Brand href="/">
             <img
@@ -40,34 +47,39 @@ function Header1() {
             <Nav className="ms-auto mt-1">
               <Nav.Link className="navlink-admin text-white" href="/Inventory">Inventory</Nav.Link>
               <Nav.Link className="navlink-admin text-white" href="/Sales">Sales</Nav.Link>
+              <Nav.Link className="navlink-admin text-white" href="/ManageAccounts">Accounts</Nav.Link>
               <div className="d-flex">
-                <Nav.Link onClick={handleLogoutClick} className='text-white ms-0 d-lg-block d-sm-none fs-4 logout-customer'>
-                  <MdOutlineLogin />
-                </Nav.Link>
-                <Nav.Link onClick={handleLogoutClick} className='text-white ms-2 d-lg-none d-sm-block'>
-                  Logout
-                </Nav.Link>
+                <Nav.Link onClick={() => setShowLogoutModal(true)} className='text-white ms-0 d-lg-block fs-4 logout-cashier'><MdOutlineLogin /></Nav.Link>
+                <Nav.Link onClick={() => setShowLogoutModal(true)} className='text-white ms-2 d-lg-none d-sm-block'>Logout</Nav.Link>
               </div>
             </Nav>
           </Navbar.Collapse>
         </Container>
       </Navbar>
 
-      {/* Confirmation Modal */}
-      <Modal show={showModal} onHide={handleCloseModal} dialogClassName="fullscreen-modal">
+      <Modal show={showLogoutModal} onHide={() => setShowLogoutModal(false)} dialogClassName="fullscreen-modal">
         <Modal.Header closeButton>
           <Modal.Title className='text-danger'>Confirm Logout</Modal.Title>
         </Modal.Header>
         <Modal.Body>Are you sure you want to logout?</Modal.Body>
-        <Modal.Footer className='d-flex justify-content-between'>
-          <Button variant="dark cancel-logout" onClick={handleCloseModal}>
-            Cancel
-          </Button>
-          <Button variant="dark confirm-logout" onClick={handleConfirmLogout}>
-            Yes
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        <Modal.Footer className="d-flex justify-content-between">
+          {loadingLogout ? (
+            <Button variant="dark" disabled>
+              <Spinner animation="border" size="sm" />
+              Logging out...
+            </Button>
+          ) : (
+          <>
+            <Button variant="dark cancel-logout" onClick={() => setShowLogoutModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="dark confirm-logout" onClick={handleLogout}>
+              Yes
+            </Button>
+          </>
+        )}
+      </Modal.Footer>
+    </Modal>
     </>
   );
 }

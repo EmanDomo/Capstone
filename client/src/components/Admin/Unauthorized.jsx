@@ -1,23 +1,15 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+// ForbiddenPage.js
+import React from 'react';
+import '../../styles/Unauthorized.css'; 
 
-const Unauthorized = () => {
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            navigate('/userlogin'); // Redirect to login page after 3 seconds
-        }, 3000);
-
-        return () => clearTimeout(timer); // Cleanup the timer on unmount
-    }, [navigate]);
-
+const ForbiddenPage = () => {
     return (
-        <div>
-            <h1>403 - Forbidden</h1>
-            <p>You do not have access to this page. Redirecting to login...</p>
+        <div className="forbidden-page">
+            <h2>403 Forbidden</h2>
+            <p>You do not have permission to access this page.</p>
+            <a href="/" className="back-button">Go Back to Home</a>
         </div>
     );
 };
 
-export default Unauthorized;
+export default ForbiddenPage;

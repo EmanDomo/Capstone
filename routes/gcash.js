@@ -18,9 +18,9 @@ async function createPaymongoSource(amount, description, remarks) {
       data: {
         data: {
           attributes: {
-            amount: amount * 100, // PayMongo expects the amount in cents
+            amount: amount * 100, 
             redirect: {
-              success: `https://sjisc-canteen.online/success`, // Ensure this URL matches your front-end success page
+              success: `https://sjisc-canteen.online/success`, 
               failed: `https://sjisc-canteen.online/failed`
             },
             type: 'gcash',

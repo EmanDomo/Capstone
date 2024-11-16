@@ -38,9 +38,9 @@ const Checkout = () => {
         }
     };
 
-    const handleOtherPayment = async () => {
+    const handlePayPal = async () => {
         try {
-            const response = await fetch(`${host}/pay-others`, {
+            const response = await fetch(`${host}/pay`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -49,14 +49,39 @@ const Checkout = () => {
             });
             const data = await response.json();
             if (data.url) {
-                window.location.href = data.url;
+                window.location.href = data.url; 
             } else {
-                console.error('Failed to get payment link');
+                console.error('Failed to get PayPal payment link');
             }
         } catch (error) {
             console.error('Error:', error);
         }
     };
+        <form action="/pay" method="post" className="checkout-form">
+    <input type="hidden" name="totalAmount" value={overallTotal} />
+    <button type="submit" className="paypal-button">Pay with PayPal</button>
+  </form>
+
+
+    // const handleOtherPayment = async () => {
+    //     try {
+    //         const response = await fetch(`${host}/pay-others`, {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //             },
+    //             body: JSON.stringify({ totalAmount: overallTotal }),
+    //         });
+    //         const data = await response.json();
+    //         if (data.url) {
+    //             window.location.href = data.url;
+    //         } else {
+    //             console.error('Failed to get payment link');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error:', error);
+    //     }
+    // };
 
     const handleQR = () => {
         setShowQRModal(true);
@@ -83,10 +108,10 @@ const Checkout = () => {
     const handleCheckout = () => {
         if (paymentMethod === 'G-Cash') {
             handlePayGcash();
-        } else if (paymentMethod === 'Other payment method') {
-            handleOtherPayment();
         } else if (paymentMethod === 'QR Code') {
             handleQR();
+        } else if (paymentMethod === 'Paypal') { 
+            handlePayPal();
         } else {
             alert('Please select a valid payment method.');
         }
@@ -137,7 +162,6 @@ const Checkout = () => {
                                 <Dropdown.Item onClick={() => handleSelectPaymentMethod('G-Cash')} className="gcash-button">G-Cash</Dropdown.Item>
                                 <Dropdown.Item onClick={() => handleSelectPaymentMethod('Paypal')} className="paypal-button">Paypal</Dropdown.Item>
                                 <Dropdown.Item onClick={() => handleSelectPaymentMethod('QR Code')} className="qr-button">QR Code</Dropdown.Item>
-                                <Dropdown.Item onClick={() => handleSelectPaymentMethod('Other payment method')} className="other-payment-button">Other payment method</Dropdown.Item>
                             </DropdownButton>
                         </div>
                     </div>
@@ -158,7 +182,7 @@ const Checkout = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <div className="qr-modal-content">
-                        <img src="/uploads/qr.jfif" alt="QR Code" className="qr-image" />
+                        <img src="/uploads/image.png" alt="QR Code" className="qr-image" />
                         <input type="file" onChange={handleFileChange} className="form-control mt-3" />
                     </div>
                 </Modal.Body>

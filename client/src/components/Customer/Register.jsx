@@ -109,8 +109,8 @@ const Register = () => {
             )}
           </div>
           <div className='btnscont d-flex justify-content-between'>
-            <Button type='submit' variant="dark" className='btnRegister'>Register</Button>
             <Button variant="dark" onClick={() => navigate('/')}>Cancel</Button>
+            <Button type='submit' variant="dark" className='btnRegister'>Register</Button>    
           </div>
         </form>
 

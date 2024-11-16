@@ -38,7 +38,8 @@ const Menu = () => {
   const navigate = useNavigate();
   const [filteredData, setFilteredData] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [toasts, setToasts] = useState([]); // Manage toasts list
+  const [toasts, setToasts] = useState([]); 
+  const [selectedCategory, setSelectedCategory] = useState('Show All');
 
   useEffect(() => {
     getUserData();
@@ -47,21 +48,21 @@ const Menu = () => {
     getCategories();
   }, []);
 
-  const [selectedCategory, setSelectedCategory] = useState('Show All');
-
   const handleCategorySelect = (categoryName) => {
     setSelectedCategory(categoryName);
     if (categoryName === 'Show All') {
       setFilteredData(data); // Show all items
     } else {
-      handleCategoryClick(categoryName); // Filter by category
+      // Ensure the category is selected correctly
+      handleCategoryClick(categoryName);
     }
   };
-
+  
   const handleCategoryClick = (category) => {
     const filteredItems = data.filter(item => item.category.toLowerCase() === category.toLowerCase());
     setFilteredData(filteredItems);
   };
+
 
   const handleShowAll = () => {
     setFilteredData(data);
@@ -195,7 +196,6 @@ const Menu = () => {
           </div>
         </section>
 
-        {/* Toast Container for Stacked Toasts */}
         <ToastContainer className="position-fixed bottom-0 end-0 p-3 toast-menu" style={{ zIndex: 1 }}>
           {toasts.map(toast => (
             <Toast key={toast.id}>
@@ -295,7 +295,6 @@ const Menu = () => {
                           </Col>
                       )}
                   </Row>
-
           </div>
         </section>
       </div>

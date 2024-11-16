@@ -11,7 +11,7 @@ const MyOrders = () => {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const token = localStorage.getItem('token'); // Assumes token is stored in localStorage
+                const token = localStorage.getItem('token'); 
                 const response = await axios.get(`${host}/api/my-orders`, {
                     headers: {
                         'Authorization': `Bearer ${token}`

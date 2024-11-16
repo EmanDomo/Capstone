@@ -20,6 +20,9 @@ import MyOrders from './components/Customer/MyOrders';
 import Sales from './components/Admin/Sales';
 import SuperAdmin from './components/Admin/SuperAdmin';
 import Inventory from './components/Admin/Inventory';
+import ManageAccounts from './components/Admin/ManageAccounts';
+import CompleteOrder from './components/Customer/CompleteOrder';
+import NotFound from './components/Admin/NotFound';
 
 function App() {
   return (
@@ -40,6 +43,9 @@ function App() {
         <Route path='/superadmin' element={<SuperAdmin />} />
         <Route path='/Inventory' element={<Inventory />} />
         <Route path='/Footer' element={<Footer />} />
+        <Route path="/ManageAccounts" element={<ManageAccounts/>}/>
+        <Route path="/complete-order" element={<CompleteOrder/>}/>
+        {/* <Route path="*" element={<NotFound/>}/> */}
       </Routes>    
     </>
   );
