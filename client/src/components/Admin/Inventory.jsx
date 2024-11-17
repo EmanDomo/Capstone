@@ -16,7 +16,7 @@ import Tabs from 'react-bootstrap/Tabs';
 import { IoMdAdd } from "react-icons/io";
 import { host } from '../../apiRoutes';
 import { Toast } from 'react-bootstrap';
-
+import { ToastContainer } from 'react-bootstrap';
 
 const Inventory = () => {
     const [data, setData] = useState([]);
@@ -82,6 +82,7 @@ const Inventory = () => {
     const [newUnitStock, setNewUnitStock] = useState('');
     const [rawMaterialUnitStock, setRawMaterialUnitStock] = useState(''); 
     const [isAddingUnitStock, setIsAddingUnitStock] = useState(false); 
+    const [toastsRaw, setToastsRaw] = useState([]);
 
     useEffect(() => {
         getUserData();
@@ -123,6 +124,15 @@ const Inventory = () => {
         setErrorMessage('');
     };
     
+    const addToastRaw = (message, type = 'success') => {
+        const id = new Date().getTime(); 
+        setToastsRaw((prevToasts) => [...prevToasts, { id, message, type }]);
+    };
+    
+    const removeToastRaw = (id) => {
+        setToastsRaw((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
+    };
+
     const getUserData = async () => {
         try {
             const token = localStorage.getItem('token');
@@ -468,6 +478,8 @@ const Inventory = () => {
                 handleClose();
                 getUserData(); 
                 setShowConfirmationModal(true);
+
+                addToastRaw("Food added successfully.", 'success');
             }
         } catch (error) {
             console.error("Error submitting data:", error);
@@ -517,6 +529,8 @@ const Inventory = () => {
                 await getStockData();
                 getRawMaterialsData();
                 setShowConfirmationModal(true);
+
+                addToastRaw("Item added successfully.", 'success');
             }
         } catch (error) {
             if (error.response && error.response.status === 409) {
@@ -576,6 +590,8 @@ const Inventory = () => {
                 setRawMaterialQuantity('');
                 setRawMaterialUnit('');
                 setIsToastVisible(true);
+
+                addToastRaw("Item added to Storage successfully.", 'success');
             }
         } catch (error) {
             if (error.response && error.response.status === 409) {
@@ -1247,18 +1263,19 @@ const addUnitStock = async (e) => {
             </Modal.Footer>
         </Modal>
 
-
-
-
-        <Toast onClose={toggleToast} show={isToastVisible} delay={3000} autohide  className="position-fixed bottom-0 end-0 p-2 m-2" style={{ width: '250px' }}>
-            <Toast.Header>
-                <strong className="me-auto text-success">Added Successfully!</strong>
-                <small>Just now</small>
-            </Toast.Header>
-            <Toast.Body className="confirmation-toast-body">
-                <p>Item Added !</p>
-            </Toast.Body>
-        </Toast>
+        <ToastContainer className="position-fixed bottom-0 end-0 p-3 toast-menu" style={{ zIndex: 1 }}>
+            {toastsRaw.map((toast) => (
+                <Toast key={toast.id} onClose={() => removeToastRaw(toast.id)} delay={3000} autohide>
+                    <Toast.Header>
+                        <strong className={`me-auto ${toast.type === 'success' ? 'text-success' : 'text-danger'}`}>
+                            {toast.type === 'success' ? 'Success' : 'Error'}
+                        </strong>
+                        <small>just now</small>
+                    </Toast.Header>
+                    <Toast.Body>{toast.message}</Toast.Body>
+                </Toast>
+            ))}
+        </ToastContainer>
 
               
               <Modal 

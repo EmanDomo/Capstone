@@ -73,43 +73,43 @@ const Sales = () => {
         }
     };
     
-    // useEffect(() => {
-    //     const fetchSalesData = async () => {
-    //         setLoading(true);
-    //         try {
-    //             let response;
-    //             if (filter === 'today') {
-    //                 response = await axios.get(`${host}/api/sales/today`, { headers: { 'Authorization': `Bearer ${token}` } });
-    //             } else if (filter === 'week') {
-    //                 response = await axios.get(`${host}/api/sales/week`, { headers: { 'Authorization': `Bearer ${token}` } });
-    //             } else {
-    //                 response = await axios.get(`${host}/api/sales/month`, { headers: { 'Authorization': `Bearer ${token}` } });
-    //             }
+    useEffect(() => {
+        const fetchSalesData = async () => {
+            setLoading(true);
+            try {
+                let response;
+                if (filter === 'today') {
+                    response = await axios.get(`${host}/api/sales/today`, { headers: { 'Authorization': `Bearer ${token}` } });
+                } else if (filter === 'week') {
+                    response = await axios.get(`${host}/api/sales/week`, { headers: { 'Authorization': `Bearer ${token}` } });
+                } else {
+                    response = await axios.get(`${host}/api/sales/month`, { headers: { 'Authorization': `Bearer ${token}` } });
+                }
 
-    //             setSalesData(response.data);
-    //             const total = response.data.reduce((sum, sale) => sum + parseFloat(sale.totalAmount), 0);
-    //             setTotalAmount(total);
+                setSalesData(response.data);
+                const total = response.data.reduce((sum, sale) => sum + parseFloat(sale.totalAmount), 0);
+                setTotalAmount(total);
 
-    //             const itemsSold = {};
-    //             response.data.forEach((sale) => {
-    //                 itemsSold[sale.itemname] = (itemsSold[sale.itemname] || 0) + sale.quantity;
-    //             });
-    //             const sortedItems = Object.entries(itemsSold).sort((a, b) => b[1] - a[1]);
-    //             const top3 = sortedItems.slice(0, 3).map(([itemname, quantity]) => ({ itemname, quantity }));
-    //             setTopSellingItems(top3);
+                const itemsSold = {};
+                response.data.forEach((sale) => {
+                    itemsSold[sale.itemname] = (itemsSold[sale.itemname] || 0) + sale.quantity;
+                });
+                const sortedItems = Object.entries(itemsSold).sort((a, b) => b[1] - a[1]);
+                const top3 = sortedItems.slice(0, 3).map(([itemname, quantity]) => ({ itemname, quantity }));
+                setTopSellingItems(top3);
 
-    //             // Calculate total sales earned
-    //             const totalSales = total + cashier1Total + cashier2Total;
-    //             setTotalSalesEarned(totalSales); // Update total sales earned
+                // Calculate total sales earned
+                const totalSales = total + cashier1Total + cashier2Total;
+                setTotalSalesEarned(totalSales); // Update total sales earned
 
-    //         } catch (error) {
-    //             console.error('Error fetching sales data:', error);
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     };
-    //     fetchSalesData();
-    // }, [filter, token, cashier1Total, cashier2Total]);
+            } catch (error) {
+                console.error('Error fetching sales data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchSalesData();
+    }, [filter, token, cashier1Total, cashier2Total]);
     
     const generatePDF = () => {
         const doc = new jsPDF();

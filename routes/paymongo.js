@@ -16,7 +16,7 @@ async function createPaymongoLink(amount, description, remarks) {
             amount: amount * 100, 
             redirect: {
               success: 'https://sjisc-canteen.online/success', 
-              failed: 'http://localhost:3000/failed'
+              failed: 'https://sjisc-canteen.online/failed'
             },
             description: "You are making a payment to Saint Jerome Integrated School of Cabuyao .",
             remarks: "Payment"
