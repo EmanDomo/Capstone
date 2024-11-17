@@ -45,7 +45,7 @@ function App() {
         <Route path='/Footer' element={<Footer />} />
         <Route path="/ManageAccounts" element={<ManageAccounts/>}/>
         <Route path="/complete-order" element={<CompleteOrder/>}/>
-        {/* <Route path="*" element={<NotFound/>}/> */}
+        <Route path="*" element={<NotFound/>}/>
       </Routes>    
     </>
   );
