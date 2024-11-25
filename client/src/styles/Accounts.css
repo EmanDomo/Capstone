@@ -4,6 +4,15 @@
   overflow-y: auto;
 }
 
+.search-account:focus {
+  box-shadow: none;
+}
+
+.search-account {
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.203);
+}
+
 @media (min-width: 344px) and (max-width: 767px) {
   .accountstbl {
     height: 800px;

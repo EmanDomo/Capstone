@@ -91,6 +91,7 @@ const Inventory = () => {
         getRawMaterialsData();
         getUnits();
         getUnitStocks();
+        
     }, []);
 
     const handleClose = () => {
@@ -284,6 +285,7 @@ const Inventory = () => {
             });
             setEditStockModalShow(false);
             getStockData();
+            getRawMaterialsData();
             setErrors({});
         } catch (error) {
             console.error('Error updating stock:', error);
@@ -496,6 +498,7 @@ const Inventory = () => {
             setErrorMessage("Please provide all required fields.");
             return;
         }
+
     
         if (requiresRawMaterial && rawMaterialUsageQuantity && conversionRatio) {
             calculatedQuantity = rawMaterialUsageQuantity * conversionRatio;
@@ -1195,11 +1198,11 @@ const addUnitStock = async (e) => {
                 value={rawMaterialName}
                 onChange={(e) => setRawMaterialName(e.target.value)}
                 className="form-raw-material-name"
-                isInvalid={!!rawMaterialNameError} 
-            />
-            <Form.Control.Feedback type="invalid">
-                {rawMaterialNameError}
-            </Form.Control.Feedback>
+                isInvalid={!!errorMessage}
+                                />
+                                <Form.Control.Feedback type="invalid">
+                                {errorMessage}
+                                </Form.Control.Feedback> 
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="formRawMaterialQuantity">
@@ -1313,7 +1316,7 @@ const addUnitStock = async (e) => {
                             as="select"
                             name="raw_material_unit"
                             value={selectedRawMaterial.raw_material_unit || ''} 
-                            onChange={(e) => handleEditChange(e)} 
+                            onChange={(e) => handleEditChange(e)} disabled
                         >
                             <option value="">Select Unit</option>
                             {units.map((unit, i) => (
@@ -1385,7 +1388,7 @@ const addUnitStock = async (e) => {
                                         type="number"
                                         name="conversion_ratio"
                                         value={selectedStock.conversion_ratio || ''}
-                                        readOnly
+                                        readOnly disabled
                                     />
                                 </Form.Group>
                             </>
@@ -1407,7 +1410,7 @@ const addUnitStock = async (e) => {
                     as="select" 
                     name="unit"
                     value={selectedStock.unit || ''} 
-                    onChange={(e) => handleStockEditChange(e)} 
+                    onChange={(e) => handleStockEditChange(e)} disabled
                 >
                     <option value="">Select Unit</option>
                     {unitStocks.map((unitStock, i) => (

@@ -219,7 +219,7 @@ const Menu = () => {
                     <Card id="customer-card">
                       <Card.Img variant="top" src={`${host}/uploads/${item.img}`} className="menu-itm" alt="Item image" />
                       <Card.Body>
-                        <Card.Title>{item.itemname}</Card.Title>
+                        <Card.Title className="item-name">{item.itemname}</Card.Title>
                         <div className="d-flex justify-content-between">
                           <Card.Text className="d-flex align-items-center">
                             <label className="p-1 customer-price">₱{item.price}</label>
@@ -228,6 +228,11 @@ const Menu = () => {
                             <IoMdAdd />
                           </Button>
                         </div>
+                          <div className="text-muted text-center mb-1 no-purchase">
+                            {item.totalQuantity > 0
+                              ? `${item.totalQuantity} purchased yesterday` 
+                            : ''} 
+                          </div>
                       </Card.Body>
                     </Card>
                   </Col>
@@ -272,7 +277,7 @@ const Menu = () => {
                                   <Card id="customer-card">
                                       <Card.Img variant="top" src={`${host}/uploads/${el.img}`} className="menu-itm" alt="itm" />
                                       <Card.Body>
-                                          <Card.Title>{el.itemname}</Card.Title>
+                                          <Card.Title className="item-name">{el.itemname}</Card.Title>
                                           <div className="d-flex justify-content-between p-2">
                                               <Card.Text className="d-flex align-items-center">
                                                   <label className="p-1 customer-price">₱{el.price}</label>
@@ -281,6 +286,11 @@ const Menu = () => {
                                                   <IoMdAdd />
                                               </Button>
                                           </div>
+                                            <div className="text-muted text-center mb-1 no-purchase">
+                                              {el.totalQuantity > 0
+                                                ? `${el.totalQuantity} purchased yesterday` 
+                                              : 'No purchase yesterday'} 
+                                            </div>
                                       </Card.Body>
                                   </Card>
                               </Col>

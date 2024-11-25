@@ -126,10 +126,17 @@ object-fit: fill;
   }
 
   #customer-card {
-    height: 260px;
+    height: 280px;
   }
   .toast-menu {
     width: 50%;
+  }
+  .item-name {
+    width: 130px;             /* Set a fixed width */
+      white-space: nowrap;      /* Prevent wrapping */
+      overflow: hidden;         /* Hide the overflowing text */
+      text-overflow: ellipsis;  /* Show ellipsis (...) when truncated */
+      font-size: 12px !important;
   }
 }
 

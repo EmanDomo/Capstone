@@ -13,6 +13,18 @@ import { FaPlus, FaMinus, FaTrash } from 'react-icons/fa';
 import { MdOutlineLogin } from "react-icons/md";
 import { host } from '../../apiRoutes';
 import { Spinner } from 'react-bootstrap'; 
+import { GoHome } from "react-icons/go";
+import { LuShoppingCart } from "react-icons/lu";
+import { IoFastFoodOutline } from "react-icons/io5";
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Tooltip from 'react-bootstrap/Tooltip';
+import { FaRegUser } from "react-icons/fa";
+import Form from 'react-bootstrap/Form';
+import Col from 'react-bootstrap/Col';
+import Row from 'react-bootstrap/Row';
+import { FaRegEye } from "react-icons/fa";
+import { FaRegEyeSlash } from "react-icons/fa";
+import InputGroup from 'react-bootstrap/InputGroup';
 
 function Header() {
     const [data, setData] = useState([]);
@@ -27,6 +39,101 @@ function Header() {
     const [error, setError] = useState(null);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const navigate = useNavigate();
+    const [showPassword, setShowPassword] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+        const fetchUserDetails = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    console.log('No token found');
+                    return;
+                }
+    
+                const response = await axios.get(`${host}/UserDetails`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+    
+                if (response.status === 200) {
+                    const { name, gender, username, mobile_number, password } = response.data.user;
+                    setUserName(name);
+                    setUserGender(gender);
+                    setFormData((prevState) => ({
+                        ...prevState,
+                        username: username,
+                        name: name,
+                        number: mobile_number,
+                        password: password,  // Set the password
+                    }));
+                } else {
+                    console.error('Error fetching user details:', response.data.message);
+                }
+            } catch (error) {
+                console.error('Error fetching user details:', error);
+            }
+        };
+    
+        
+    
+    
+
+    const [showProfileModal, setShowProfileModal] = useState(false);
+    const [formData, setFormData] = useState({
+        username: '',
+        name: '',
+        password: '',
+        confirmPassword: '',
+        number: ''
+    });
+    const handleProfileModalShow = () => setShowProfileModal(true);
+
+    // Function to handle closing the profile modal
+    const handleProfileModalClose = () => setShowProfileModal(false);
+
+     function handleChange(e) {
+        const { name, value } = e.target;
+        setFormData(prevState => ({
+            ...prevState,
+            [name]: value
+        }));
+    }
+
+    const update = async () => {
+        handleSubmit();
+    }
+
+    const handleSubmit = async () => {
+        // e.preventDefault();
+    
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.log('No token found');
+            return;
+        }
+    
+        try {
+            const response = await axios.put(`${host}/updateUserDetails`, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+    
+            if (response.status === 200) {
+                console.log('User details updated successfully');
+                // Close the modal or show a success message
+                handleProfileModalClose();
+            } else {
+                console.error('Error updating user details:', response.data.message);
+            }
+        } catch (error) {
+            console.error('Error updating user details:', error);
+        }
+    };
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -38,6 +145,7 @@ function Header() {
         getUserData();
         getCartData();
         fetchOrders();
+        fetchUserDetails();
     }, []);
 
     const getUserData = async () => {
@@ -212,14 +320,33 @@ function Header() {
                     <Navbar.Toggle aria-controls="basic-navbar-nav" id='toggle-nav-customer' />
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="ms-auto mt-1">
-                            <Nav.Link href="#customer-home" className='text-white'> Home </Nav.Link>
-                            <Nav.Link href="#top-menu" className='text-white'> Top Selling </Nav.Link>
-                            <Nav.Link href="#customer-menu" className='text-white'> Menu </Nav.Link>
-                            <Nav.Link onClick={handleCartShow} className='text-white'>My Cart</Nav.Link>
-                            <Nav.Link onClick={handleOrdersShow} className='text-white'> My Orders </Nav.Link>
+                        <OverlayTrigger placement="bottom" overlay={<Tooltip id="tooltip-home">Home</Tooltip>}>
+                            <Nav.Link href="#customer-home" className='text-white d-lg-block home-customer mx-2'> <GoHome/> </Nav.Link>
+                        </OverlayTrigger>
+                            <Nav.Link href="#customer-home" className='text-white d-lg-none d-sm-block'> Home </Nav.Link>
+
+                            {/* <Nav.Link href="#top-menu" className='text-white'> Top Selling </Nav.Link> */}
+                            {/* <Nav.Link href="#customer-menu" className='text-white'> Menu </Nav.Link> */}
+                        <OverlayTrigger placement="bottom" overlay={<Tooltip id="tooltip-home">My Orders</Tooltip>}>
+                            <Nav.Link onClick={handleOrdersShow} className='text-white d-lg-block home-customer mx-2'> <IoFastFoodOutline/> </Nav.Link>
+                        </OverlayTrigger>
+                            <Nav.Link onClick={handleOrdersShow} className='text-white d-lg-none d-sm-block'> Orders </Nav.Link>
+
+                        <OverlayTrigger placement="bottom" overlay={<Tooltip id="tooltip-home">Cart</Tooltip>}>
+                            <Nav.Link onClick={handleCartShow} className='text-white d-lg-block home-customer mx-2'><LuShoppingCart/></Nav.Link>
+                        </OverlayTrigger>
+                            <Nav.Link onClick={handleCartShow} className='text-white d-lg-none d-sm-block'>My Cart</Nav.Link>
+
+                        <OverlayTrigger  placement="bottom" overlay={<Tooltip id="tooltip-home">Profile</Tooltip>}>
+                            <Nav.Link onClick={handleProfileModalShow} className='text-white d-lg-block home-customer mx-2'><FaRegUser/></Nav.Link>
+                        </OverlayTrigger>
+                            <Nav.Link onClick={handleProfileModalShow} className='text-white d-lg-none d-sm-block'>My Profile</Nav.Link>
+
                             <div className="d-flex">
-                                <Nav.Link onClick={() => setShowLogoutModal(true)} className='text-white ms-0 d-lg-block fs-4 logout-cashier'><MdOutlineLogin /></Nav.Link>
-                                <Nav.Link onClick={() => setShowLogoutModal(true)} className='text-white ms-2 d-lg-none d-sm-block'>Logout</Nav.Link>
+                                <OverlayTrigger placement="bottom" overlay={<Tooltip id="tooltip-home">Log Out</Tooltip>}>
+                                    <Nav.Link onClick={() => setShowLogoutModal(true)} className='text-white ms-0 d-lg-block home-customer mx-2'><MdOutlineLogin /></Nav.Link>
+                                </OverlayTrigger>
+                                <Nav.Link onClick={() => setShowLogoutModal(true)} className='text-white d-lg-none d-sm-block'>Logout</Nav.Link>
                             </div>
                         </Nav>
                     </Navbar.Collapse>
@@ -346,7 +473,102 @@ function Header() {
     </>
   )}
 </Modal.Footer>
-      </Modal>
+</Modal>
+      <Modal show={showProfileModal} onHide={handleProfileModalClose} fullscreen="sm-down">
+                <Modal.Header closeButton>
+                    <Modal.Title>Edit Profile</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form onSubmit={handleSubmit}>
+                        <Row>
+                            <Col xs={12}>
+                                <Form.Group controlId="formUsername">
+                                    <Form.Label>Username</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="username"
+                                        value={formData.username}
+                                        onChange={handleChange}
+                                        placeholder="Enter username"
+                                        className='mb-2 inputheader'
+                                        required
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col xs={12}>
+                                <Form.Group controlId="formName">
+                                    <Form.Label>Name</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        placeholder="Enter your full name"
+                                        className='mb-2 inputheader'
+                                        required
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col xs={12}>
+                                <Form.Group controlId="formPassword">
+                                    <Form.Label>Password</Form.Label>
+                                <div className='d-flex'>
+
+                                
+                                    <Form.Control
+                                        name="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        placeholder="Enter password"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        className='mb-2 inputheader'
+                                        required
+                                    />
+                                    <InputGroup.Text
+                                        className="login-body-icon"
+                                        onClick={togglePasswordVisibility}
+                                    >
+                                        {showPassword ? <FaRegEyeSlash className="fs-5 inputheaderp" /> : <FaRegEye className="fs-5 inputheaderp" />}
+                                    </InputGroup.Text>
+                                    </div>
+                                    {/* <Form.Control
+                                        type="password"
+                                        name="password"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        placeholder="Enter password"
+                                        className='mb-2'
+                                        required
+                                    /> */}
+                                </Form.Group>
+                            </Col>
+
+                            <Col xs={12}>
+                                <Form.Group controlId="formNumber">
+                                    <Form.Label>Phone Number</Form.Label>
+                                    <Form.Control
+                                        type="tel"
+                                        name="number"
+                                        value={formData.number}
+                                        onChange={handleChange}
+                                        placeholder="Enter your phone number"
+                                        className='mb-2 inputheader'
+                                        required
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
+                        
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                <div className="d-flex justify-content-end updatehead">
+                        <Button variant="dark" onClick={update} className="updateheader">
+                            Save Changes
+                        </Button>
+                    </div>
+                </Modal.Footer>
+            </Modal>
         </>
     );
 }

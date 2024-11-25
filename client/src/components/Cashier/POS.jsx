@@ -395,7 +395,7 @@ const POS = () => {
                           
                     </div>
                     <div className="mx-2 pos-content">
-                        <Row xs={2} md={3} lg={4} className="g-4 mx-2">
+                        <Row xs={2} md={3} lg={3} xl={4} className="g-4 mx-2">
                             {filteredData.length > 0 ? (
                                 filteredData.map((el, i) => (
                                     <Col key={i}>
@@ -404,7 +404,7 @@ const POS = () => {
                                                 <Card.Img variant="top" src={`${host}/uploads/${el.img}`} className="cashier-itm" alt="itm" />
                                             </div>
                                             <Card.Body>
-                                                <Card.Title>{el.itemname}</Card.Title>
+                                                <Card.Title className='d-inline-block text-truncate'>{el.itemname}</Card.Title>
                                                 <div className="d-flex justify-content-between p-2">
                                                     <Card.Text className="d-flex align-items-center">
                                                         <label className="p-1 cashier-price">₱{el.price}</label>
@@ -420,10 +420,15 @@ const POS = () => {
 
                                                 </div>
                                                 {/* Display available stock/meals */}
-                                                <div className="text-muted text-center">
+                                                <div className="text-muted text-center my-1 available">
                                                     {el.max_meals > 0 
                                                         ? `Available Meals: ${el.max_meals}`
                                                         : 'Out of Stock'}
+                                                </div>
+                                                <div className="text-muted text-center mb-1 no-purchase">
+                                                   {el.totalQuantity > 0
+                                                    ? `${el.totalQuantity} purchased yesterday` 
+                                                    : ''} 
                                                 </div>
                                             </Card.Body>
                                         </Card>

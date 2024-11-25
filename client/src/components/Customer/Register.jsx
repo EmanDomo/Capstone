@@ -29,6 +29,7 @@ const Register = () => {
     const username = e.target.elements.username.value;
     const password = e.target.elements.password.value;
     const confirmPassword = e.target.elements.confirmPassword.value;
+    const mobile_number  = e.target.elements.mobile_number.value;
 
     if (password !== confirmPassword) {
       setErrorMessage('Passwords do not match');
@@ -44,7 +45,7 @@ const Register = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ fullName, gender, username, password }),
+        body: JSON.stringify({ fullName, gender, username, password, mobile_number }),
       });
 
       if (response.ok) {
@@ -78,6 +79,9 @@ const Register = () => {
               <option className="optionr" value='Male'>Male</option>
               <option className="optionr" value='Female'>Female</option>
             </select>
+          </div>
+          <div className='input-box'>
+            <input type='text' name='mobile_number' placeholder='Mobile Number' required />
           </div>
           <div className='input-box'>
             <input type='text' name='username' placeholder='Username' required />

@@ -46,7 +46,7 @@
 
 #cashier-card {
   width: 200px;
-  height: 300px;
+  height: 320px;
 }
 
 .cashier-itm {
@@ -55,6 +55,13 @@
   object-fit: fill;
 }
 
+.no-purchase {
+  font-size: 12px !important;
+}
+
+.available {
+  font-size: 14 !important;
+}
 /* .pos-quantity {
   padding: 2[x];
 } */
@@ -131,7 +138,7 @@
 
   #cashier-card {
     width: 160px;
-    height: 300px !important;
+    height: 350px !important;
   }  
 
   .cashier-itm {
@@ -147,8 +154,8 @@
   }
 
   #cashier-card {
-    width: 160px;
-    height: 300px;
+    width: 220px !important;
+    height: 340px !important;
   }  
 
   .cashier-itm {

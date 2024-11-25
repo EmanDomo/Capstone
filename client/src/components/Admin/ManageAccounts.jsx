@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Table, Button, Modal, Form } from 'react-bootstrap';
+import { Table, Button, Modal, Form, InputGroup, FormControl } from 'react-bootstrap';
 import { MdEdit } from "react-icons/md";
 import { FaRegTrashAlt } from "react-icons/fa";
 import Header from './HeaderAdmin';
@@ -25,6 +25,8 @@ const ManageAccounts = () => {
     password: '',
     role: 'cashier',
   });
+  
+  const [searchQuery, setSearchQuery] = useState(""); // Search query state
 
   useEffect(() => {
     fetchAccounts();
@@ -114,17 +116,38 @@ const ManageAccounts = () => {
       setShowModal(false);
       fetchAccounts();
       setErrors({});
-
     } catch (error) {
       console.error('Error saving account:', error);
     }
-};
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (showModal) {
       setEditAccount({ ...editAccount, [name]: value });
     }
+  };
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const filterAccounts = (accounts) => {
+    return accounts.filter(account => {
+      const accountId = account.userId || account.superadminid || account.id;
+      const accountName = account.name.toLowerCase();
+      const accountUsername = account.username.toLowerCase();
+      const accountGender = account.gender ? account.gender.toLowerCase() : ''; // Optional gender field for users
+
+      // Check if any field matches the search query
+      return (
+        accountId.toString().includes(searchQuery.toLowerCase()) || // Search by ID
+        accountName.includes(searchQuery.toLowerCase()) || // Search by Name
+        accountUsername.includes(searchQuery.toLowerCase()) || // Search by Username
+        accountGender.includes(searchQuery.toLowerCase()) // Search by Gender (for users)
+      );
+    });
   };
 
   return (
@@ -141,8 +164,22 @@ const ManageAccounts = () => {
             </Tabs>
           </div>
         </div>
+
         {selectedAccounts === 'customer' && (
+          
           <div className="accountstbl">
+            <div className="d-flex justify-content-end me-3">
+              <InputGroup className="mb-3" style={{ maxWidth: '250px', width: '100%' }}>
+                <FormControl
+                  placeholder="Search"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  aria-label="Search accounts"
+                  className='search-account'
+                />
+            </InputGroup>
+            </div>
+
             <Table hover responsive>
               <thead>
                 <tr>
@@ -150,16 +187,18 @@ const ManageAccounts = () => {
                   <th className="text-center">Name</th>
                   <th className="text-center">Gender</th>
                   <th className="text-center">Username</th>
+                  <th className="text-center">Mobile No.</th>
                   <th className="text-center" style={{ width: '80px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map(user => (
+                {filterAccounts(users).map(user => (
                   <tr key={user.userId}>
                     <td className="text-center">{user.userId}</td>
                     <td className="text-center">{user.name}</td>
                     <td className="text-center">{user.gender}</td>
                     <td className="text-center">{user.username}</td>
+                    <td className="text-center">{user.mobile_number}</td>
                     <td className="d-flex justify-content-between">
                       <Button variant="dark" id="edit-inventory" onClick={() => handleEdit(user, 'user')}>
                         <MdEdit />
@@ -174,35 +213,37 @@ const ManageAccounts = () => {
             </Table>
           </div>
         )}
-          {selectedAccounts === 'admin' && 
-            <div className='accountstbl'>
-                <Table hover responsive className="">
-                  <thead className='position-sticky z-3'>
-                      <tr>
-                        <th className='text-center'>ID</th>
-                        <th className='text-center'>Name</th>
-                        <th className='text-center'>Username</th>
-                        <th className="text-center" style={{ width: '80px' }}>Actions</th>
-                        </tr>
-                  </thead>
-                  <tbody>
-                    {superAdmins?.map(superAdmin => (
-                      <tr key={superAdmin.superadminid}>
-                        <td className='text-center'>{superAdmin.superadminid}</td>
-                        <td className='text-center'>{superAdmin.name}</td>
-                        <td className='text-center'>{superAdmin.username}</td>
-                        <td className='text-center'>
-                          <Button variant="dark" id="edit-inventory" onClick={() => handleEdit(superAdmin, 'superadmin')}>
-                            <MdEdit />
-                          </Button>
-                        </td>
-                       </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </div>
-            }
-            {selectedAccounts === 'cashier' && (
+
+        {selectedAccounts === 'admin' && (
+          <div className='accountstbl'>
+            <Table hover responsive>
+              <thead>
+                <tr>
+                  <th className='text-center'>ID</th>
+                  <th className='text-center'>Name</th>
+                  <th className='text-center'>Username</th>
+                  <th className="text-center" style={{ width: '80px' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filterAccounts(superAdmins).map(superAdmin => (
+                  <tr key={superAdmin.superadminid}>
+                    <td className='text-center'>{superAdmin.superadminid}</td>
+                    <td className='text-center'>{superAdmin.name}</td>
+                    <td className='text-center'>{superAdmin.username}</td>
+                    <td className='text-center'>
+                      <Button variant="dark" id="edit-inventory" onClick={() => handleEdit(superAdmin, 'superadmin')}>
+                        <MdEdit />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        )}
+
+        {selectedAccounts === 'cashier' && (
               <div className='accounts-table'>
                 <Table hover responsive className="table-fixed">
                   <thead>

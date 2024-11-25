@@ -132,15 +132,14 @@ const authorizeRoles = (...roles) => {
     };
 };
 
-
 router.post('/Register', (req, res) => {
-    const { fullName, gender, username, password } = req.body;
+    const { fullName, gender, username, password, mobile_number } = req.body; // Don't forget to extract mobile_number
   
-    if (!fullName || !gender || !username || !password) {
+    if (!fullName || !gender || !username || !password || !mobile_number) {
       return res.status(400).json({ message: 'Invalid input data' });
     }
   
-    const checkQuery = 'SELECT * FROM tbl_users WHERE username = ?';
+    const checkQuery = 'SELECT * FROM tbl_users WHERE username = ? AND is_archived = 0';
     conn.query(checkQuery, [username], (checkError, checkResults) => {
       if (checkError) {
         console.error('Error checking username:', checkError);
@@ -151,9 +150,9 @@ router.post('/Register', (req, res) => {
         return res.status(400).json({ message: 'Username already exists' });
       }
   
-      const query = 'INSERT INTO tbl_users (name, gender, username, password) VALUES (?, ?, ?, ?)';
+      const query = 'INSERT INTO tbl_users (name, gender, username, password, mobile_number) VALUES (?, ?, ?, ?, ?)';
       
-      conn.query(query, [fullName, gender, username, password], (error) => {
+      conn.query(query, [fullName, gender, username, password, mobile_number], (error) => {
         if (error) {
           console.error('Error adding user:', error);
           return res.status(500).json({ message: 'Failed to add user' });
@@ -162,6 +161,8 @@ router.post('/Register', (req, res) => {
       });
     });
   });
+
+
   const superAdminLoginAttempts = {}; 
 
 router.post('/SuperAdminLoginForm', (req, res) => { 
@@ -853,13 +854,23 @@ router.get("/get-menu-data", authenticateToken, authorizeRoles('admin', 'custome
     tbl_items.itemname, 
     tbl_items.img, 
     tbl_items.price, 
-    tbl_items.category,  -- Directly from tbl_items if no separate categories table
-    MIN(IFNULL(FLOOR(tbl_stocks.stock_quantity / tbl_item_ingredients.quantity_required), 0)) AS max_meals
+    tbl_items.category, 
+    MIN(IFNULL(FLOOR(tbl_stocks.stock_quantity / tbl_item_ingredients.quantity_required), 0)) AS max_meals,
+    IFNULL(sales.totalQuantity, 0) AS totalQuantity
 FROM tbl_items
 LEFT JOIN tbl_item_ingredients ON tbl_items.id = tbl_item_ingredients.item_id
 LEFT JOIN tbl_stocks ON tbl_item_ingredients.stock_id = tbl_stocks.stockId
+LEFT JOIN (
+    SELECT i.id AS itemId, SUM(o.quantity) AS totalQuantity
+    FROM tbl_sale s
+    JOIN tbl_orders o ON s.orderId = o.orderId
+    JOIN tbl_items i ON o.id = i.id
+    WHERE DATE(s.saleDate) = CURDATE() - INTERVAL 1 DAY
+    GROUP BY i.id
+) AS sales ON tbl_items.id = sales.itemId
 WHERE tbl_items.is_archived = 0
-GROUP BY tbl_items.id, tbl_items.category;
+GROUP BY tbl_items.id, tbl_items.itemname, tbl_items.img, tbl_items.price, tbl_items.category;
+
 `, (err, result) => {
             if (err) {
                 console.error("Error fetching data:", err);
@@ -957,7 +968,7 @@ router.post('/addStock', authenticateToken, authorizeRoles('superadmin'), async 
     }
 
     try {
-        const [results] = await conn.promise().query('SELECT COUNT(*) AS count FROM tbl_stocks WHERE stock_item_name = ?', [stockName]);
+        const [results] = await conn.promise().query('SELECT COUNT(*) AS count FROM tbl_stocks WHERE stock_item_name = ? AND is_archive = 0', [stockName]);
         if (results[0].count > 0) {
             return res.status(409).json({ message: 'Stock with the same name already exists' });
         }
@@ -2277,7 +2288,7 @@ router.post('/add-raw-material', authenticateToken, authorizeRoles('superadmin',
         return res.status(400).json({ message: 'Please provide all required fields. Invalid data.' });
     }
 
-    const checkQuery = 'SELECT COUNT(*) AS count FROM tbl_raw_materials WHERE raw_material_name = ?';
+    const checkQuery = 'SELECT COUNT(*) AS count FROM tbl_raw_materials WHERE raw_material_name = ? AND is_archived = 0';
     conn.query(checkQuery, [rawMaterialName], (error, results) => {
         if (error) {
             console.error('Error checking for duplicate:', error);
@@ -2285,7 +2296,7 @@ router.post('/add-raw-material', authenticateToken, authorizeRoles('superadmin',
         }
 
         if (results[0].count > 0) {
-            return res.status(409).json({ message: 'Raw material with the same name already exists' });
+            return res.status(409).json({ message: 'Item with the same name already exists' });
         }
 
         const insertQuery = 'INSERT INTO tbl_raw_materials (raw_material_name, raw_material_quantity, raw_material_unit, date_added) VALUES (?, ?, ?, NOW())';
@@ -2585,5 +2596,89 @@ router.post('/api/cashiers/add', authenticateToken, authorizeRoles('superadmin')
         res.status(200).json({ message: 'Cashier added successfully' });
     });
 });
+
+router.get('/UserDetails', authenticateToken, (req, res) => {
+    const userId = req.user.userId;
+
+    const query = 'SELECT userId, name, gender, username, mobile_number, password FROM tbl_users WHERE userId = ? AND is_archived = 0';
+
+    conn.query(query, [userId], (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        if (results.length > 0) {
+            const { userId, name, gender, username, mobile_number, password } = results[0];
+            return res.status(200).json({ message: 'User details fetched successfully', user: { userId, name, gender, username, mobile_number, password } });
+        } else {
+            return res.status(404).json({ message: 'User not found' });
+        }
+    });
+});
+
+router.put('/updateUserDetails', authenticateToken, (req, res) => {
+    const userId = req.user.userId;
+    const { username, name, password, number } = req.body;
+
+    // Step 1: Check if the username already exists for another active user
+    const checkUsernameQuery = 'SELECT userId FROM tbl_users WHERE username = ? AND is_archived = 0 AND userId != ?';
+
+    conn.query(checkUsernameQuery, [username, userId], (err, results) => {
+        if (err) {
+            console.error('Error executing query:', err.stack);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        if (results.length > 0) {
+            // If the username already exists, send an error
+            return res.status(400).json({ message: 'Username already taken' });
+        }
+
+        // Step 2: Prepare the fields to be updated
+        let updateFields = [];
+        let updateValues = [];
+
+        // Only update fields that are not empty and have changed
+        if (username) {
+            updateFields.push('username = ?');
+            updateValues.push(username);
+        }
+        if (name) {
+            updateFields.push('name = ?');
+            updateValues.push(name);
+        }
+        if (password) {
+            updateFields.push('password = ?');
+            updateValues.push(password);
+        }
+        if (number) {
+            updateFields.push('mobile_number = ?');
+            updateValues.push(number);
+        }
+
+        // Step 3: If there are fields to update, perform the update
+        if (updateFields.length > 0) {
+            const updateQuery = `UPDATE tbl_users SET ${updateFields.join(', ')} WHERE userId = ? AND is_archived = 0`;
+            updateValues.push(userId);  // Add the userId as the last value
+
+            conn.query(updateQuery, updateValues, (err, result) => {
+                if (err) {
+                    console.error('Error executing update query:', err.stack);
+                    return res.status(500).json({ message: 'Error updating user details' });
+                }
+
+                if (result.affectedRows > 0) {
+                    return res.status(200).json({ message: 'User details updated successfully' });
+                } else {
+                    return res.status(400).json({ message: 'No changes detected or user not found' });
+                }
+            });
+        } else {
+            return res.status(400).json({ message: 'No fields to update' });
+        }
+    });
+});
+
 
 module.exports = router;
