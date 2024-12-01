@@ -89,10 +89,35 @@
   color: red;
   font-size: larger;
   border: none;
+  background-color: transparent;
+}
+
+.increase-ing, .decrease-ing {
+  background-color: transparent;
+  color: black;
+  font-weight: bolder;
+}
+
+.decrease-ing {
+  border-left: none;
+  border-top: none;
+  border-bottom: none;
+  border-right: 1px solid rgba(0, 0, 0, 0.245);
+}
+
+.increase-ing {
+  border-right: none;
+  border-top: none;
+  border-bottom: none;
+  border-left: 1px solid rgba(0, 0, 0, 0.245);
 }
 
 .added-ing-title {
   color: hotpink;
+}
+
+.btngroup {
+  border: 1px solid rgba(0, 0, 0, 0.245);
 }
 
 .add-ingredient {

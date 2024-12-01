@@ -17,6 +17,7 @@ import { IoMdAdd } from "react-icons/io";
 import { host } from '../../apiRoutes';
 import { Toast } from 'react-bootstrap';
 import { ToastContainer } from 'react-bootstrap';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
 const Inventory = () => {
     const [data, setData] = useState([]);
@@ -439,6 +440,26 @@ const Inventory = () => {
             }
         }
     };
+    
+    const increaseQuantity = (index) => {
+        setSelectedIngredients(prevIngredients => {
+            const updatedIngredients = [...prevIngredients];
+            updatedIngredients[index].quantity = Number(updatedIngredients[index].quantity) + 1; // Ensure it's treated as a number
+            return updatedIngredients;
+        });
+    };
+    
+    const decreaseQuantity = (index) => {
+        setSelectedIngredients(prevIngredients => {
+            const updatedIngredients = [...prevIngredients];
+            const currentQuantity = Number(updatedIngredients[index].quantity); // Ensure it's treated as a number
+            if (currentQuantity > 1) {
+                updatedIngredients[index].quantity = currentQuantity - 1; // Decrease the quantity
+            }
+            return updatedIngredients;
+        });
+    };
+    
     
 
     const removeIngredient = (index) => {
@@ -996,26 +1017,45 @@ const addUnitStock = async (e) => {
                             </>
                         )}
 
-                        {selectedIngredients.length > 0 && (
-                            <div className="ingredients-list">
-                                <h5 className='p-1 text-center added-ing-title'>Added Ingredients</h5>
-                                <Table responsive className='table-ingredients'>
+                    {selectedIngredients.length > 0 && (
+                        <div className="ingredients-list">
+                            <h5 className='p-1 text-center added-ing-title'>Added Ingredients</h5>
+                            <Table responsive className='table-ingredients'>
+                                <thead>
                                     <tr className='p-1'>
                                         <th className='p-2'>Ingredient Name</th>
-                                        <th className='ing-th p2'>Quantity & Unit</th>
+                                        <th className='ing-th p2 text-center'>Qty</th>
+                                        <th className='ing-th p2 text-center'>Unit</th>
                                         <th className='ing-th1 p2'>Action</th>
                                     </tr>
+                                </thead>
+                                <tbody>
                                     {selectedIngredients.map((ingredient, index) => (
                                         <tr key={index}>
-
                                             <td className='p-2'>{ingredient.name}</td>
-                                            <td className='ing-td p2'>{ingredient.quantity} {ingredient.unit}</td>
-                                            <td className='text-center'><button type="button" className="btn-remove-ingredient" onClick={() => removeIngredient(index)}><IoTrashOutline /></button></td>
+                                            <td className='ing-td p2 text-center'>
+                                                <ButtonGroup aria-label="Basic example" className='btngroup'>
+                                                    <Button className="decrease-ing" variant="dark" onClick={() => decreaseQuantity(index)}>-</Button>
+                                                    <label className="px-2 pt-1">{ingredient.quantity}</label>
+                                                    <Button className="increase-ing" variant="dark" onClick={() => increaseQuantity(index)}>+</Button>
+                                                </ButtonGroup>
+                                            </td>
+                                            <td className='ing-td p2 text-center'>
+                                                {ingredient.unit}
+                                                
+                                            </td>
+                                            <td className='text-center'>
+                                                <button type="button" className="btn-remove-ingredient" onClick={() => removeIngredient(index)}>
+                                                    <IoTrashOutline />
+                                                </button>
+                                            </td>
                                         </tr>
                                     ))}
-                                </Table>
-                            </div>
-                        )}
+                                </tbody>
+                            </Table>
+                        </div>
+                    )}
+
 
                     <Form.Group className="mb-3" controlId="formItemImage">
                         <Form.Label>Image</Form.Label>
