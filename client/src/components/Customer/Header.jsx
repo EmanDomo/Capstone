@@ -29,6 +29,7 @@ import InputGroup from 'react-bootstrap/InputGroup';
 function Header() {
     const [data, setData] = useState([]);
     const [userName, setUserName] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
     const [userGender, setUserGender] = useState('');
     const [openLinks, setOpenLinks] = useState(false);
     const [cartItems, setCartItems] = useState([]);
@@ -108,8 +109,6 @@ function Header() {
     }
 
     const handleSubmit = async () => {
-        // e.preventDefault();
-    
         const token = localStorage.getItem('token');
         if (!token) {
             console.log('No token found');
@@ -125,13 +124,15 @@ function Header() {
     
             if (response.status === 200) {
                 console.log('User details updated successfully');
-                // Close the modal or show a success message
                 handleProfileModalClose();
-            } else {
-                console.error('Error updating user details:', response.data.message);
+                setErrorMessage(''); // Clear any existing error message
             }
         } catch (error) {
-            console.error('Error updating user details:', error);
+            if (error.response && error.response.status === 400) {
+                setErrorMessage(error.response.data.message); // Set the error message from the backend
+            } else {
+                console.error('Error updating user details:', error);
+            }
         }
     };
 
@@ -481,20 +482,25 @@ function Header() {
                 <Modal.Body>
                     <Form onSubmit={handleSubmit}>
                         <Row>
-                            <Col xs={12}>
-                                <Form.Group controlId="formUsername">
-                                    <Form.Label>Username</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        name="username"
-                                        value={formData.username}
-                                        onChange={handleChange}
-                                        placeholder="Enter username"
-                                        className='mb-2 inputheader'
-                                        required
-                                    />
-                                </Form.Group>
-                            </Col>
+                        <Col xs={12}>
+    <Form.Group controlId="formUsername">
+        <Form.Label>Username</Form.Label>
+        <Form.Control
+            type="text"
+            name="username"
+            value={formData.username}
+            onChange={(e) => {
+                handleChange(e);
+                setErrorMessage(''); // Clear the error message while typing
+            }}
+            placeholder="Enter username"
+            className="mb-2 inputheader"
+            required
+        />
+        {errorMessage && <Form.Text className="text-danger">{errorMessage}</Form.Text>}
+    </Form.Group>
+</Col>
+
                             <Col xs={12}>
                                 <Form.Group controlId="formName">
                                     <Form.Label>Name</Form.Label>

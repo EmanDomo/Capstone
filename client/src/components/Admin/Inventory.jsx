@@ -671,7 +671,7 @@ const Inventory = () => {
         if (!newUnit.trim()) return;  
     
         try {
-            const res = await axios.post('/unit', { unit_name: newUnit }, {
+            const res = await axios.post(`${host}/unit`, { unit_name: newUnit }, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
