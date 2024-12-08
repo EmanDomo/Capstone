@@ -66,12 +66,33 @@ router.post('/capture-payment', async (req, res) => {
     }
 });
 
+// router.post('/pay-gcash', async (req, res) => {
+//     const { totalAmount } = req.body;
+
+//     if (!totalAmount) {
+//         return res.status(400).send('Total amount is required');
+//     }
+//     const parsedTotalAmount = parseFloat(totalAmount);
+//     if (isNaN(parsedTotalAmount)) {
+//         return res.status(400).send('Total amount must be a number');
+//     }
+
+//     try {
+//         const paymongoSource = await createPaymongoSource(parsedTotalAmount, 'GCash Payment', 'GCash payment description');
+//         return res.json({ url: paymongoSource.data.attributes.redirect.checkout_url });
+//     } catch (error) {
+//         console.error('Error creating PayMongo GCash link:', error);
+//         return res.status(500).json({ error: 'Internal server error' });
+//     }
+// });
+
 router.post('/pay-gcash', async (req, res) => {
     const { totalAmount } = req.body;
 
     if (!totalAmount) {
         return res.status(400).send('Total amount is required');
     }
+
     const parsedTotalAmount = parseFloat(totalAmount);
     if (isNaN(parsedTotalAmount)) {
         return res.status(400).send('Total amount must be a number');
@@ -79,11 +100,29 @@ router.post('/pay-gcash', async (req, res) => {
 
     try {
         const paymongoSource = await createPaymongoSource(parsedTotalAmount, 'GCash Payment', 'GCash payment description');
-        return res.json({ url: paymongoSource.data.attributes.redirect.checkout_url });
+        const checkoutUrl = paymongoSource.data.attributes.redirect.checkout_url;
+
+        // After the payment is completed and confirmed via webhook, place the order
+        // Call the place-order API to place the order and then return success.
+        
+        res.json({ url: checkoutUrl });  // Provide URL for GCash payment
     } catch (error) {
         console.error('Error creating PayMongo GCash link:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
+});
+
+// You may want to set up a webhook that handles PayMongo payment success
+router.post('/payment-webhook', (req, res) => {
+    const paymentStatus = req.body.data.attributes.status; // Payment status from PayMongo
+
+    if (paymentStatus === 'paid') {
+        // Payment was successful
+        // Call the place-order API here
+        placeOrderFunction();  // This function will place the order automatically
+    }
+
+    res.status(200).send('Webhook received');
 });
 
 router.post('/pay-others', async (req, res) => {
@@ -528,60 +567,135 @@ router.post("/category", (req, res) => {
     }
 });
 
+// router.post('/complete-order', authenticateToken, authorizeRoles('admin'), (req, res) => {
+//     const { orderIds, userId, totalAmount } = req.body;
+
+//     console.log(`Received orderIds: ${orderIds}, userId: ${userId}, totalAmount: ${totalAmount}`);
+
+//     conn.query(
+//         'SELECT orderId, orderNumber, userName, quantity, gender FROM tbl_orders WHERE orderId IN (?)',
+//         [orderIds],
+//         (err, result) => {
+//             if (err) {
+//                 console.error('Error fetching order details:', err);
+//                 return res.status(500).json({ success: false, error: 'Failed to fetch order details' });
+//             }
+
+//             if (result.length === 0) {
+//                 return res.status(404).json({ success: false, error: 'Orders not found' });
+//             }
+
+//             const salePromises = result.map(order => {
+//                 const { orderId, orderNumber, userName, quantity, gender } = order;
+//                 return new Promise((resolve, reject) => {
+//                     conn.query(
+//                         'INSERT INTO tbl_sale (orderId, orderNumber, userId, totalAmount, saleDate, userName, quantity, gender) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)',
+//                         [orderId, orderNumber, userId, totalAmount, userName, quantity, gender],
+//                         (err, result) => {
+//                             if (err) {
+//                                 return reject(err);
+//                             }
+//                             resolve(result);
+//                         }
+//                     );
+//                 });
+//             });
+
+//             Promise.all(salePromises)
+//                 .then(() => {
+//                     conn.query(
+//                         'UPDATE tbl_orders SET status = ? WHERE orderId IN (?)',
+//                         ['completed', orderIds],
+//                         (err, result) => {
+//                             if (err) {
+//                                 console.error('Error updating order status:', err);
+//                                 return res.status(500).json({ success: false, error: 'Failed to update order status' });
+//                             }
+
+//                             console.log('Updated order status to completed:', result);
+//                             return res.status(200).json({ success: true, message: 'Orders completed and stored in sales' });
+//                         }
+//                     );
+//                 })
+//                 .catch(err => {
+//                     console.error('Error inserting sales record:', err);
+//                     return res.status(500).json({ success: false, error: 'Failed to insert sales record' });
+//                 });
+//         }
+//     );
+// });
+
 router.post('/complete-order', authenticateToken, authorizeRoles('admin'), (req, res) => {
     const { orderIds, userId, totalAmount } = req.body;
+    const cashierName = req.body.cashierName;
 
     console.log(`Received orderIds: ${orderIds}, userId: ${userId}, totalAmount: ${totalAmount}`);
 
     conn.query(
-        'SELECT orderId, orderNumber, userName, quantity, gender FROM tbl_orders WHERE orderId IN (?)',
-        [orderIds],
+        'SELECT name FROM tbl_admins WHERE username = ?',
+        [cashierName],
         (err, result) => {
             if (err) {
-                console.error('Error fetching order details:', err);
-                return res.status(500).json({ success: false, error: 'Failed to fetch order details' });
+                console.error('Error fetching cashier name:', err);
+                return res.status(500).json({ success: false, error: 'Failed to fetch cashier name' });
             }
 
             if (result.length === 0) {
-                return res.status(404).json({ success: false, error: 'Orders not found' });
+                return res.status(404).json({ success: false, error: 'Cashier not found' });
             }
+            const adminName = result[0].name;
 
-            const salePromises = result.map(order => {
-                const { orderId, orderNumber, userName, quantity, gender } = order;
-                return new Promise((resolve, reject) => {
-                    conn.query(
-                        'INSERT INTO tbl_sale (orderId, orderNumber, userId, totalAmount, saleDate, userName, quantity, gender) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)',
-                        [orderId, orderNumber, userId, totalAmount, userName, quantity, gender],
-                        (err, result) => {
-                            if (err) {
-                                return reject(err);
-                            }
-                            resolve(result);
-                        }
-                    );
-                });
-            });
+            conn.query(
+                'SELECT orderId, orderNumber, userName, quantity, gender FROM tbl_orders WHERE orderId IN (?)',
+                [orderIds],
+                (err, result) => {
+                    if (err) {
+                        console.error('Error fetching order details:', err);
+                        return res.status(500).json({ success: false, error: 'Failed to fetch order details' });
+                    }
 
-            Promise.all(salePromises)
-                .then(() => {
-                    conn.query(
-                        'UPDATE tbl_orders SET status = ? WHERE orderId IN (?)',
-                        ['completed', orderIds],
-                        (err, result) => {
-                            if (err) {
-                                console.error('Error updating order status:', err);
-                                return res.status(500).json({ success: false, error: 'Failed to update order status' });
-                            }
+                    if (result.length === 0) {
+                        return res.status(404).json({ success: false, error: 'Orders not found' });
+                    }
 
-                            console.log('Updated order status to completed:', result);
-                            return res.status(200).json({ success: true, message: 'Orders completed and stored in sales' });
-                        }
-                    );
-                })
-                .catch(err => {
-                    console.error('Error inserting sales record:', err);
-                    return res.status(500).json({ success: false, error: 'Failed to insert sales record' });
-                });
+                    const salePromises = result.map(order => {
+                        const { orderId, orderNumber, userName, quantity, gender } = order;
+                        return new Promise((resolve, reject) => {
+                            conn.query(
+                                'INSERT INTO tbl_sale (orderId, orderNumber, userId, totalAmount, saleDate, userName, quantity, gender, adminName) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)',
+                                [orderId, orderNumber, userId, totalAmount, userName, quantity, gender, adminName],
+                                (err, result) => {
+                                    if (err) {
+                                        return reject(err);
+                                    }
+                                    resolve(result);
+                                }
+                            );
+                        });
+                    });
+
+                    Promise.all(salePromises)
+                        .then(() => {
+                            conn.query(
+                                'UPDATE tbl_orders SET status = ? WHERE orderId IN (?)',
+                                ['completed', orderIds],
+                                (err, result) => {
+                                    if (err) {
+                                        console.error('Error updating order status:', err);
+                                        return res.status(500).json({ success: false, error: 'Failed to update order status' });
+                                    }
+
+                                    console.log('Updated order status to completed:', result);
+                                    return res.status(200).json({ success: true, message: 'Orders completed and stored in sales' });
+                                }
+                            );
+                        })
+                        .catch(err => {
+                            console.error('Error inserting sales record:', err);
+                            return res.status(500).json({ success: false, error: 'Failed to insert sales record' });
+                        });
+                }
+            );
         }
     );
 });
@@ -1861,26 +1975,56 @@ ORDER BY
 });
 
 router.post('/api/cashier1Sales', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    // const query = `
+    // SELECT 
+    //     s.saleId, 
+    //     o.orderId, 
+    //     o.orderNumber,  -- Include orderNumber
+    //     s.userName, 
+    //     s.totalAmount, 
+    //     s.saleDate, 
+    //     i.itemname,
+    //     s.quantity 
+    // FROM 
+    //     tbl_sale s
+    // JOIN 
+    //     tbl_orders o ON s.orderId = o.orderId
+    // JOIN 
+    //     tbl_items i ON o.id = i.id
+    // WHERE 
+    //     DATE(s.saleDate) = CURDATE()
+    //     AND s.userName = 'cashier1';
+    // `;
     const query = `
-    SELECT 
+        SELECT 
         s.saleId, 
         o.orderId, 
         o.orderNumber,  -- Include orderNumber
-        s.userName, 
+        s.adminName as cashier_name,
+        u.name as customer_name,
+        -- Add the status column next to the customer_name
+        CASE 
+            WHEN u.userName IS NULL THEN 'walk-in'  -- If there's no customer username, it's a "walk-in" order
+            ELSE 'online'  -- If there's a customer username, it's an "online" order
+        END AS status,
         s.totalAmount, 
         s.saleDate, 
-        i.itemname,
-        s.quantity 
+        s.quantity, 
+        i.itemname
     FROM 
         tbl_sale s
     JOIN 
         tbl_orders o ON s.orderId = o.orderId
     JOIN 
-        tbl_items i ON o.id = i.id
+        tbl_items i ON o.id = i.id 
+    LEFT JOIN
+        tbl_admins a ON s.adminName = a.name
+    LEFT JOIN
+        tbl_users u ON s.userName = u.username
     WHERE 
-        DATE(s.saleDate) = CURDATE()
+            DATE(s.saleDate) = CURDATE()
         AND s.userName = 'cashier1';
-    `;
+    `
     conn.query(query, (err, results) => {
         if (err) {
             console.error('Error fetching cashier1\'s sales:', err);
@@ -1891,27 +2035,58 @@ router.post('/api/cashier1Sales', authenticateToken, authorizeRoles('superadmin'
 });
 
 router.post('/api/cashier1SalesMonth', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    // const query = `
+    //     SELECT 
+    //         s.saleId, 
+    //         o.orderId, 
+    //         o.orderNumber,  -- Include orderNumber
+    //         s.userName, 
+    //         s.totalAmount, 
+    //         s.saleDate, 
+    //         i.itemname,
+    //         s.quantity 
+    //     FROM 
+    //         tbl_sale s
+    //     JOIN 
+    //         tbl_orders o ON s.orderId = o.orderId
+    //     JOIN 
+    //         tbl_items i ON o.id = i.id
+    //     WHERE 
+    //         MONTH(s.saleDate) = MONTH(CURDATE()) 
+    //         AND YEAR(s.saleDate) = YEAR(CURDATE())
+    //         AND s.userName = 'cashier1';
+    // `;
     const query = `
-        SELECT 
-            s.saleId, 
-            o.orderId, 
-            o.orderNumber,  -- Include orderNumber
-            s.userName, 
-            s.totalAmount, 
-            s.saleDate, 
-            i.itemname,
-            s.quantity 
-        FROM 
-            tbl_sale s
-        JOIN 
-            tbl_orders o ON s.orderId = o.orderId
-        JOIN 
-            tbl_items i ON o.id = i.id
-        WHERE 
+            SELECT 
+        s.saleId, 
+        o.orderId, 
+        o.orderNumber,  -- Include orderNumber
+        s.adminName as cashier_name,
+        u.name as customer_name,
+        -- Add the status column next to the customer_name
+        CASE 
+            WHEN u.userName IS NULL THEN 'walk-in'  -- If there's no customer username, it's a "walk-in" order
+            ELSE 'online'  -- If there's a customer username, it's an "online" order
+        END AS status,
+        s.totalAmount, 
+        s.saleDate, 
+        s.quantity, 
+        i.itemname
+    FROM 
+        tbl_sale s
+    JOIN 
+        tbl_orders o ON s.orderId = o.orderId
+    JOIN 
+        tbl_items i ON o.id = i.id 
+    LEFT JOIN
+        tbl_admins a ON s.adminName = a.name
+    LEFT JOIN
+        tbl_users u ON s.userName = u.username
+    WHERE 
             MONTH(s.saleDate) = MONTH(CURDATE()) 
             AND YEAR(s.saleDate) = YEAR(CURDATE())
             AND s.userName = 'cashier1';
-    `;
+    `
     conn.query(query, (err, results) => {
         if (err) {
             console.error('Error fetching cashier1\'s monthly sales:', err);
@@ -1922,27 +2097,58 @@ router.post('/api/cashier1SalesMonth', authenticateToken, authorizeRoles('supera
 });
 
 router.post('/api/cashier1SalesWeek', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    // const query = `
+    //     SELECT 
+    //         s.saleId, 
+    //         o.orderId, 
+    //         o.orderNumber,  -- Include orderNumber
+    //         s.userName, 
+    //         s.totalAmount, 
+    //         s.saleDate, 
+    //         i.itemname,
+    //         s.quantity 
+    //     FROM 
+    //         tbl_sale s
+    //     JOIN 
+    //         tbl_orders o ON s.orderId = o.orderId
+    //     JOIN 
+    //         tbl_items i ON o.id = i.id
+    //     WHERE 
+    //         YEAR(s.saleDate) = YEAR(CURDATE()) 
+    //         AND WEEK(s.saleDate, 1) = WEEK(CURDATE(), 1)
+    //         AND s.userName = 'cashier1';
+    // `;
     const query = `
-        SELECT 
-            s.saleId, 
-            o.orderId, 
-            o.orderNumber,  -- Include orderNumber
-            s.userName, 
-            s.totalAmount, 
-            s.saleDate, 
-            i.itemname,
-            s.quantity 
-        FROM 
-            tbl_sale s
-        JOIN 
-            tbl_orders o ON s.orderId = o.orderId
-        JOIN 
-            tbl_items i ON o.id = i.id
-        WHERE 
-            YEAR(s.saleDate) = YEAR(CURDATE()) 
+            SELECT 
+        s.saleId, 
+        o.orderId, 
+        o.orderNumber,  -- Include orderNumber
+        s.adminName as cashier_name,
+        u.name as customer_name,
+        -- Add the status column next to the customer_name
+        CASE 
+            WHEN u.userName IS NULL THEN 'walk-in'  -- If there's no customer username, it's a "walk-in" order
+            ELSE 'online'  -- If there's a customer username, it's an "online" order
+        END AS status,
+        s.totalAmount, 
+        s.saleDate, 
+        s.quantity, 
+        i.itemname
+    FROM 
+        tbl_sale s
+    JOIN 
+        tbl_orders o ON s.orderId = o.orderId
+    JOIN 
+        tbl_items i ON o.id = i.id 
+    LEFT JOIN
+        tbl_admins a ON s.adminName = a.name
+    LEFT JOIN
+        tbl_users u ON s.userName = u.username
+    WHERE 
+             YEAR(s.saleDate) = YEAR(CURDATE()) 
             AND WEEK(s.saleDate, 1) = WEEK(CURDATE(), 1)
             AND s.userName = 'cashier1';
-    `;
+    `
     conn.query(query, (err, results) => {
         if (err) {
             console.error('Error fetching cashier1\'s weekly sales:', err);
@@ -1953,26 +2159,56 @@ router.post('/api/cashier1SalesWeek', authenticateToken, authorizeRoles('superad
 });
 
 router.post('/api/cashier2Sales', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    // const query = `
+    // SELECT 
+    //     s.saleId, 
+    //     o.orderId, 
+    //     o.orderNumber,   -- Include orderNumber
+    //     s.userName, 
+    //     s.totalAmount, 
+    //     s.saleDate, 
+    //     i.itemname,
+    //     s.quantity 
+    // FROM 
+    //     tbl_sale s
+    // JOIN 
+    //     tbl_orders o ON s.orderId = o.orderId
+    // JOIN 
+    //     tbl_items i ON o.id = i.id
+    // WHERE 
+    //     DATE(s.saleDate) = CURDATE()
+    //     AND s.userName = 'cashier2';
+    // `;
     const query = `
-    SELECT 
+            SELECT 
         s.saleId, 
         o.orderId, 
-        o.orderNumber,   -- Include orderNumber
-        s.userName, 
+        o.orderNumber,  -- Include orderNumber
+        s.adminName as cashier_name,
+        u.name as customer_name,
+        -- Add the status column next to the customer_name
+        CASE 
+            WHEN u.userName IS NULL THEN 'walk-in'  -- If there's no customer username, it's a "walk-in" order
+            ELSE 'online'  -- If there's a customer username, it's an "online" order
+        END AS status,
         s.totalAmount, 
         s.saleDate, 
-        i.itemname,
-        s.quantity 
+        s.quantity, 
+        i.itemname
     FROM 
         tbl_sale s
     JOIN 
         tbl_orders o ON s.orderId = o.orderId
     JOIN 
-        tbl_items i ON o.id = i.id
+        tbl_items i ON o.id = i.id 
+    LEFT JOIN
+        tbl_admins a ON s.adminName = a.name
+    LEFT JOIN
+        tbl_users u ON s.userName = u.username
     WHERE 
-        DATE(s.saleDate) = CURDATE()
+            DATE(s.saleDate) = CURDATE()
         AND s.userName = 'cashier2';
-    `;
+    `
     conn.query(query, (err, results) => {
         if (err) {
             console.error('Error fetching cashier2\'s sales:', err);
@@ -1983,27 +2219,58 @@ router.post('/api/cashier2Sales', authenticateToken, authorizeRoles('superadmin'
 });
 
 router.post('/api/cashier2SalesMonth', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    // const query = `
+    //     SELECT 
+    //         s.saleId, 
+    //         o.orderId, 
+    //         o.orderNumber,   -- Include orderNumber
+    //         s.userName, 
+    //         s.totalAmount, 
+    //         s.saleDate, 
+    //         i.itemname,
+    //         s.quantity 
+    //     FROM 
+    //         tbl_sale s
+    //     JOIN 
+    //         tbl_orders o ON s.orderId = o.orderId
+    //     JOIN 
+    //         tbl_items i ON o.id = i.id
+    //     WHERE 
+    //         MONTH(s.saleDate) = MONTH(CURDATE()) 
+    //         AND YEAR(s.saleDate) = YEAR(CURDATE())
+    //         AND s.userName = 'cashier2';
+    // `;
     const query = `
         SELECT 
-            s.saleId, 
-            o.orderId, 
-            o.orderNumber,   -- Include orderNumber
-            s.userName, 
-            s.totalAmount, 
-            s.saleDate, 
-            i.itemname,
-            s.quantity 
-        FROM 
-            tbl_sale s
-        JOIN 
-            tbl_orders o ON s.orderId = o.orderId
-        JOIN 
-            tbl_items i ON o.id = i.id
-        WHERE 
+        s.saleId, 
+        o.orderId, 
+        o.orderNumber,  -- Include orderNumber
+        s.adminName as cashier_name,
+        u.name as customer_name,
+        -- Add the status column next to the customer_name
+        CASE 
+            WHEN u.userName IS NULL THEN 'walk-in'  -- If there's no customer username, it's a "walk-in" order
+            ELSE 'online'  -- If there's a customer username, it's an "online" order
+        END AS status,
+        s.totalAmount, 
+        s.saleDate, 
+        s.quantity, 
+        i.itemname
+    FROM 
+        tbl_sale s
+    JOIN 
+        tbl_orders o ON s.orderId = o.orderId
+    JOIN 
+        tbl_items i ON o.id = i.id 
+    LEFT JOIN
+        tbl_admins a ON s.adminName = a.name
+    LEFT JOIN
+        tbl_users u ON s.userName = u.username
+    WHERE 
             MONTH(s.saleDate) = MONTH(CURDATE()) 
             AND YEAR(s.saleDate) = YEAR(CURDATE())
             AND s.userName = 'cashier2';
-    `;
+    `
     conn.query(query, (err, results) => {
         if (err) {
             console.error(`Error fetching cashier2's monthly sales:`, err);
@@ -2014,28 +2281,59 @@ router.post('/api/cashier2SalesMonth', authenticateToken, authorizeRoles('supera
 });
 
 router.post('/api/cashier2SalesWeek', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    // const query = `
+    //     SELECT 
+    //         s.saleId, 
+    //         o.orderId, 
+    //         o.orderNumber,   -- Include orderNumber
+    //         s.userName, 
+    //         s.totalAmount, 
+    //         s.saleDate, 
+    //         i.itemname,
+    //         s.quantity 
+    //     FROM 
+    //         tbl_sale s
+    //     JOIN 
+    //         tbl_orders o ON s.orderId = o.orderId
+    //     JOIN 
+    //         tbl_items i ON o.id = i.id
+    //     WHERE 
+    //         YEAR(s.saleDate) = YEAR(CURDATE()) 
+    //         AND WEEK(s.saleDate, 1) = WEEK(CURDATE(), 1)
+    //         AND s.userName = 'cashier2'
+    //     ;
+    // `;
     const query = `
         SELECT 
-            s.saleId, 
-            o.orderId, 
-            o.orderNumber,   -- Include orderNumber
-            s.userName, 
-            s.totalAmount, 
-            s.saleDate, 
-            i.itemname,
-            s.quantity 
-        FROM 
-            tbl_sale s
-        JOIN 
-            tbl_orders o ON s.orderId = o.orderId
-        JOIN 
-            tbl_items i ON o.id = i.id
-        WHERE 
-            YEAR(s.saleDate) = YEAR(CURDATE()) 
-            AND WEEK(s.saleDate, 1) = WEEK(CURDATE(), 1)
-            AND s.userName = 'cashier2'
-        ;
-    `;
+        s.saleId, 
+        o.orderId, 
+        o.orderNumber,  -- Include orderNumber
+        s.adminName as cashier_name,
+        u.name as customer_name,
+        -- Add the status column next to the customer_name
+        CASE 
+            WHEN u.userName IS NULL THEN 'walk-in'  -- If there's no customer username, it's a "walk-in" order
+            ELSE 'online'  -- If there's a customer username, it's an "online" order
+        END AS status,
+        s.totalAmount, 
+        s.saleDate, 
+        s.quantity, 
+        i.itemname
+    FROM 
+        tbl_sale s
+    JOIN 
+        tbl_orders o ON s.orderId = o.orderId
+    JOIN 
+        tbl_items i ON o.id = i.id 
+    LEFT JOIN
+        tbl_admins a ON s.adminName = a.name
+    LEFT JOIN
+        tbl_users u ON s.userName = u.username
+    WHERE 
+       YEAR(s.saleDate) = YEAR(CURDATE()) 
+        AND WEEK(s.saleDate, 1) = WEEK(CURDATE(), 1)
+        AND s.userName = 'cashier2'
+    `
     conn.query(query, (err, results) => {
         if (err) {
             console.error(`Error fetching cashier2's weekly sales:`, err);
@@ -2047,26 +2345,57 @@ router.post('/api/cashier2SalesWeek', authenticateToken, authorizeRoles('superad
 
 
 router.get('/api/sales/today', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    // const query = `
+    //       SELECT 
+    //         s.saleId, 
+    //         o.orderId, 
+    //         o.orderNumber,  -- Include orderNumber
+    //         s.userName, 
+    //         s.totalAmount, 
+    //         s.saleDate, 
+    //         s.quantity, 
+    //         i.itemname
+    //     FROM 
+    //         tbl_sale s
+    //     JOIN 
+    //         tbl_orders o ON s.orderId = o.orderId
+    //     JOIN 
+    //         tbl_items i ON o.id = i.id 
+    //     WHERE 
+    //         DATE(s.saleDate) = CURDATE()
+    //     ORDER BY orderNumber;
+    // `;
     const query = `
-          SELECT 
-            s.saleId, 
-            o.orderId, 
-            o.orderNumber,  -- Include orderNumber
-            s.userName, 
-            s.totalAmount, 
-            s.saleDate, 
-            s.quantity, 
-            i.itemname
-        FROM 
-            tbl_sale s
-        JOIN 
-            tbl_orders o ON s.orderId = o.orderId
-        JOIN 
-            tbl_items i ON o.id = i.id 
-        WHERE 
-            DATE(s.saleDate) = CURDATE()
-        ORDER BY orderNumber;
-    `;
+        SELECT 
+        s.saleId, 
+        o.orderId, 
+        o.orderNumber,  -- Include orderNumber
+        s.adminName as cashier_name,
+        u.name as customer_name,
+        -- Add the status column next to the customer_name
+        CASE 
+            WHEN u.userName IS NULL THEN 'walk-in'  -- If there's no customer username, it's a "walk-in" order
+            ELSE 'online'  -- If there's a customer username, it's an "online" order
+        END AS status,
+        s.totalAmount, 
+        s.saleDate, 
+        s.quantity, 
+        i.itemname
+    FROM 
+        tbl_sale s
+    JOIN 
+        tbl_orders o ON s.orderId = o.orderId
+    JOIN 
+        tbl_items i ON o.id = i.id 
+    LEFT JOIN
+        tbl_admins a ON s.adminName = a.name
+    LEFT JOIN
+        tbl_users u ON s.userName = u.username
+    WHERE 
+        DATE(s.saleDate) = CURDATE()
+    ORDER BY 
+        o.orderNumber;
+    `
     conn.query(query, (err, results) => {
         if (err) {
             console.error('Error fetching today\'s sales:', err);
@@ -2078,26 +2407,56 @@ router.get('/api/sales/today', authenticateToken, authorizeRoles('superadmin'), 
 
 
 router.get('/api/sales/week', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    // const query = `
+    //     SELECT 
+    //         s.saleId, 
+    //         o.orderId, 
+    //         o.orderNumber,  -- Include orderNumber
+    //         s.userName, 
+    //         s.totalAmount, 
+    //         s.saleDate, 
+    //         s.quantity, 
+    //         i.itemname
+    //     FROM 
+    //         tbl_sale s
+    //     JOIN 
+    //         tbl_orders o ON s.orderId = o.orderId
+    //     JOIN 
+    //         tbl_items i ON o.id = i.id 
+    //     WHERE 
+    //         YEARWEEK(s.saleDate, 1) = YEARWEEK(CURDATE(), 1)
+    //     ORDER BY orderNumber;
+    // `;
     const query = `
         SELECT 
-            s.saleId, 
-            o.orderId, 
-            o.orderNumber,  -- Include orderNumber
-            s.userName, 
-            s.totalAmount, 
-            s.saleDate, 
-            s.quantity, 
-            i.itemname
-        FROM 
-            tbl_sale s
-        JOIN 
-            tbl_orders o ON s.orderId = o.orderId
-        JOIN 
-            tbl_items i ON o.id = i.id 
-        WHERE 
-            YEARWEEK(s.saleDate, 1) = YEARWEEK(CURDATE(), 1)
+        s.saleId, 
+        o.orderId, 
+        o.orderNumber,  -- Include orderNumber
+        s.adminName as cashier_name,
+        u.name as customer_name,
+        -- Add the status column next to the customer_name
+        CASE 
+            WHEN u.userName IS NULL THEN 'walk-in'  -- If there's no customer username, it's a "walk-in" order
+            ELSE 'online'  -- If there's a customer username, it's an "online" order
+        END AS status,
+        s.totalAmount, 
+        s.saleDate, 
+        s.quantity, 
+        i.itemname
+    FROM 
+        tbl_sale s
+    JOIN 
+        tbl_orders o ON s.orderId = o.orderId
+    JOIN 
+        tbl_items i ON o.id = i.id 
+    LEFT JOIN
+        tbl_admins a ON s.adminName = a.name
+    LEFT JOIN
+        tbl_users u ON s.userName = u.username
+    WHERE 
+      YEARWEEK(s.saleDate, 1) = YEARWEEK(CURDATE(), 1)
         ORDER BY orderNumber;
-    `;
+    `
     conn.query(query, (err, results) => {
         if (err) {
             console.error('Error fetching this week\'s sales:', err);
@@ -2108,27 +2467,58 @@ router.get('/api/sales/week', authenticateToken, authorizeRoles('superadmin'), (
 });
 
 router.get('/api/sales/month', authenticateToken, authorizeRoles('superadmin'), (req, res) => {
+    // const query = `
+    //     SELECT 
+    //         s.saleId, 
+    //         o.orderId, 
+    //         o.orderNumber,  -- Include orderNumber
+    //         s.userName, 
+    //         s.totalAmount, 
+    //         s.saleDate, 
+    //         s.quantity, 
+    //         i.itemname
+    //     FROM 
+    //         tbl_sale s
+    //     JOIN 
+    //         tbl_orders o ON s.orderId = o.orderId
+    //     JOIN 
+    //         tbl_items i ON o.id = i.id 
+    //     WHERE 
+    //         MONTH(s.saleDate) = MONTH(CURDATE()) 
+    //         AND YEAR(s.saleDate) = YEAR(CURDATE())
+    //     ORDER BY orderNumber;
+    // `;
     const query = `
         SELECT 
-            s.saleId, 
-            o.orderId, 
-            o.orderNumber,  -- Include orderNumber
-            s.userName, 
-            s.totalAmount, 
-            s.saleDate, 
-            s.quantity, 
-            i.itemname
-        FROM 
-            tbl_sale s
-        JOIN 
-            tbl_orders o ON s.orderId = o.orderId
-        JOIN 
-            tbl_items i ON o.id = i.id 
-        WHERE 
-            MONTH(s.saleDate) = MONTH(CURDATE()) 
-            AND YEAR(s.saleDate) = YEAR(CURDATE())
+        s.saleId, 
+        o.orderId, 
+        o.orderNumber,  -- Include orderNumber
+        s.adminName as cashier_name,
+        u.name as customer_name,
+        -- Add the status column next to the customer_name
+        CASE 
+            WHEN u.userName IS NULL THEN 'walk-in'  -- If there's no customer username, it's a "walk-in" order
+            ELSE 'online'  -- If there's a customer username, it's an "online" order
+        END AS status,
+        s.totalAmount, 
+        s.saleDate, 
+        s.quantity, 
+        i.itemname
+    FROM 
+        tbl_sale s
+    JOIN 
+        tbl_orders o ON s.orderId = o.orderId
+    JOIN 
+        tbl_items i ON o.id = i.id 
+    LEFT JOIN
+        tbl_admins a ON s.adminName = a.name
+    LEFT JOIN
+        tbl_users u ON s.userName = u.username
+    WHERE 
+      MONTH(s.saleDate) = MONTH(CURDATE()) 
+        AND YEAR(s.saleDate) = YEAR(CURDATE())
         ORDER BY orderNumber;
-    `;
+    `
     conn.query(query, (err, results) => {
         if (err) {
             console.error('Error fetching this month\'s sales:', err);

@@ -25,6 +25,7 @@ const Orders = () => {
     const token = localStorage.getItem('token');
     const [isToastVisible, setIsToastVisible] = useState(false);
     const toggleToast = () => setIsToastVisible(prev => !prev);
+    const cashierName = localStorage.getItem('username');
 
     const renderTooltip = (props) => (
         <Tooltip id="button-tooltip" {...props}>
@@ -73,7 +74,8 @@ const Orders = () => {
                 userId,
                 totalAmount,
                 userName,
-                quantity
+                quantity,
+                cashierName
             }, {
                 headers: {
                     'Authorization': `Bearer ${token}`

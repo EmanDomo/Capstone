@@ -395,7 +395,7 @@ const POS = () => {
                           
                     </div>
                     <div className="mx-2 pos-content">
-                        <Row xs={2} md={3} lg={3} xl={4} className="g-4 mx-2">
+                        <Row xs={2} md={3} lg={3} xl={4} className="gy-4">
                             {filteredData.length > 0 ? (
                                 filteredData.map((el, i) => (
                                     <Col key={i}>

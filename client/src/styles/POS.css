@@ -47,6 +47,7 @@
 #cashier-card {
   width: 200px;
   height: 320px;
+  margin-right: 10px;
 }
 
 .cashier-itm {
