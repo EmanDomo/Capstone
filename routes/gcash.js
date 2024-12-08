@@ -20,10 +20,10 @@ async function createPaymongoSource(amount, description, remarks) {
           attributes: {
             amount: amount * 100, 
             redirect: {
-              success: `https://sjisc-canteen.online/success`, 
-              failed: `https://sjisc-canteen.online/failed`
-              // success: 'http://localhost:3000/success', // Ensure this URL matches your front-end success page
-              // failed: 'http://localhost:3000/failed'
+              // success: `https://sjisc-canteen.online/success`, 
+              // failed: `https://sjisc-canteen.online/failed`
+              success: 'http://localhost:3000/success', // Ensure this URL matches your front-end success page
+              failed: 'http://localhost:3000/failed'
             },
             type: 'gcash',
             currency: 'PHP',

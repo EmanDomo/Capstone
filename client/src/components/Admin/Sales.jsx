@@ -448,6 +448,7 @@ useEffect(() => {
                             <td className='text-center'>{sale.saleId}</td>
                             <td className='text-center'>{sale.orderNumber}</td>
                             <td className='text-center'>{sale.userName}</td>
+                            {/* <td className='text-center'>{sale.name}</td> */}
                             <td className='text-center'>₱ {sale.totalAmount}</td>
                             <td className='text-center'>{new Date(sale.saleDate).toLocaleDateString()}</td>
                             <td className='text-center'>{sale.itemname}</td>
@@ -460,7 +461,6 @@ useEffect(() => {
 
         );
     };
-    const [selectedSales, setSelectedSales] = useState('dashboard');
 
     const handleTabSelect = (key) => {
         setSelectedSales(key);
@@ -499,6 +499,9 @@ useEffect(() => {
       <div style={{ width: '100%', height: '300px' }}>
         <Pie data={pieData} options={options} />
       </div>
+    
+    const [selectedSales, setSelectedSales] = useState('overview');
+
     return ( 
         <div>
             <Header />
@@ -514,8 +517,8 @@ useEffect(() => {
                                 className="tabs-sales mb-3"
                                 fill
                             >
-                                <Tab eventKey="dashboard" title="Dashboard" />
-                                <Tab eventKey="overview" title="Overview" />
+                                <Tab eventKey="dashboard" title="Dashboard" />   
+                                <Tab eventKey="overview" title="Overview" />        
                             </Tabs>
                         </div>
                     </div>
@@ -523,7 +526,7 @@ useEffect(() => {
                         <button onClick={generatePDF} className="btn btn-primary" id='sales-report'>Print <FaRegFilePdf /></button>
                     </div>
                 </div>
-                {selectedSales === 'dashboard' && 
+                {selectedSales === 'overview' && 
                     <div>
                         <div className="sales-filters-container d-flex flex-row-reverse">
                             <div className="sales-filter-dropdown d-flex">
@@ -566,7 +569,7 @@ useEffect(() => {
                         {renderSalesTable(salesData)}
                     </div>
                 }
-                {selectedSales === 'overview' && 
+                {selectedSales === 'dashboard' && 
                     <div class="container-fluid">
                         <div class="row">
                             <div class="col-12 col-lg-6">
