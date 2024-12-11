@@ -15,6 +15,7 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import Toast from 'react-bootstrap/Toast';
 import ToastContainer from 'react-bootstrap/ToastContainer';
 import { host } from '../../apiRoutes';
+import Modal from 'react-bootstrap/Modal';
 
 var heroData = [
   {
@@ -40,6 +41,7 @@ const Menu = () => {
   const [categories, setCategories] = useState([]);
   const [toasts, setToasts] = useState([]); 
   const [selectedCategory, setSelectedCategory] = useState('Show All');
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     getUserData();
@@ -282,10 +284,15 @@ const Menu = () => {
                                               <Card.Text className="d-flex align-items-center">
                                                   <label className="p-1 customer-price">₱{el.price}</label>
                                               </Card.Text>
-                                              <Button variant="dark" className="customer-add-to-cart" onClick={() => handleAddToCart(el.id, el.itemname)}>
+                                              <Button variant="dark" className="customer-add-to-cart" onClick={() => handleAddToCart(el.id, el.itemname)} disabled={el.max_meals === 0} >
                                                   <IoMdAdd />
                                               </Button>
                                           </div>
+                                          <div className="text-muted text-center my-1 available">
+                                                    {el.max_meals > 0 
+                                                        ? `Available Meals: ${el.max_meals}`
+                                                        : 'Out of Stock'}
+                                                </div>
                                             <div className="text-muted text-center mb-1 no-purchase">
                                               {el.totalQuantity > 0
                                                 ? `${el.totalQuantity} purchased yesterday` 
@@ -305,6 +312,17 @@ const Menu = () => {
                           </Col>
                       )}
                   </Row>
+                  <Modal show={showModal} onHide={() => setShowModal(false)}>
+                  <Modal.Header closeButton>
+                    <Modal.Title>Order has been placed</Modal.Title>
+                  </Modal.Header>
+                  <Modal.Body>TRY</Modal.Body>
+                  <Modal.Footer>
+                    {/* <Button variant="dark" className="close-order-confirm" onClick={() => setShowModal(false)}>
+                      Close
+                    </Button> */}
+                  </Modal.Footer>
+                </Modal>
           </div>
         </section>
       </div>

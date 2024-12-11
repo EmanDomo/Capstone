@@ -63,6 +63,41 @@ const Checkout = () => {
   </form>
 
 
+const handlePlaceOrder = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userId'); 
+
+      const formData = new FormData();
+      formData.append('userId', userId);
+      formData.append('qrCodeImage', selectedFile);
+
+      const response = await fetch(`${host}/place-order`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      console.log('Response data:', data); 
+      if (data.success) {
+        console.log('Order placed successfully');
+        // setShowModal(true);
+        // setTimeout(() => {
+        //   navigate('/menu');
+        // }, 3000); 
+      } else {
+        console.error('Failed to place order:', data.error);
+        alert('Failed to place order. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error placing order:', error);
+      alert('An error occurred while placing the order. Please try again.');
+    }
+  };
+
     // const handleOtherPayment = async () => {
     //     try {
     //         const response = await fetch(`${host}/pay-others`, {
@@ -107,10 +142,12 @@ const Checkout = () => {
 
     const handleCheckout = () => {
         if (paymentMethod === 'G-Cash') {
+            handlePlaceOrder();
             handlePayGcash();
         } else if (paymentMethod === 'QR Code') {
             handleQR();
-        } else if (paymentMethod === 'Paypal') { 
+        } else if (paymentMethod === 'Paypal') {
+            handlePlaceOrder(); 
             handlePayPal();
         } else {
             alert('Please select a valid payment method.');

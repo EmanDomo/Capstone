@@ -22,7 +22,7 @@ async function createPaymongoSource(amount, description, remarks) {
             redirect: {
               // success: `https://sjisc-canteen.online/success`, 
               // failed: `https://sjisc-canteen.online/failed`
-              success: 'http://localhost:3000/success', // Ensure this URL matches your front-end success page
+              success: 'http://localhost:3000/menu', // Ensure this URL matches your front-end success page
               failed: 'http://localhost:3000/failed'
             },
             type: 'gcash',
