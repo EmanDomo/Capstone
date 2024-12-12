@@ -1005,17 +1005,35 @@ router.get("/top-selling", authenticateToken, authorizeRoles('customer'), (req, 
     try {
         const userGender = req.user.gender;
         const query = `
-        SELECT i.id, i.itemname, i.img, i.price, SUM(o.quantity) AS total_quantity_sold
-        FROM tbl_orders o
-        JOIN tbl_items i ON o.id = i.id
-        JOIN tbl_sale s ON o.orderId = s.orderId
-        WHERE o.status = 'completed'
-        AND s.saleDate >= CURDATE()
-        AND s.saleDate < CURDATE() + INTERVAL 1 DAY
-        AND s.gender = ?
-        GROUP BY i.id, i.itemname, i.img, i.price
-        ORDER BY total_quantity_sold DESC
-        LIMIT 3;
+        SELECT 
+                i.id, 
+                i.itemname, 
+                i.img, 
+                i.price, 
+                i.category,
+                MIN(IFNULL(FLOOR(s2.stock_quantity / si.quantity_required), 0)) AS max_meals,
+                IFNULL(sales.totalQuantity, 0) AS totalQuantity,
+                SUM(o.quantity) AS total_quantity_sold
+            FROM tbl_orders o
+            JOIN tbl_items i ON o.id = i.id
+            JOIN tbl_sale s ON o.orderId = s.orderId
+            LEFT JOIN tbl_item_ingredients si ON i.id = si.item_id
+            LEFT JOIN tbl_stocks s2 ON si.stock_id = s2.stockId
+            LEFT JOIN (
+                SELECT i.id AS itemId, SUM(o.quantity) AS totalQuantity
+                FROM tbl_sale s
+                JOIN tbl_orders o ON s.orderId = o.orderId
+                JOIN tbl_items i ON o.id = i.id
+                WHERE DATE(s.saleDate) = CURDATE() - INTERVAL 1 DAY
+                GROUP BY i.id
+            ) AS sales ON i.id = sales.itemId
+            WHERE o.status = 'completed'
+            AND s.saleDate >= CURDATE()
+            AND s.saleDate < CURDATE() + INTERVAL 1 DAY
+            AND s.gender = ?
+            GROUP BY i.id, i.itemname, i.img, i.price, i.category
+            ORDER BY total_quantity_sold DESC
+            LIMIT 3;
         `;
 
         conn.query(query, [userGender], (err, result) => {

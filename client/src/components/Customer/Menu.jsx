@@ -226,15 +226,20 @@ const Menu = () => {
                           <Card.Text className="d-flex align-items-center">
                             <label className="p-1 customer-price">₱{item.price}</label>
                           </Card.Text>
-                          <Button variant="dark" className="customer-add-to-cart" onClick={() => handleAddToCart(item.id, item.itemname)}>
-                            <IoMdAdd />
-                          </Button>
+                          <Button variant="dark" className="customer-add-to-cart" onClick={() => handleAddToCart(item.id, item.itemname)} disabled={item.max_meals === 0} >
+                                                  <IoMdAdd />
+                                              </Button>
                         </div>
-                          <div className="text-muted text-center mb-1 no-purchase">
-                            {item.totalQuantity > 0
-                              ? `${item.totalQuantity} purchased yesterday` 
-                            : ''} 
+                        <div className="text-muted text-center available no-purchase">
+                              {item.max_meals > 0 
+                                  ? `Available Meals: ${item.max_meals}`
+                                  : 'Out of Stock'}
                           </div>
+                      <div className="text-muted text-center mb-1 no-purchase">
+                        {item.totalQuantity > 0
+                          ? `${item.totalQuantity} purchased yesterday` 
+                        : 'No purchase yesterday'} 
+                      </div>
                       </Card.Body>
                     </Card>
                   </Col>
@@ -288,7 +293,7 @@ const Menu = () => {
                                                   <IoMdAdd />
                                               </Button>
                                           </div>
-                                          <div className="text-muted text-center my-1 available">
+                                          <div className="text-muted text-center available no-purchase">
                                                     {el.max_meals > 0 
                                                         ? `Available Meals: ${el.max_meals}`
                                                         : 'Out of Stock'}

@@ -404,7 +404,7 @@ const POS = () => {
                                                 <Card.Img variant="top" src={`${host}/uploads/${el.img}`} className="cashier-itm" alt="itm" />
                                             </div>
                                             <Card.Body>
-                                                <Card.Title className='d-inline-block text-truncate'>{el.itemname}</Card.Title>
+                                                <Card.Title className="item-name">{el.itemname}</Card.Title>
                                                 <div className="d-flex justify-content-between p-2">
                                                     <Card.Text className="d-flex align-items-center">
                                                         <label className="p-1 cashier-price">₱{el.price}</label>
