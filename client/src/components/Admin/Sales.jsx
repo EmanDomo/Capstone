@@ -150,7 +150,7 @@ const Sales = () => {
 
         doc.setFontSize(12);
         doc.setFont("helvetica", "normal");
-        const tableColumn = ["Sale ID", "Order #", "Username", "Total Amount", "Sale Date", "Item Name", "Quantity"];
+        const tableColumn = ["Sale ID", "Order #", "Cashier", "Customer", "Status", "Total Amount", "Sale Date", "Item Name", "Qty"];
     
         let filteredSalesData = salesData;
         let totalSales = 0;
@@ -164,7 +164,9 @@ const Sales = () => {
         const tableRows = filteredSalesData.map(sale => [
             sale.saleId,
             sale.orderNumber,
-            sale.userName,
+            sale.cashier_name,
+            sale.customer_name || "-",
+            sale.status,
             `P ${sale.totalAmount}`,
             new Date(sale.saleDate).toLocaleDateString(),
             sale.itemname,
@@ -192,13 +194,15 @@ const Sales = () => {
                 valign: 'middle',
             },
             columnStyles: {
-                0: { cellWidth: 20 }, 
-                1: { cellWidth: 20 }, 
-                2: { cellWidth: 30 }, 
-                3: { cellWidth: 30 }, 
-                4: { cellWidth: 30 },  
-                5: { cellWidth: 30 },  
-                6: { cellWidth: 20 },  
+                0: { cellWidth: 15 }, //id
+                1: { cellWidth: 18 }, //id
+                2: { cellWidth: 25 }, //cashier
+                3: { cellWidth: 30 }, //customer
+                4: { cellWidth: 20 },  //status
+                5: { cellWidth: 20 },  //total amount
+                6: { cellWidth: 25 },  //sale date
+                7: { cellWidth: 23 }, //item name
+                8: { cellWidth: 12 }, //qty
             },
         });
     
