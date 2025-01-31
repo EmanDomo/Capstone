@@ -1,5 +1,1 @@
-"# Capstone" 
-"# Capstone" 
-"# Capstone" 
-"# NewCapstone" 
-"# BagongCapstone" 
+An Online Ordering and Point-of-Sale System for Saint Jerome Integrated School of Cabuyao, featuring seamless cashless payments via PayMongo and PayPal, along with inventory management and sales reporting.
