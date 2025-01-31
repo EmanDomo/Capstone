@@ -1,1 +1,1 @@
-An Online Ordering and Point-of-Sale System for Saint Jerome Integrated School of Cabuyao, featuring seamless cashless payments via PayMongo and PayPal, along with inventory management and sales reporting.
+An Online Ordering and Point-of-Sale System for Saint Jerome Integrated School of Cabuyao, featuring seamless cashless payments via PayMongo and PayPal, along with inventory management and sales reporting. Tech stack used: React.js, Express.js, Node.js, MySQL
